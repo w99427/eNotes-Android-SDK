@@ -1,0 +1,570 @@
+package io.enotes.sdk.repository.card;
+
+import android.app.Activity;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
+import android.content.Context;
+import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.WorkerThread;
+import android.text.TextUtils;
+
+import org.ethereum.util.ByteUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.enotes.sdk.constant.Constant;
+import io.enotes.sdk.constant.ErrorCode;
+import io.enotes.sdk.constant.Status;
+import io.enotes.sdk.repository.ProviderFactory;
+import io.enotes.sdk.repository.base.Resource;
+import io.enotes.sdk.repository.db.entity.Card;
+import io.enotes.sdk.repository.db.entity.Cert;
+import io.enotes.sdk.repository.db.entity.Mfr;
+import io.enotes.sdk.utils.CardUtils;
+import io.enotes.sdk.utils.LogUtils;
+import io.enotes.sdk.utils.ReaderUtils;
+import io.reactivex.Completable;
+import io.reactivex.schedulers.Schedulers;
+
+import static io.enotes.sdk.constant.ErrorCode.BLUETOOTH_DISCONNECT;
+import static io.enotes.sdk.constant.ErrorCode.NOT_FIND_CARD;
+import static io.enotes.sdk.constant.Status.BLUETOOTH_PARSING;
+import static io.enotes.sdk.constant.Status.BLUETOOTH_SCAN_FINISH;
+import static io.enotes.sdk.constant.Status.ERROR;
+import static io.enotes.sdk.constant.Status.NFC_CONNECTED;
+import static io.enotes.sdk.constant.Status.SUCCESS;
+import static io.enotes.sdk.repository.db.entity.Card.STATUS_SAFE;
+import static io.enotes.sdk.repository.db.entity.Card.STATUS_UNSAFE;
+import static io.enotes.sdk.utils.SignatureUtils.blockChainPrvChallenge;
+import static io.enotes.sdk.utils.SignatureUtils.devicePrvChallenge;
+import static io.enotes.sdk.utils.SignatureUtils.verifySignatureTwiceHash;
+
+
+/**
+ * A helper class to scan and connect card
+ */
+public class CardScannerReader implements ICardScanner, ICardReader, ICardScanner.ScanCallback, ICardReader.ConnectedCallback {
+    private static final String TAG = CardScannerReader.class.getSimpleName();
+    private Context mContext;
+    private String mTargetAID;
+    private int mScanMode;
+    private int mReadMode;
+    private List<ScannerReader> mScannerReaders = new ArrayList<>();
+    private ScannerReader mCurrentScannerReader;
+    private ScannerReader mNfcScannerReader;
+    private ScannerReader mBleScannerReader;
+    private ICardScanner.ScanCallback mScanCallback;
+    private ICardReader.ConnectedCallback mConnectedCallback;
+    private MutableLiveData<Resource<Card>> mCard = new MutableLiveData<>();
+    private MutableLiveData<Resource<Reader>> mReader = new MutableLiveData<>();
+    private Handler handler = new Handler();
+
+    public static class Builder {
+        private Context mContext;
+        private String mTargetAID;
+        private int mScanMode = 0;
+        private int mReadMode = 0;
+
+        public Builder(@NonNull Context context) {
+            mContext = context;
+        }
+
+        public Builder setTargetAID(@NonNull String aid) {
+            mTargetAID = aid;
+            return this;
+        }
+
+        public Builder setScanMode(@ScanMode int scanMode) {
+            mScanMode = scanMode;
+            return this;
+        }
+
+        public Builder setReadMode(@ReadMode int readMode) {
+            mReadMode = readMode;
+            return this;
+        }
+
+        public CardScannerReader build() {
+            if (mTargetAID == null) mTargetAID = Reader.DEFAULT_TARGET_AID;
+            if ((mScanMode & NFC_MODE) != 0 && ((mReadMode & (NFC_AUTO_MODE ^ NFC_MANUAL_MODE)) == 0)) {
+                throw new IllegalArgumentException("Please set NFC read mode!");
+            }
+            if ((mScanMode & BLE_MODE) != 0 && ((mReadMode & (BLE_AUTO_MODE ^ BLE_MANUAL_MODE)) == 0)) {
+                throw new IllegalArgumentException("Please set BLE read mode!");
+            }
+            return new CardScannerReader(mContext, mTargetAID, mScanMode, mReadMode);
+        }
+    }
+
+    private CardScannerReader(@NonNull Context context, String targetAID, int scanMode, int readMode) {
+        mContext = context.getApplicationContext();
+        setTargetAID(targetAID);
+        setScanReadMode(scanMode, readMode);
+    }
+
+    public void setTargetAID(@NonNull String aid) {
+        mTargetAID = aid;
+    }
+
+    public String getTargetAID() {
+        return mTargetAID;
+    }
+
+    /**
+     * Notice：It will remove and destroy old scanners and readers if they are not in the new scanMode.
+     * New scanners and readers may be added if there was no related scanner and reader before.
+     * Device should have nfc/ble feature to support related scan mode, otherwise it does nothing.
+     *
+     * @param scanMode
+     * @param readMode
+     */
+    public void setScanReadMode(@ScanMode int scanMode, @ReadMode int readMode) {
+        if ((scanMode & NFC_MODE) != 0 && ((readMode & (NFC_AUTO_MODE ^ NFC_MANUAL_MODE)) == 0)) {
+            throw new IllegalArgumentException("Invalid NFC scan/read mode!");
+        }
+        if ((scanMode & BLE_MODE) != 0 && ((readMode & (BLE_AUTO_MODE ^ BLE_MANUAL_MODE)) == 0)) {
+            throw new IllegalArgumentException("Invalid BLE scan/read mode!");
+        }
+        if (scanMode == mScanMode && readMode == mReadMode) {
+            return;
+        }
+        boolean canNfc = ((scanMode & NFC_MODE) != 0) && ReaderUtils.supportNfc(mContext);
+        boolean canBle = ((scanMode & BLE_MODE) != 0) && ReaderUtils.supportBluetooth(mContext);
+        if (!canNfc && mNfcScannerReader != null) {
+            release(mNfcScannerReader);
+            mNfcScannerReader = null;
+        }
+        if (!canBle && mBleScannerReader != null) {
+            release(mBleScannerReader);
+            mBleScannerReader = null;
+        }
+        mScanMode = scanMode;
+        mReadMode = readMode;
+        if (canNfc && mNfcScannerReader == null) {
+            mNfcScannerReader = ScannerReader.build(new NfcCardDetector(this),
+                    new NfcCardReader(this));
+            mScannerReaders.add(mNfcScannerReader);
+        }
+        if (canBle && mBleScannerReader == null) {
+            mBleScannerReader = ScannerReader.build(new BleCardScanner(mContext, this),
+                    new BleCardReader(mContext, this));
+            mScannerReaders.add(mBleScannerReader);
+        }
+    }
+
+    private void release(ScannerReader scannerReader) {
+        scannerReader.mCardReader.disconnect();
+        scannerReader.mCardScanner.destroy();
+        scannerReader.mCardReader.setConnectedCallback(null);
+        scannerReader.mCardScanner.setScanCallback(null);
+        mScannerReaders.remove(scannerReader);
+        if (mCurrentScannerReader == scannerReader) mCurrentScannerReader = null;
+    }
+
+    @NonNull
+    public LiveData<Resource<Card>> getCard() {
+        return mCard;
+    }
+
+    @NonNull
+    public LiveData<Resource<Reader>> getReader() {
+        return mReader;
+    }
+
+    @Override
+    public void onCardScanned(@NonNull Resource<Reader> card) {
+        switch (card.status) {
+            case SUCCESS:
+                // Usually UI observer display the card result and pass the card back by #parseAndConnect if it's manual mode.
+                mReader.postValue(card);
+                boolean isNfcCard = card.data.getTag() != null;
+                boolean isBleCard = card.data.getDeviceInfo() != null;
+                boolean isOneBleCard = true;
+                // pass to reader, card with tag or devices if it's auto read mode
+                boolean autoConnectNfc = isNfcCard && ((mReadMode & NFC_AUTO_MODE) != 0);
+                boolean autoConnectBle = isBleCard && (
+                        (((mReadMode & BLE_AUTO_MODE) != 0) && ((mReadMode & BLE_MANUAL_MODE) == 0))//auto mode
+                                ||
+                                (((mReadMode & BLE_AUTO_MODE) != 0) && ((mReadMode & BLE_MANUAL_MODE) != 0)
+                                        && isOneBleCard)// manual auto mode
+                );
+                if (autoConnectNfc || autoConnectBle) {
+                    if (card.data.getDeviceInfo() == null)
+                        parseAndConnect(card.data);
+                }
+                break;
+            case ERROR:
+                // here is always of the callback of ble scanner
+                mReader.postValue(Resource.error(card.errorCode,card.message));
+                break;
+            case BLUETOOTH_SCAN_FINISH:
+                mReader.postValue(Resource.bluetoothScanFinish(card.message));
+                break;
+        }
+        if (mScanCallback != null) mScanCallback.onCardScanned(card);
+    }
+
+    @Override
+    public void enterForeground(Activity activity) {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            scannerReader.mCardScanner.enterForeground(activity);
+        }
+    }
+
+    @Override
+    public void enterBackground(Activity activity) {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            scannerReader.mCardScanner.enterBackground(activity);
+        }
+    }
+
+    // only for ble
+    @Override
+    public void startScan() {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            if (scannerReader == mBleScannerReader) {
+                scannerReader.mCardReader.disconnect();
+                scannerReader.mCardScanner.startScan();
+            }
+        }
+    }
+
+    @Override
+    public void destroy() {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            scannerReader.mCardScanner.destroy();
+        }
+    }
+
+    @Override
+    public void deliveryCard(@NonNull Reader reader) {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            scannerReader.mCardScanner.deliveryCard(reader);
+        }
+    }
+
+    @Override
+    public void setScanCallback(@Nullable ScanCallback scanCallback) {
+        mScanCallback = scanCallback;
+    }
+
+    @Override
+    public boolean isConnected() {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            if (scannerReader.mCardReader.isConnected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isPresent() {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            if (scannerReader.mCardReader.isPresent()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void disconnect() {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            scannerReader.mCardReader.disconnect();
+        }
+    }
+
+    @Override
+    public void parseAndConnect(@NonNull Reader reader) {
+        List<ScannerReader> scannerReaders = mScannerReaders;
+        for (ScannerReader scannerReader : scannerReaders) {
+            // connect in parallel
+            Completable.fromAction(() -> scannerReader.mCardReader.parseAndConnect(reader))
+                    .subscribeOn(Schedulers.newThread()).subscribe();
+        }
+    }
+
+    @Override
+    public void prepareToRead(String aid) throws CommandException {
+        ScannerReader scannerReader = mCurrentScannerReader;
+        if (scannerReader != null) scannerReader.mCardReader.prepareToRead(aid);
+    }
+
+    @NonNull
+    @Override
+    public String transceive(@NonNull Command command) throws CommandException {
+        ScannerReader scannerReader = mCurrentScannerReader;
+        if (scannerReader != null) {
+            String transceive = scannerReader.mCardReader.transceive(command);
+            return transceive;
+        }
+        throw new CommandException(ErrorCode.NFC_DISCONNECTED,"tag_connection_lost");
+    }
+
+    @NonNull
+    public TLVBox transceive2TLV(@NonNull Command command) throws CommandException {
+        ScannerReader scannerReader = mCurrentScannerReader;
+        if (scannerReader != null) {
+            TLVBox transceive = scannerReader.mCardReader.transceive2TLV(command);
+            return transceive;
+        }
+        throw new CommandException(ErrorCode.NFC_DISCONNECTED,"tag_connection_lost");
+    }
+
+    @Override
+    public void setConnectedCallback(@Nullable ConnectedCallback connectedCallback) {
+        mConnectedCallback = connectedCallback;
+    }
+
+    @Override
+    public void onCardConnected(@NonNull Resource<ICardReader> reader) {
+        LogUtils.i(TAG, "onCardConnected status:" + reader.errorCode);
+        switch (reader.status) {
+            case NFC_CONNECTED:
+                mCard.postValue(Resource.nfcConnected("nfc_start"));
+                break;
+            case SUCCESS:
+                // only keep the latest connect currently
+                LogUtils.d(TAG, "onCardConnected: " + reader.data);
+                List<ScannerReader> scannerReaders = mScannerReaders;
+                for (ScannerReader scannerReader : scannerReaders) {
+                    // multi-thread issue?
+                    if (scannerReader.mCardReader != reader.data) {
+                        scannerReader.mCardReader.disconnect();
+                    } else {
+                        mCurrentScannerReader = scannerReader;
+                    }
+                }
+                // need a thread for bluetooth sync
+                new Thread(() -> {
+                    detectCard();
+                    try {
+                        Thread.sleep(500);
+                        mCard.postValue(Resource.cardParseFinish());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+                break;
+            case ERROR:
+                mCard.postValue(Resource.error(reader.errorCode,reader.message));
+                break;
+            case BLUETOOTH_PARSING:
+                mCard.postValue(Resource.bluetoothParsingCard(reader.message));
+                break;
+            case BLUETOOTH_DISCONNECT:
+                mCard.postValue(Resource.error(ErrorCode.BLUETOOTH_DISCONNECT,reader.message));
+                break;
+        }
+        if (mConnectedCallback != null) mConnectedCallback.onCardConnected(reader);
+    }
+
+    @Override
+    public void onCardDisconnected(@NonNull Resource<ICardReader> reader) {
+        LogUtils.i(TAG, "onCardDisconnected status:" + reader.errorCode);
+        if (reader.status == Status.ERROR) {
+            if(reader.errorCode == NOT_FIND_CARD){
+                mCard.postValue(Resource.cardParseFinish());
+            }else {
+                mCard.postValue(Resource.error(reader.errorCode, reader.message));
+            }
+        }
+        if (mConnectedCallback != null) mConnectedCallback.onCardDisconnected(reader);
+    }
+
+    /**
+     * Get card from current connected card device.
+     */
+    @WorkerThread
+    public void detectCard() {
+        long startTime = System.currentTimeMillis();
+        Card card = new Card();
+        try {
+            LogUtils.d(TAG, "detectCoin prepareToRead mCurrentScannerReader:" + mCurrentScannerReader);
+            prepareToRead(mTargetAID);
+            card.setCert(readCert());
+            card.setCurrencyPubKey(readCurrencyPubKey());
+            setCurrencyAddress(card);
+            card.setStatus(readStatus());
+            checkBlockChainPrv(CardUtils.isBTC(card.getCert().getBlockChain()) ? card.getBitCoinECKey().getPubKey() : card.getEthECKey().getPubKey());
+            //differentiate success type
+            if (mCurrentScannerReader.mCardReader instanceof NfcCardReader)
+                mCard.postValue(Resource.success(card));
+            else
+                mCard.postValue(Resource.success(card,"bluetooth"));
+        } catch (CommandException e) {
+            LogUtils.d(TAG, "detectCoin exception: " + e.getMessage());
+            mCard.postValue(Resource.error(e.getCode(),e.getMessage()));
+        } finally {
+            LogUtils.d(TAG, "checkCard spend time: " + (System.currentTimeMillis() - startTime));
+        }
+    }
+
+    private Cert readCert() throws CommandException {
+        LogUtils.d(TAG, "read cert");
+        StringBuffer certSB=new StringBuffer();
+        boolean flag=true;
+        int p1=0;
+        Command command=Commands.getCertificate();
+        while (flag){
+            String stringValue= transceive2TLV(command.setCmdStr("00CA0"+p1+"30")).getStringValue(Commands.TLVTag.Device_Certificate);
+            if(TextUtils.isEmpty(stringValue)||stringValue.length()<506){//if cert.bytes = 253,need read cert apdu again
+                flag=false;
+            }else{
+                p1++;
+            }
+            certSB.append(stringValue);
+        }
+
+        String certHex = certSB.toString();
+        LogUtils.d(TAG, "certHex=" + certHex);
+        Cert cert;
+        try {
+            cert = Cert.fromHex(certHex);
+            if (cert == null || cert.getPublicKey() == null) {
+                throw new CommandException(ErrorCode.INVALID_CARD,"No cert");
+            }
+            LogUtils.i(TAG, cert.toString());
+            //verify manufacture cert
+            verifyCert(cert);
+            //verify device priKey
+            checkDevicePrv(ByteUtil.hexStringToBytes(cert.getPublicKey()));
+        } catch (IllegalArgumentException ex) {
+            throw new CommandException("Invalid cert", ex);
+        }
+
+        return cert;
+    }
+
+    /**
+     * verify cert by contract public key
+     *
+     * @param cert
+     * @throws CommandException
+     */
+    private void verifyCert(Cert cert) throws CommandException {
+        LogUtils.i(TAG, "verify cert start");
+        boolean testCard;
+        if (cert.getSerialNumber() != null && cert.getSerialNumber().toLowerCase().startsWith("test-")) {
+            testCard = true;
+        } else {
+            testCard = false;
+        }
+        Mfr mfr = ProviderFactory.getInstance(mContext).getApiProvider()
+                .callCertPubKey(testCard ? Constant.ContractAddress.ABI_KOVAN_ADDRESS : Constant.ContractAddress.ABI_ADDRESS, cert.getVendorName(), cert.getBatch(), testCard);
+        if (mfr == null) {
+            throw new CommandException(ErrorCode.CALL_CERT_PUB_KEY_ERROR,"call pub key");
+        }
+        LogUtils.i(TAG,"call_publicKey: "+mfr.getPublicKey());
+        try {
+            if (!verifySignatureTwiceHash(ByteUtil.hexStringToBytes(mfr.getPublicKey()), cert.getTbsCertificate(), cert.getR(), cert.getS())) {
+                throw new CommandException(ErrorCode.INVALID_CARD,"Invalid cert _ verify manufacture cert fail");
+            }
+        } catch (Exception e) {
+            throw new CommandException(ErrorCode.INVALID_CARD,"Invalid cert _ verify manufacture cert fail");
+        }
+        LogUtils.i(TAG, "verify cert success");
+    }
+
+    /**
+     * verify device private key
+     *
+     * @param publicKey
+     * @throws CommandException
+     */
+    private void checkDevicePrv(byte[] publicKey) throws CommandException {
+        LogUtils.d(TAG, "Device private key challenge start");
+        devicePrvChallenge(this, publicKey);
+        LogUtils.d(TAG, "Device private key challenge success");
+    }
+
+    /**
+     * get block chain public key
+     *
+     * @return
+     * @throws CommandException
+     */
+    private String readCurrencyPubKey() throws CommandException {
+        LogUtils.d(TAG, "read currency pub key");
+        String pubKey = transceive2TLV(Commands.getCurrencyPubKey()).getStringValue(Commands.TLVTag.BlockChain_PublicKey);
+        if (TextUtils.isEmpty(pubKey)) throw new CommandException(ErrorCode.INVALID_CARD,"wrong public key format");
+        if (pubKey.length() == 130 && pubKey.startsWith("04"))
+            return pubKey;
+        else if (pubKey.length() == 128)
+            return "04" + pubKey;
+        else if (pubKey.length() == 66 && (pubKey.startsWith("02") || pubKey.startsWith("03")))
+            return pubKey;
+        throw new CommandException(ErrorCode.INVALID_CARD,"wrong public key format");
+
+    }
+
+    /**
+     * set card address fof btc or eth
+     *
+     * @param card
+     * @throws CommandException
+     */
+    private void setCurrencyAddress(Card card) throws CommandException {
+        LogUtils.d(TAG, "calculate address");
+        card.setAddress(CardUtils.getAddress(card, card.getCert().getBlockChain()));
+        if (card.getAddress() == null) {
+            throw new CommandException(ErrorCode.INVALID_CARD,"No valid currency public key");
+        }
+    }
+
+    /**
+     * read card status
+     *
+     * @return
+     * @throws CommandException
+     */
+    private int readStatus() throws CommandException {
+        LogUtils.d(TAG, "read status");
+        String result = transceive2TLV(Commands.getTxSignCounter()).getStringValue(Commands.TLVTag.Transaction_Signature_Counter);
+        if (result != null) {
+            if (result.length() == 4) {
+                int txSignTimes = ByteUtil.byteArrayToInt(ByteUtil.hexStringToBytes(result.substring(0, 4)));
+                LogUtils.d(TAG, "    txSignTimes: " + txSignTimes);
+                return txSignTimes == 0 ? STATUS_SAFE : STATUS_UNSAFE;
+            }
+        }
+        throw new CommandException(ErrorCode.INVALID_CARD,"Fail to read status");
+    }
+
+    /**
+     * verify block chain private key
+     *
+     * @param publicKey
+     * @throws CommandException
+     */
+    private void checkBlockChainPrv(byte[] publicKey) throws CommandException {
+        LogUtils.d(TAG, "block chain private key challenge start");
+        blockChainPrvChallenge(this, publicKey);
+        LogUtils.d(TAG, "block chain private key challenge success");
+    }
+
+    static class ScannerReader {
+        ICardScanner mCardScanner;
+        ICardReader mCardReader;
+
+        static ScannerReader build(ICardScanner scanner, ICardReader reader) {
+            ScannerReader scannerReader = new ScannerReader();
+            scannerReader.mCardScanner = scanner;
+            scannerReader.mCardReader = reader;
+            return scannerReader;
+        }
+    }
+
+}

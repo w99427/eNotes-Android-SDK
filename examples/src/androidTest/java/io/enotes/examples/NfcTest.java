@@ -1,0 +1,85 @@
+package io.enotes.examples;
+
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.util.Log;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import io.enotes.examples.test.TestNfcActivity;
+import io.enotes.sdk.constant.Status;
+import io.enotes.sdk.core.CardManager;
+import io.enotes.sdk.core.RPCApiManager;
+import io.enotes.sdk.repository.db.entity.Card;
+
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+
+@RunWith(AndroidJUnit4.class)
+public class NfcTest extends BaseTest {
+    private static final String TAG = "NfcTest";
+    @Rule
+    public ActivityTestRule<TestNfcActivity> activityTestRule = new ActivityTestRule<>(TestNfcActivity.class);
+    private TestNfcActivity activity;
+
+    @Before
+    public void setup() {
+        activity = activityTestRule.getActivity();
+    }
+
+    @Test
+    public void testReadCard() {
+        Object lock = new Object();
+        ThreadLock threadLock = new ThreadLock(lock);
+        CardManager cardManager = activity.getCardManager();
+        assertNotNull(cardManager);
+        cardManager.setReadCardCallback((resource -> {
+            threadLock.assertResource(resource);
+            if (resource.status == Status.SUCCESS) {
+                assertTrue(resource.data instanceof Card);
+                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
+                threadLock.notifyLock();
+            }
+        }));
+        threadLock.waitAndRelease(10);
+    }
+
+    @Test
+    public void testBtcRawTransaction() {
+        Object lock = new Object();
+        ThreadLock threadLock = new ThreadLock(lock);
+        CardManager cardManager = activity.getCardManager();
+        assertNotNull(cardManager);
+        RPCApiManager rpcApiManager = activity.getRpcApiManager();
+        assertNotNull(rpcApiManager);
+        cardManager.setReadCardCallback((resource -> {
+            if (resource.status == Status.SUCCESS) {
+                assertTrue(resource.data instanceof Card);
+                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
+                getBtcRawTransaction(threadLock, ((Card) resource.data), cardManager, rpcApiManager);
+            }
+        }));
+        threadLock.waitAndRelease(15);
+    }
+
+    @Test
+    public void testEthRawTransaction() {
+        Object lock = new Object();
+        ThreadLock threadLock = new ThreadLock(lock);
+        CardManager cardManager = activity.getCardManager();
+        assertNotNull(cardManager);
+        RPCApiManager rpcApiManager = activity.getRpcApiManager();
+        assertNotNull(rpcApiManager);
+        cardManager.setReadCardCallback((resource -> {
+            if (resource.status == Status.SUCCESS) {
+                assertTrue(resource.data instanceof Card);
+                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
+                getEthRawTransaction(threadLock, ((Card) resource.data), cardManager, rpcApiManager);
+            }
+        }));
+        threadLock.waitAndRelease(15);
+    }
+}

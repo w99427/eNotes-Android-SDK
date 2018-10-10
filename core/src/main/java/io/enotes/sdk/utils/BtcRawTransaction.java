@@ -1,0 +1,332 @@
+package io.enotes.sdk.utils;
+
+import android.util.Log;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.ScriptException;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.UnsafeByteArrayOutputStream;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.TransactionSignature;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.signers.TransactionSigner;
+import org.bitcoinj.wallet.KeyBag;
+import org.bitcoinj.wallet.KeyChainGroup;
+import org.bitcoinj.wallet.RedeemData;
+import org.ethereum.util.ByteUtil;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+
+import io.enotes.sdk.constant.Constant;
+import io.enotes.sdk.constant.ErrorCode;
+import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.card.CommandException;
+import io.enotes.sdk.repository.db.entity.Card;
+import io.enotes.sdk.repository.provider.CardProvider;
+
+import static io.enotes.sdk.utils.SignatureUtils.str2BtcSignature;
+
+
+public class BtcRawTransaction {
+    private static final String TAG = "BtcRawTransaction";
+    private static final EnumSet<Script.VerifyFlag> MINIMUM_VERIFY_FLAGS = EnumSet.of(Script.VerifyFlag.P2SH,
+            Script.VerifyFlag.NULLDUMMY);
+    private CardProvider cardProvider;
+    private Card card;
+    private static NetworkParameters currentBtcNetWork;
+
+    public Transaction createRawTransaction(Card card, CardProvider cardProvider, long fees, String toAddress, long changeCount, String changeAddress, List<EntUtxoEntity> utxos) {
+        this.card = card;
+        this.cardProvider = cardProvider;
+        if (card.getCert().getNetWork() == Constant.Network.BTC_TESTNET) {
+            currentBtcNetWork = TestNet3Params.get();
+        } else {
+            currentBtcNetWork = MainNetParams.get();
+        }
+        Transaction transaction = new Transaction(currentBtcNetWork);
+        long amount = 0;
+        long toCount = 0;
+        //get intPut
+        for (EntUtxoEntity unSpent : utxos) {
+            amount += Long.valueOf(unSpent.getBalance());
+            Transaction preTx = new Transaction(currentBtcNetWork);//need a tx for set input
+            for (int i = 0; i <= unSpent.getOutput_no(); i++) {
+                if (i == unSpent.getOutput_no()) {
+                    TransactionOutput transactionOutput = new TransactionOutput(currentBtcNetWork, preTx, Coin.valueOf(Long.valueOf(unSpent.getBalance())), ByteUtil.hexStringToBytes(unSpent.getScript()));
+                    preTx.addOutput(transactionOutput);
+                } else {
+                    TransactionOutput fakeOutput = new TransactionOutput(currentBtcNetWork, preTx, Coin.valueOf(1), new byte[]{});
+                    preTx.addOutput(fakeOutput);
+                }
+            }
+            Class<? extends Transaction> aClass1 = preTx.getClass();
+            try {
+                Method declaredMethod = aClass1.getDeclaredMethod("setHash", Sha256Hash.class);
+                declaredMethod.setAccessible(true);
+                declaredMethod.invoke(preTx, new Sha256Hash(unSpent.getTxid()));
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            transaction.addInput(preTx.getOutput(unSpent.getOutput_no()));
+        }
+
+        if (amount == 0) {
+            Log.e(TAG, "utxo = 0 ");
+        } else if (amount <= fees + changeCount) {
+            Log.e(TAG, "your utxo can not spent fees and change");
+        }
+        toCount = amount - fees - changeCount;
+        LogUtils.i(TAG, "\namount=" + amount + "\nfees=" + fees + "\ntoCount=" + toCount + "\nchangeCount=" + changeCount);
+        TransactionOutput to = new TransactionOutput(currentBtcNetWork, transaction, Coin.valueOf(toCount), Address.fromBase58(currentBtcNetWork, toAddress));
+        transaction.addOutput(to);
+        if (changeCount > 0) {
+            TransactionOutput change = new TransactionOutput(currentBtcNetWork, transaction, Coin.valueOf(changeCount), Address.fromBase58(currentBtcNetWork, changeAddress));
+            transaction.addOutput(change);
+        }
+        Log.i(TAG, "get no sign tx");
+        return transaction;
+    }
+
+
+    public void signTransactionInputs(Transaction tx) throws CommandException {
+        String pubKey = card.getCurrencyPubKey();
+        ECKey ecKey = ECKey.fromPublicOnly(ByteUtil.hexStringToBytes(pubKey));
+        KeyChainGroup keyChainGroup = new KeyChainGroup(currentBtcNetWork);
+        keyChainGroup.importKeys(ecKey);
+        int numInputs = tx.getInputs().size();
+        for (int i = 0; i < numInputs; i++) {
+            TransactionInput txIn = tx.getInput(i);
+            if (txIn.getConnectedOutput() == null) {
+                continue;
+            }
+
+            try {
+                txIn.getScriptSig().correctlySpends(tx, i, txIn.getConnectedOutput().getScriptPubKey());
+                continue;
+            } catch (ScriptException e) {
+//                Log.e("test", e.getMessage());
+            }
+
+            Script scriptPubKey = txIn.getConnectedOutput().getScriptPubKey();
+            RedeemData redeemData = txIn.getConnectedRedeemData(keyChainGroup);
+            txIn.setScriptSig(scriptPubKey.createEmptyInputScript(redeemData.keys.get(0), redeemData.redeemScript));
+        }
+        TransactionSigner.ProposedTransaction proposal = new TransactionSigner.ProposedTransaction(tx);
+        signInputs(proposal, keyChainGroup);
+    }
+
+    private boolean signInputs(TransactionSigner.ProposedTransaction propTx, KeyBag keyBag) throws CommandException {
+        Log.i(TAG, " start signInputs");
+        Transaction tx = propTx.partialTx;
+        int numInputs = tx.getInputs().size();
+        for (int i = 0; i < numInputs; i++) {
+            TransactionInput txIn = tx.getInput(i);
+            if (txIn.getConnectedOutput() == null) {
+                continue;
+            }
+
+            try {
+                txIn.getScriptSig().correctlySpends(tx, i, txIn.getConnectedOutput().getScriptPubKey(), MINIMUM_VERIFY_FLAGS);
+                continue;
+            } catch (ScriptException e) {
+                // Expected.
+            }
+
+            RedeemData redeemData = txIn.getConnectedRedeemData(keyBag);
+            Script scriptPubKey = txIn.getConnectedOutput().getScriptPubKey();
+            ECKey pubKey = redeemData.keys.get(0);
+            if (pubKey instanceof DeterministicKey)
+                propTx.keyPaths.put(scriptPubKey, (((DeterministicKey) pubKey).getPath()));
+
+
+            Script inputScript = txIn.getScriptSig();
+            byte[] script = redeemData.redeemScript.getProgram();
+            try {
+                TransactionSignature signature = calculateSignature(tx, i, script, Transaction.SigHash.ALL, false);
+                int sigIndex = 0;
+                inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), sigIndex);
+                txIn.setScriptSig(inputScript);
+            } catch (ECKey.KeyIsEncryptedException e) {
+                throw e;
+            } catch (ECKey.MissingPrivateKeyException e) {
+            }
+
+        }
+        return true;
+    }
+
+    private TransactionSignature calculateSignature(Transaction transaction, int inputIndex,
+                                                    byte[] redeemScript,
+                                                    Transaction.SigHash hashType, boolean anyoneCanPay) throws CommandException {
+        Sha256Hash hash = hashForSignature(transaction, inputIndex, redeemScript, hashType, anyoneCanPay);
+        return new TransactionSignature(getECDSASignature(hash.getBytes()), hashType, anyoneCanPay);
+    }
+
+
+    private ECKey.ECDSASignature getECDSASignature(byte[] transHash) throws CommandException {
+        if (cardProvider != null && card != null) {
+            String signature = cardProvider.verifyCoinAndSignTx(card, transHash);
+            LogUtils.i(TAG, "sig_der=:\n" + signature);
+            return str2BtcSignature(signature);
+        } else {
+            throw new CommandException(ErrorCode.SDK_ERROR, "card or cardManager id null");
+        }
+    }
+
+    private Sha256Hash hashForSignature(Transaction transaction, int inputIndex, byte[] redeemScript,
+                                        Transaction.SigHash type, boolean anyoneCanPay) {
+        byte sigHashType = (byte) TransactionSignature.calcSigHashValue(type, anyoneCanPay);
+        return hashForSignature(transaction, inputIndex, redeemScript, sigHashType);
+    }
+
+    private Sha256Hash hashForSignature(Transaction trans, int inputIndex, byte[] connectedScript, byte sigHashType) {
+
+        try {
+            Transaction tx = currentBtcNetWork.getDefaultSerializer().makeTransaction(trans.bitcoinSerialize());
+            Class<? extends Transaction> inputClass = tx.getClass();
+            // 获取Method对象
+            Method method = null;
+            int length = 0;
+            Field lengthF = inputClass.getSuperclass().getSuperclass().getDeclaredField("length");
+            lengthF.setAccessible(true);
+            length = (int) lengthF.get(tx);
+
+            for (int i = 0; i < getInputs(tx).size(); ++i) {
+                ((TransactionInput) getInputs(tx).get(i)).clearScriptBytes();
+            }
+
+            connectedScript = Script.removeAllInstancesOfOp(connectedScript, 171);
+            TransactionInput input = (TransactionInput) getInputs(tx).get(inputIndex);
+            method = input.getClass().getDeclaredMethod("setScriptBytes",
+                    byte[].class);
+            method.setAccessible(true); // 抑制Java的访问控制检查
+            method.invoke(input, new Object[]{connectedScript});
+            int i;
+            if ((sigHashType & 31) == Transaction.SigHash.NONE.value) {
+                setOutPuts(tx, new ArrayList(0));
+
+                for (i = 0; i < getInputs(tx).size(); ++i) {
+                    if (i != inputIndex) {
+                        ((TransactionInput) getInputs(tx).get(i)).setSequenceNumber(0L);
+                    }
+                }
+            } else if ((sigHashType & 31) == Transaction.SigHash.SINGLE.value) {
+                if (inputIndex >= getOutputs(tx).size()) {
+                    return Sha256Hash.wrap("0100000000000000000000000000000000000000000000000000000000000000");
+                }
+
+                setOutPuts(tx, new ArrayList(getOutputs(tx).subList(0, inputIndex + 1)));
+
+                for (i = 0; i < inputIndex; ++i) {
+                    getOutputs(tx).set(i, new TransactionOutput(currentBtcNetWork, tx, Coin.NEGATIVE_SATOSHI, new byte[0]));
+                }
+
+                for (i = 0; i < getInputs(tx).size(); ++i) {
+                    if (i != inputIndex) {
+                        ((TransactionInput) getInputs(tx).get(i)).setSequenceNumber(0L);
+                    }
+                }
+            }
+
+            if ((sigHashType & Transaction.SigHash.ANYONECANPAY.value) == Transaction.SigHash.ANYONECANPAY.value) {
+                setInPuts(tx, new ArrayList());
+                getInputs(tx).add(input);
+            }
+
+            ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == -2147483648 ? 256 : length + 4);
+            tx.bitcoinSerialize(bos);
+            Utils.uint32ToByteStreamLE((long) (255 & sigHashType), bos);
+            LogUtils.i(TAG, "Serialize3=\n" + ByteUtil.toHexString(bos.toByteArray()));
+            Sha256Hash hash = Sha256Hash.twiceOf(bos.toByteArray());
+            bos.close();
+            return hash;
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private ArrayList<TransactionOutput> getOutputs(Transaction tx) {
+        Class<? extends Transaction> txClass = tx.getClass();
+        try {
+            Field outputsF = txClass.getDeclaredField("outputs");
+            outputsF.setAccessible(true);
+            return (ArrayList<TransactionOutput>) outputsF.get(tx);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private ArrayList<TransactionInput> getInputs(Transaction tx) {
+        Class<? extends Transaction> txClass = tx.getClass();
+        try {
+            Field outputsF = txClass.getDeclaredField("inputs");
+            outputsF.setAccessible(true);
+            return (ArrayList<TransactionInput>) outputsF.get(tx);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void setOutPuts(Transaction tx, ArrayList<TransactionOutput> outputs) {
+        Class<? extends Transaction> txClass = tx.getClass();
+        try {
+            Field outputsF = txClass.getDeclaredField("outputs");
+            outputsF.setAccessible(true);
+            outputsF.set(tx, outputs);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setInPuts(Transaction tx, ArrayList<TransactionInput> outputs) {
+        Class<? extends Transaction> txClass = tx.getClass();
+        try {
+            Field outputsF = txClass.getDeclaredField("inputs");
+            outputsF.setAccessible(true);
+            outputsF.set(tx, outputs);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+}
