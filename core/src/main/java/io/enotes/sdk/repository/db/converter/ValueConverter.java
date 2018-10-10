@@ -5,7 +5,7 @@ import android.arch.persistence.room.TypeConverter;
 import java.math.BigInteger;
 
 /**
- * Card value convert BigInteger <---> String
+ * Card value convert BigInteger to String
  * if it's a invalid String, will return BigInteger.ZERO
  */
 public class ValueConverter {

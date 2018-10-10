@@ -100,13 +100,14 @@ public interface ICardReader {
      */
     void prepareToRead(String aid) throws CommandException;
 
+
     /**
      * Send Command with raw ISO-DEP data to the card and receive the response.
      * The response should be trimmed if it a valid response {@link Commands#isSuccessResponse(String)}
      *
      * @param command
      * @return
-     * @throws if the response is not valid or connect error
+     * @throws CommandException if the response is not valid or connect error
      */
     @NonNull
     String transceive(@NonNull Command command) throws CommandException;

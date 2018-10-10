@@ -25,7 +25,7 @@ public class Card {
      */
     public static final int STATUS_SAFE = 0;
     /**
-     * Tx signed times > 0
+     * Tx signed times big than 0
      */
     public static final int STATUS_UNSAFE = 1;
 

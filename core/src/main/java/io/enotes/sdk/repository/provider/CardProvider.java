@@ -73,7 +73,7 @@ public class CardProvider implements BaseManager {
      * For NFC Mode: Limit the NFC controller to reader mode while this Activity is in the foreground.
      *
      * @param activity
-     * @see {@link NfcAdapter#enableReaderMode(Activity, NfcAdapter.ReaderCallback, int, Bundle)}
+     * Use {@link NfcAdapter#enableReaderMode(Activity, NfcAdapter.ReaderCallback, int, Bundle)}
      */
     @MainThread
     public void enterForeground(Activity activity) {
@@ -84,7 +84,7 @@ public class CardProvider implements BaseManager {
      * For NFC Mode: Restore the NFC adapter to normal mode of operation
      *
      * @param activity
-     * @see {@link NfcAdapter#disableReaderMode(Activity)}
+     * Use {@link NfcAdapter#disableReaderMode(Activity)}
      */
     @MainThread
     public void enterBackground(Activity activity) {

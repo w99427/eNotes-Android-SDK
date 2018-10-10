@@ -32,10 +32,7 @@ import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_ETHER;
 
 /**
  * EthApiProvider
- * <p>
- * (etherscan=Random(3 apikeys),infura=Random(5 apikey))
- * (1)CommonApi:  infura->etherscan->eNotes server
- * (2)GasPrice Api:  etherchain->infura->etherscan->eNotes server
+ *
  */
 public class EthApiProvider extends BaseApiProvider {
     private ApiService apiService;

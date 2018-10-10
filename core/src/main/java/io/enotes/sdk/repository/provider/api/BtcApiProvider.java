@@ -32,11 +32,6 @@ import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_BITCOIN
 
 /**
  * BtcApiProvider
- * <p>
- * (blockcypher=Random(5 apikeys))
- * (1)Common Api: Random(blockchain,blockcypher,blockexplorer)->Random(第一次随机剩余的两个)->eNotes server
- * (2)SendRawTransaction: Random(blockcypher,blockexplorer)->第一次随机剩余的一个->eNotes server
- * (3)Fee Api: bitcoinfees->blockexplorer->eNotes server
  */
 public class BtcApiProvider extends BaseApiProvider {
     private ApiService apiService;
