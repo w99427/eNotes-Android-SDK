@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/rl_head"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/dimen_5dp"
+            android:paddingLeft="@dimen/dimen_11dp"
+            android:paddingRight="@dimen/dimen_11dp"
+            android:paddingTop="@dimen/dimen_11dp">
+
+            <ImageView
+                android:id="@+id/iv_icon_big"
+                android:layout_width="@dimen/card_balance_bg_size"
+                android:layout_height="@dimen/card_balance_bg_size"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="-30dp"
+                android:layout_marginTop="@dimen/dimen_7dp" />
+
+            <ImageView
+                android:id="@+id/iv_icon"
+                android:layout_width="@dimen/dimen_15dp"
+                android:layout_height="@dimen/dimen_15dp"
+                android:layout_marginTop="@dimen/dimen_3dp"
+                android:background="@mipmap/ic_bit" />
+
+            <TextView
+                android:id="@+id/tv_chain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dimen_5dp"
+                android:layout_toRightOf="@+id/iv_icon"
+                android:textColor="@color/gold"
+                android:textSize="@dimen/card_title"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_denomination_t"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/iv_icon"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:minWidth="@dimen/card_item_min_width"
+                android:text="@string/card_deno"
+                android:textColor="@color/silver"
+                android:textSize="@dimen/card_label" />
+
+            <TextView
+                android:id="@+id/tv_denomination"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/iv_icon"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:layout_toRightOf="@+id/tv_denomination_t"
+                android:textSize="@dimen/card_label" />
+
+
+            <TextView
+                android:id="@+id/tv_status_t"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_denomination_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:minWidth="@dimen/card_item_min_width"
+                android:text="@string/card_status"
+                android:textColor="@color/silver"
+                android:textSize="@dimen/card_label" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_denomination_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:layout_toRightOf="@+id/tv_status_t"
+                android:textColor="@color/green"
+                android:textSize="@dimen/card_label" />
+
+            <ImageView
+                android:id="@+id/iv_status"
+                android:layout_width="@dimen/dimen_8dp"
+                android:layout_height="@dimen/dimen_8dp"
+                android:layout_below="@+id/tv_denomination_t"
+                android:layout_marginLeft="@dimen/dimen_8dp"
+                android:layout_marginTop="@dimen/dimen_8dp"
+                android:layout_toRightOf="@+id/tv_status" />
+
+            <TextView
+                android:id="@+id/tv_issuer_t"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_status_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:minWidth="@dimen/card_item_min_width"
+                android:text="@string/card_issuer"
+                android:textColor="@color/silver"
+                android:textSize="@dimen/card_label" />
+
+            <TextView
+                android:id="@+id/tv_issuer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_status_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:layout_toRightOf="@+id/tv_issuer_t"
+                android:textSize="@dimen/card_label" />
+
+            <TextView
+                android:id="@+id/tv_number_t"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_issuer_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:minWidth="@dimen/card_item_min_width"
+                android:text="@string/card_serial_number"
+                android:textColor="@color/silver"
+                android:textSize="@dimen/card_label" />
+
+            <TextView
+                android:id="@+id/tv_serial_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_issuer_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:layout_toRightOf="@+id/tv_number_t"
+                android:textSize="@dimen/card_label" />
+
+            <TextView
+                android:id="@+id/tv_record_time_t"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_number_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:minWidth="@dimen/card_item_min_width"
+                android:text="@string/card_record_time"
+                android:textColor="@color/silver"
+                android:textSize="@dimen/card_label" />
+
+            <TextView
+                android:id="@+id/tv_record_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_number_t"
+                android:layout_marginTop="@dimen/dimen_5dp"
+                android:layout_toRightOf="@+id/tv_record_time_t"
+                android:textSize="@dimen/card_label" />
+
+
+            <View
+                android:id="@+id/v_line"
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_below="@+id/tv_record_time_t"
+                android:layout_marginTop="@dimen/dimen_10dp"
+                android:background="@color/edit_press" />
+
+            <TextView
+                android:id="@+id/tv_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/v_line"
+                android:layout_centerHorizontal="true"
+                android:paddingTop="@dimen/dimen_5dp"
+                android:textColor="@color/gold"
+                android:textSize="@dimen/card_label" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true">
+
+                <RelativeLayout
+                    android:id="@+id/rl_balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true">
+
+                    <ImageView
+                        android:id="@+id/iv_balance_bg"
+                        android:layout_width="@dimen/card_balance_bg_size"
+                        android:layout_height="@dimen/card_balance_bg_size"
+                        android:layout_centerInParent="true"
+                         />
+
+
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:paddingBottom="@dimen/dimen_60dp"
+                        android:paddingTop="@dimen/dimen_60dp">
+
+                        <TextView
+                            android:id="@+id/tv_balance_t"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentTop="true"
+                            android:layout_centerHorizontal="true"
+                            android:layout_gravity="center_horizontal"
+                            android:text="@string/card_balance"
+                            android:textColor="@color/silver"
+                            android:textSize="@dimen/card_label" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content" android:layout_centerHorizontal="true"
+                            android:layout_centerVertical="true" android:orientation="vertical"
+                            android:layout_height="wrap_content">
+                            <TextView
+                                android:id="@+id/tv_balance"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_horizontal"
+                                android:textColor="@color/gold"
+                                android:textSize="@dimen/dimen_35dp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:id="@+id/tv_price"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_horizontal"
+                                android:textColor="@color/silver"
+                                android:textSize="@dimen/dimen_13dp"
+                                />
+                        </LinearLayout>
+
+
+                        <TextView
+                            android:id="@+id/tv_tx_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:layout_marginBottom="@dimen/dimen_4dp"
+                            android:layout_centerHorizontal="true"
+                            android:layout_gravity="center_horizontal"
+                            android:textColor="@color/silver"
+                            android:textSize="@dimen/card_label" />
+                    </RelativeLayout>
+                </RelativeLayout>
+
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="@dimen/dimen_5dp"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/edit_press"
+                android:visibility="visible" />
+
+
+
+            <RelativeLayout
+                android:id="@+id/rl_withdraw"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/card_btn_height"
+                android:background="@drawable/bottom_bg_press">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:orientation="horizontal">
+
+
+                    <TextView
+                        android:id="@+id/tv_withdraw"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_toRightOf="@+id/iv_withdraw_t"
+                        android:text="@string/withdraw" android:textColor="@color/white"
+                        android:textSize="@dimen/dimen_16dp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="@color/edit_press"
+                    android:visibility="visible" />
+            </RelativeLayout>
+
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>

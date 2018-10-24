@@ -32,7 +32,6 @@ import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_ETHER;
 
 /**
  * EthApiProvider
- *
  */
 public class EthApiProvider extends BaseApiProvider {
     private ApiService apiService;
@@ -131,7 +130,7 @@ public class EthApiProvider extends BaseApiProvider {
      */
     public LiveData<Resource<EntGasEntity>> estimateGas(int network, String from, String toAddress, String value, String gasPrice, String data) {
         if (!TextUtils.isEmpty(data)) value = "0";
-        return addLiveDataSource(estimateGasBy1st(network, from, toAddress, value, gasPrice, data), estimateGasBy2nd(network, from, toAddress, value, gasPrice, data), addSourceForES(apiService.getEstimateGasByES(eNotesNetWork.get(network), from, "0x" + toAddress, "0x" + new BigInteger(value).toString(16), data)));
+        return addLiveDataSource(estimateGasBy1st(network, from, toAddress, value, gasPrice, data), estimateGasBy2nd(network, from, toAddress, value, gasPrice, data), addSourceForES(apiService.getEstimateGasByES(eNotesNetWork.get(network), toAddress, from, "0x" + new BigInteger(value).toString(16), data)));
     }
 
     /**

@@ -42,7 +42,7 @@ public class BluetoothTest extends BaseTest{
             threadLock.assertResource(resource);
             if(resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Reader);
-                Log.i(TAG, "bluetooth devices name = " + ((Reader) resource.data).getDeviceInfo().getName());
+                Log.i(TAG, "bluetooth devices name = " +  resource.data.getDeviceInfo().getName());
                 threadLock.notifyLock();
             }
         }));
@@ -59,7 +59,7 @@ public class BluetoothTest extends BaseTest{
             threadLock.assertResource(resource);
             if(resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Reader);
-                Log.i(TAG, "bluetooth devices name = " + ((Reader) resource.data).getDeviceInfo().getName());
+                Log.i(TAG, "bluetooth devices name = " + resource.data.getDeviceInfo().getName());
                 cardManager.connectBluetooth(((Reader) resource.data).getDeviceInfo());
             }
         }));
@@ -67,7 +67,7 @@ public class BluetoothTest extends BaseTest{
             threadLock.assertResource(resource);
             if (resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Card);
-                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
+                Log.i(TAG, "card cert = " +  resource.data.getCert().toString());
                 threadLock.notifyLock();
             }
         }));
@@ -86,15 +86,15 @@ public class BluetoothTest extends BaseTest{
             threadLock.assertResource(resource);
             if(resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Reader);
-                Log.i(TAG, "bluetooth devices name = " + ((Reader) resource.data).getDeviceInfo().getName());
-                cardManager.connectBluetooth(((Reader) resource.data).getDeviceInfo());
+                Log.i(TAG, "bluetooth devices name = " +  resource.data.getDeviceInfo().getName());
+                cardManager.connectBluetooth( resource.data.getDeviceInfo());
             }
         }));
         cardManager.setReadCardCallback((resource -> {
             if (resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Card);
-                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
-                getBtcRawTransaction(threadLock, ((Card) resource.data), cardManager, rpcApiManager);
+                Log.i(TAG, "card cert = " +  resource.data.getCert().toString());
+                getBtcRawTransaction(threadLock,  resource.data, cardManager, rpcApiManager);
             }
         }));
         threadLock.waitAndRelease(15);
@@ -112,15 +112,15 @@ public class BluetoothTest extends BaseTest{
             threadLock.assertResource(resource);
             if(resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Reader);
-                Log.i(TAG, "bluetooth devices name = " + ((Reader) resource.data).getDeviceInfo().getName());
-                cardManager.connectBluetooth(((Reader) resource.data).getDeviceInfo());
+                Log.i(TAG, "bluetooth devices name = " +  resource.data.getDeviceInfo().getName());
+                cardManager.connectBluetooth( resource.data.getDeviceInfo());
             }
         }));
         cardManager.setReadCardCallback((resource -> {
             if (resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Card);
-                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
-                getEthRawTransaction(threadLock, ((Card) resource.data), cardManager, rpcApiManager);
+                Log.i(TAG, "card cert = " + resource.data.getCert().toString());
+                getEthRawTransaction(threadLock,  resource.data, cardManager, rpcApiManager);
             }
         }));
         threadLock.waitAndRelease(15);

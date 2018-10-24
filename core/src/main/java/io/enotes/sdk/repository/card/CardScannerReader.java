@@ -198,7 +198,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
                 break;
             case ERROR:
                 // here is always of the callback of ble scanner
-                mReader.postValue(Resource.error(card.errorCode,card.message));
+                mReader.postValue(Resource.error(card.errorCode, card.message));
                 break;
             case BLUETOOTH_SCAN_FINISH:
                 mReader.postValue(Resource.bluetoothScanFinish(card.message));
@@ -310,7 +310,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             String transceive = scannerReader.mCardReader.transceive(command);
             return transceive;
         }
-        throw new CommandException(ErrorCode.NFC_DISCONNECTED,"tag_connection_lost");
+        throw new CommandException(ErrorCode.NFC_DISCONNECTED, "tag_connection_lost");
     }
 
     @NonNull
@@ -320,7 +320,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             TLVBox transceive = scannerReader.mCardReader.transceive2TLV(command);
             return transceive;
         }
-        throw new CommandException(ErrorCode.NFC_DISCONNECTED,"tag_connection_lost");
+        throw new CommandException(ErrorCode.NFC_DISCONNECTED, "tag_connection_lost");
     }
 
     @Override
@@ -350,22 +350,18 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
                 // need a thread for bluetooth sync
                 new Thread(() -> {
                     detectCard();
-                    try {
-                        Thread.sleep(500);
-                        mCard.postValue(Resource.cardParseFinish());
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    parseCardFinish();
                 }).start();
                 break;
             case ERROR:
-                mCard.postValue(Resource.error(reader.errorCode,reader.message));
+                mCard.postValue(Resource.error(reader.errorCode, reader.message));
                 break;
             case BLUETOOTH_PARSING:
                 mCard.postValue(Resource.bluetoothParsingCard(reader.message));
                 break;
             case BLUETOOTH_DISCONNECT:
-                mCard.postValue(Resource.error(ErrorCode.BLUETOOTH_DISCONNECT,reader.message));
+                mCard.postValue(Resource.error(ErrorCode.BLUETOOTH_DISCONNECT, reader.message));
+                parseCardFinish();
                 break;
         }
         if (mConnectedCallback != null) mConnectedCallback.onCardConnected(reader);
@@ -375,13 +371,16 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     public void onCardDisconnected(@NonNull Resource<ICardReader> reader) {
         LogUtils.i(TAG, "onCardDisconnected status:" + reader.errorCode);
         if (reader.status == Status.ERROR) {
-            if(reader.errorCode == NOT_FIND_CARD){
-                mCard.postValue(Resource.cardParseFinish());
-            }else {
-                mCard.postValue(Resource.error(reader.errorCode, reader.message));
-            }
+            mCard.postValue(Resource.error(reader.errorCode, reader.message));
+            parseCardFinish();
         }
         if (mConnectedCallback != null) mConnectedCallback.onCardDisconnected(reader);
+    }
+
+    private void parseCardFinish() {
+        handler.postDelayed(() -> {
+            mCard.postValue(Resource.cardParseFinish());
+        }, 500);
     }
 
     /**
@@ -394,6 +393,10 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         try {
             LogUtils.d(TAG, "detectCoin prepareToRead mCurrentScannerReader:" + mCurrentScannerReader);
             prepareToRead(mTargetAID);
+            if (mTargetAID != Reader.DEFAULT_TARGET_AID) {
+                mCard.postValue(Resource.success(card));
+                return;
+            }
             card.setCert(readCert());
             card.setCurrencyPubKey(readCurrencyPubKey());
             setCurrencyAddress(card);
@@ -403,10 +406,10 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             if (mCurrentScannerReader.mCardReader instanceof NfcCardReader)
                 mCard.postValue(Resource.success(card));
             else
-                mCard.postValue(Resource.success(card,"bluetooth"));
+                mCard.postValue(Resource.success(card, "bluetooth"));
         } catch (CommandException e) {
             LogUtils.d(TAG, "detectCoin exception: " + e.getMessage());
-            mCard.postValue(Resource.error(e.getCode(),e.getMessage()));
+            mCard.postValue(Resource.error(e.getCode(), e.getMessage()));
         } finally {
             LogUtils.d(TAG, "checkCard spend time: " + (System.currentTimeMillis() - startTime));
         }
@@ -414,15 +417,15 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
 
     private Cert readCert() throws CommandException {
         LogUtils.d(TAG, "read cert");
-        StringBuffer certSB=new StringBuffer();
-        boolean flag=true;
-        int p1=0;
-        Command command=Commands.getCertificate();
-        while (flag){
-            String stringValue= transceive2TLV(command.setCmdStr("00CA0"+p1+"30")).getStringValue(Commands.TLVTag.Device_Certificate);
-            if(TextUtils.isEmpty(stringValue)||stringValue.length()<506){//if cert.bytes = 253,need read cert apdu again
-                flag=false;
-            }else{
+        StringBuffer certSB = new StringBuffer();
+        boolean flag = true;
+        int p1 = 0;
+        Command command = Commands.getCertificate();
+        while (flag) {
+            String stringValue = transceive2TLV(command.setCmdStr("00CA0" + p1 + "30")).getStringValue(Commands.TLVTag.Device_Certificate);
+            if (TextUtils.isEmpty(stringValue) || stringValue.length() < 506) {//if cert.bytes = 253,need read cert apdu again
+                flag = false;
+            } else {
                 p1++;
             }
             certSB.append(stringValue);
@@ -434,7 +437,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         try {
             cert = Cert.fromHex(certHex);
             if (cert == null || cert.getPublicKey() == null) {
-                throw new CommandException(ErrorCode.INVALID_CARD,"No cert");
+                throw new CommandException(ErrorCode.INVALID_CARD, "No cert");
             }
             LogUtils.i(TAG, cert.toString());
             //verify manufacture cert
@@ -465,15 +468,15 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         Mfr mfr = ProviderFactory.getInstance(mContext).getApiProvider()
                 .callCertPubKey(testCard ? Constant.ContractAddress.ABI_KOVAN_ADDRESS : Constant.ContractAddress.ABI_ADDRESS, cert.getVendorName(), cert.getBatch(), testCard);
         if (mfr == null) {
-            throw new CommandException(ErrorCode.CALL_CERT_PUB_KEY_ERROR,"call pub key");
+            throw new CommandException(ErrorCode.CALL_CERT_PUB_KEY_ERROR, "call pub key");
         }
-        LogUtils.i(TAG,"call_publicKey: "+mfr.getPublicKey());
+        LogUtils.i(TAG, "call_publicKey: " + mfr.getPublicKey());
         try {
             if (!verifySignatureTwiceHash(ByteUtil.hexStringToBytes(mfr.getPublicKey()), cert.getTbsCertificate(), cert.getR(), cert.getS())) {
-                throw new CommandException(ErrorCode.INVALID_CARD,"Invalid cert _ verify manufacture cert fail");
+                throw new CommandException(ErrorCode.INVALID_CARD, "Invalid cert _ verify manufacture cert fail");
             }
         } catch (Exception e) {
-            throw new CommandException(ErrorCode.INVALID_CARD,"Invalid cert _ verify manufacture cert fail");
+            throw new CommandException(ErrorCode.INVALID_CARD, "Invalid cert _ verify manufacture cert fail");
         }
         LogUtils.i(TAG, "verify cert success");
     }
@@ -499,14 +502,15 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     private String readCurrencyPubKey() throws CommandException {
         LogUtils.d(TAG, "read currency pub key");
         String pubKey = transceive2TLV(Commands.getCurrencyPubKey()).getStringValue(Commands.TLVTag.BlockChain_PublicKey);
-        if (TextUtils.isEmpty(pubKey)) throw new CommandException(ErrorCode.INVALID_CARD,"wrong public key format");
+        if (TextUtils.isEmpty(pubKey))
+            throw new CommandException(ErrorCode.INVALID_CARD, "wrong public key format");
         if (pubKey.length() == 130 && pubKey.startsWith("04"))
             return pubKey;
         else if (pubKey.length() == 128)
             return "04" + pubKey;
         else if (pubKey.length() == 66 && (pubKey.startsWith("02") || pubKey.startsWith("03")))
             return pubKey;
-        throw new CommandException(ErrorCode.INVALID_CARD,"wrong public key format");
+        throw new CommandException(ErrorCode.INVALID_CARD, "wrong public key format");
 
     }
 
@@ -520,7 +524,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         LogUtils.d(TAG, "calculate address");
         card.setAddress(CardUtils.getAddress(card, card.getCert().getBlockChain()));
         if (card.getAddress() == null) {
-            throw new CommandException(ErrorCode.INVALID_CARD,"No valid currency public key");
+            throw new CommandException(ErrorCode.INVALID_CARD, "No valid currency public key");
         }
     }
 
@@ -540,7 +544,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
                 return txSignTimes == 0 ? STATUS_SAFE : STATUS_UNSAFE;
             }
         }
-        throw new CommandException(ErrorCode.INVALID_CARD,"Fail to read status");
+        throw new CommandException(ErrorCode.INVALID_CARD, "Fail to read status");
     }
 
     /**

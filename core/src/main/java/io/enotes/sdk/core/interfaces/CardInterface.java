@@ -3,20 +3,32 @@ package io.enotes.sdk.core.interfaces;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.NonNull;
 
 import java.util.List;
 
 import io.enotes.sdk.core.Callback;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.card.Command;
+import io.enotes.sdk.repository.card.CommandException;
+import io.enotes.sdk.repository.card.Commands;
+import io.enotes.sdk.repository.card.Reader;
+import io.enotes.sdk.repository.card.TLVBox;
 import io.enotes.sdk.repository.db.entity.Card;
 
 public interface CardInterface {
+
+    /**
+     * select cardlet application id
+     * @param aid
+     */
+    void selectAid(String aid);
     /**
      * start scan bluetooth devices
      *
      * @param callback
      */
-    void startBluetoothScan(Callback callback);
+    void startBluetoothScan(Callback<Reader> callback);
 
     /**
      * stop scan bluetooth devices
@@ -57,7 +69,7 @@ public interface CardInterface {
      *
      * @param cardCallback
      */
-    void setReadCardCallback(Callback cardCallback);
+    void setReadCardCallback(Callback<Card> cardCallback);
 
     /**
      * judge whether bluetooth is connected
@@ -82,7 +94,7 @@ public interface CardInterface {
      * @param unSpends
      * @param callback
      */
-    void getBtcRawTransaction(Card card, String fees, String toAddress, List<EntUtxoEntity> unSpends, Callback callback);
+    void getBtcRawTransaction(Card card, String fees, String toAddress, List<EntUtxoEntity> unSpends, Callback<String> callback);
 
     /**
      * get eth raw transaction
@@ -94,5 +106,12 @@ public interface CardInterface {
      * @param value
      * @param callback
      */
-    void getEthRawTransaction(Card card, String nonce, String estimateGas, String gasPrice, String toAddress, String value, byte[] data, Callback callback);
+    void getEthRawTransaction(Card card, String nonce, String estimateGas, String gasPrice, String toAddress, String value, byte[] data, Callback<String> callback);
+
+    /**
+     * Send Command with raw ISO-DEP data to the card and receive the response.
+     * The response should be trimmed if it a valid response {@link Commands#isSuccessResponse(String)}
+     * @param command
+     */
+    String transmitApdu(@NonNull Command command) throws CommandException;
 }

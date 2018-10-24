@@ -5,7 +5,17 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 
+import java.util.List;
+
 import io.enotes.sdk.core.interfaces.RPCApiInterface;
+import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
+import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
+import io.enotes.sdk.repository.api.entity.EntFeesEntity;
+import io.enotes.sdk.repository.api.entity.EntGasEntity;
+import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
+import io.enotes.sdk.repository.api.entity.EntNonceEntity;
+import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.provider.ApiProvider;
 import io.enotes.sdk.viewmodel.RPCApiViewModel;
 
@@ -32,56 +42,56 @@ public class RPCApiManager implements RPCApiInterface {
     }
 
     @Override
-    public void getBalance(String blockchain, int network, String address, @NonNull Callback callback) {
+    public void getBalance(String blockchain, int network, String address, @NonNull Callback<EntBalanceEntity> callback) {
         apiProvider.getBalance(blockchain, network, address).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));
     }
 
     @Override
-    public void getTransactionReceipt(String blockchain, int network, String txId, @NonNull Callback callback) {
+    public void getTransactionReceipt(String blockchain, int network, String txId, @NonNull Callback<EntConfirmedEntity> callback) {
         apiProvider.getTransactionReceipt(blockchain, network, txId).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));
     }
 
     @Override
-    public void sendRawTransaction(String blockchain, int network, String hexString, @NonNull Callback callback) {
+    public void sendRawTransaction(String blockchain, int network, String hexString, @NonNull Callback<EntSendTxEntity> callback) {
         apiProvider.sendRawTransaction(blockchain, network, hexString).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));
     }
 
     @Override
-    public void estimateFee(int network, @NonNull Callback callback) {
+    public void estimateFee(int network, @NonNull Callback<EntFeesEntity> callback) {
         apiProvider.estimateFee(network).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));
     }
 
     @Override
-    public void getUnSpend(int network, String address, @NonNull Callback callback) {
+    public void getUnSpend(int network, String address, @NonNull Callback<List<EntUtxoEntity>> callback) {
         apiProvider.getUnSpend(network, address).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));
     }
 
     @Override
-    public void estimateGas(int network, String from, String to, String value, String gasPrice, String data, @NonNull Callback callback) {
+    public void estimateGas(int network, String from, String to, String value, String gasPrice, String data, @NonNull Callback<EntGasEntity> callback) {
         apiProvider.estimateGas(network, from, to, value, gasPrice, data).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));
     }
 
     @Override
-    public void getGasPrice(int network, @NonNull Callback callback) {
+    public void getGasPrice(int network, @NonNull Callback<EntGasPriceEntity> callback) {
         apiProvider.getGasPrice(network).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));
     }
 
     @Override
-    public void getNonce(int network, String address, @NonNull Callback callback) {
+    public void getNonce(int network, String address, @NonNull Callback<EntNonceEntity> callback) {
         apiProvider.getNonce(network, address).observe(fragmentActivity, (resource -> {
             callback.onBack(resource);
         }));

@@ -1,3 +1,52 @@
 <resources>
-    <string name="app_name">examples</string>
+    <string name="app_name">eNotes Demo</string>
+    <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
+    <string name="card_close_to_phone_nfc">请将实体币靠近手机NFC感应处</string>
+    <string name="card_balance">余额</string>
+    <string name="card_status">安全状态</string>
+    <string name="card_tx_status">交易状态</string>
+    <string name="card_deno">面额</string>
+    <string name="card_serial_number">序列号</string>
+    <string name="card_issuer">生产厂商</string>
+    <string name="card_record_time">生产日期</string>
+    <string name="card_address">地址</string>
+    <string name="card_qr_code">地址二维码</string>
+    <string name="cancel">删除</string>
+    <string name="cancel_success">删除成功！</string>
+    <string name="withdraw">发送</string>
+    <string name="join_card">加入卡包</string>
+    <string name="safe">安全</string>
+    <string name="dangerous">危险</string>
+    <string name="address_copy_clipboard">地址已复制到粘贴板</string>
+    <string name="tx_send_address">发送地址</string>
+    <string name="gas">燃料（预估值）</string>
+    <string name="get_gas_after_address">填写地址以后预估燃料值</string>
+    <string name="tx_fees">交易费（预估值）</string>
+    <string name="send">发送</string>
+    <string name="detail">详情</string>
+    <string name="gas_price">燃料费</string>
+    <string name="tx_photo">扫描二维码</string>
+    <string name="please_select_to_address">请输入收款方地址</string>
+    <string name="network_unavailable">网络连接不可用，请检查网络</string>
+    <string name="please_select_fees">请输入交易费</string>
+    <string name="illegal_address">地址不合法</string>
+    <string name="please_select_gaslimit">请输入燃料费</string>
+    <string name="please_select_gas">请输入燃料</string>
+    <string name="tx_balance">发送金额</string>
+    <string name="withdraw_confirmed">发送确认</string>
+    <string name="dialog_sure">确定</string>
+    <string name="dialog_cancel">取消</string>
+    <string name="send_success">发送成功！</string>
+
+    <string-array name="tx_recommend">
+        <item>最低=</item>
+        <item>推荐=</item>
+        <item>最优=</item>
+    </string-array>
+    <string-array name="eth_tx_recommend">
+        <item>较低=</item>
+        <item>标准=</item>
+        <item>快速=</item>
+        <item>最快=</item>
+    </string-array>
 </resources>

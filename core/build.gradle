@@ -4,7 +4,7 @@ apply plugin: 'com.novoda.bintray-release'
 publish {
     def groupProjectID = 'io.enotes.sdk'
     def artifactProjectID = 'core'
-    def publishVersionID = '1.0.1'
+    def publishVersionID = '1.0.7'
 
     userOrg = 'enotes'
     repoName = 'eNotes'
@@ -20,7 +20,7 @@ android {
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 28
-        versionCode 3
+        versionCode 9
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -32,7 +32,7 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -98,7 +98,7 @@ dependencies {
     implementation 'org.bitcoinj:bitcoinj-core:0.14.7'
     implementation 'com.madgag.spongycastle:core:1.53.0.0'
     implementation 'com.madgag.spongycastle:prov:1.53.0.0'
-    implementation 'com.madgag.spongycastle:pkgitix:1.53.0.0'
+    implementation 'com.madgag.spongycastle:pkix:1.53.0.0'
     implementation 'org.apache.commons:commons-lang3:3.4'
 
     testImplementation 'junit:junit:4.12'

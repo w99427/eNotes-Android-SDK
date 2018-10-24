@@ -40,7 +40,7 @@ public class NfcTest extends BaseTest {
             threadLock.assertResource(resource);
             if (resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Card);
-                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
+                Log.i(TAG, "card cert = " + resource.data.getCert().toString());
                 threadLock.notifyLock();
             }
         }));
@@ -58,8 +58,8 @@ public class NfcTest extends BaseTest {
         cardManager.setReadCardCallback((resource -> {
             if (resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Card);
-                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
-                getBtcRawTransaction(threadLock, ((Card) resource.data), cardManager, rpcApiManager);
+                Log.i(TAG, "card cert = " + resource.data.getCert().toString());
+                getBtcRawTransaction(threadLock, resource.data, cardManager, rpcApiManager);
             }
         }));
         threadLock.waitAndRelease(15);
@@ -76,8 +76,8 @@ public class NfcTest extends BaseTest {
         cardManager.setReadCardCallback((resource -> {
             if (resource.status == Status.SUCCESS) {
                 assertTrue(resource.data instanceof Card);
-                Log.i(TAG, "card cert = " + ((Card) resource.data).getCert().toString());
-                getEthRawTransaction(threadLock, ((Card) resource.data), cardManager, rpcApiManager);
+                Log.i(TAG, "card cert = " +  resource.data.getCert().toString());
+                getEthRawTransaction(threadLock,  resource.data, cardManager, rpcApiManager);
             }
         }));
         threadLock.waitAndRelease(15);

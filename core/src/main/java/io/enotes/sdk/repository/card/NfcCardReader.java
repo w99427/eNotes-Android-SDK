@@ -166,8 +166,8 @@ public class NfcCardReader implements ICardReader {
                 }
                 tmpIsoDep = mIsoDep;
             }
-            if (tmpIsoDep != null && mConnectedCallback != null)
-                mConnectedCallback.onCardDisconnected(Resource.error(ErrorCode.NFC_DISCONNECTED,"Tag connection lost"));
+//            if (tmpIsoDep != null && mConnectedCallback != null)
+//                mConnectedCallback.onCardDisconnected(Resource.error(ErrorCode.NFC_DISCONNECTED,"Tag connection lost"));
         }
     }
 

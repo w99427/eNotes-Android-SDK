@@ -31,5 +31,8 @@ public class EntBalanceEntity extends BaseENotesEntity {
     public void setUnit(String unit) {
         this.unit = unit;
     }
+    public String getIntBalance() {
+        return Utils.hexToBigIntString(balance);
+    }
 }
 

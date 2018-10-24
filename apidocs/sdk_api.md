@@ -2,6 +2,7 @@
 
 ## CardManager
 
+- [selectAid](#selectAid)
 - [startBluetoothScan](#startBluetoothScan)
 - [stopBluetoothScan](#stopBluetoothScan)
 - [connectBluetooth](#connectBluetooth)
@@ -109,10 +110,23 @@ public class NetworkConfig{
 | BLUETOOTH_UNABLE       | 106               |  bluetooth unable      |
 | CALL_CERT_PUB_KEY_ERROR       | 107               |  Call cert public key error      |
 | SDK_ERROR       | 108               |  sdk self error      |
+| NOT_FIND_RIGHT_CARD       | 109               |  not find right card when withdraw      |
 
 
 
 ## CardManager Reference
+
+### selectAid
+- select cardlet application id
+- interface definition：
+```
+public void selectAid(String aid)
+```
+- code example:
+```
+CardManager cardManager = new CardManager(activity);
+cardManager.selectAid(aid)
+```
 
 ### startBluetoothScan
 - start scan bluetooth devices
@@ -125,7 +139,7 @@ public void startBluetoothScan(Callback callback)
 CardManager cardManager = new CardManager(activity);
 cardManager.startScanDevice((resource)-> {
 	if(resource.status == Status.SUCCESS) {
-		List<BluetoothDevice> deviceList = 		 (List<BluetoothDevice>)resource.data;
+		List<BluetoothDevice> deviceList = resource.data;
 		//TODO
 	} else if(resource.status == Status.ERROR) {
 		String errorMsg = resource.msg;
@@ -183,7 +197,7 @@ public void setReadCardCallback(Callback callback)
 CardManager cardManager = new CardManager(activity);
 cardManager.setReadCardManager((resource)-> {
 	if(resource.status == Status.SUCCESS) {
-		Card card = (Card)resource.data;
+		Card card = resource.data;
 		//TODO
 	} else if(resource.status == Status.ERROR) {
 		String errorMsg = resource.msg;
@@ -218,7 +232,7 @@ public void getBtcRawTransaction(Card card, string fee, String toAddress, List<E
 CardManager cardManager = new CardManager(activity);
 cardManager.getBtcRawTransaction(Card card, string fee, String toAddress, List<EntUtxoEntity> utxos, (resource)-> {
 	if(resource.status == Status.SUCCESS) {
-		String hex = (String)resource.data;
+		String hex = resource.data;
 		//TODO
 	} else if(resource.status == Status.ERROR) {
 		String errorMsg = resource.msg;
@@ -239,7 +253,7 @@ public void getEthRawTransaction(Card card, string nonce, String estimateGas, St
 CardManager cardManager = new CardManager(activity);
 cardManager.getEthRawTransaction(Card card, string nonce, String estimateGas, String gasPrice, String value, (resource)-> {
 	if(resource.status == Status.SUCCESS) {
-		String hex = (String)resource.data;
+		String hex = resource.data;
 		//TODO
 	} else if(resource.status == Status.ERROR) {
 		String errorMsg = resource.msg;
@@ -271,7 +285,7 @@ public void getBalance(String blockchain, int network, String address, Callback 
 RPCApiManager manager = new RPCApiManager(activity);
 manager.getBalance("8000003c", 42, (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		EntBalanceEntity entity= (EntBalanceEntity)resource.data;
+		EntBalanceEntity entity= resource.data;
 		String balance = entity.getBalance();
 		//TODO
 	} else if(resource.status == Status.ERROR) {
@@ -315,7 +329,7 @@ public void sendRawTransaction(String blockchain, int network, String hexString,
 RPCApiManager manager = new RPCApiManager(activity);
 manager.sendRawTransaction("8000003c", 42, "0x21h43dsfetgdfgrsfse32423tryfsntrtrerttr8iolkj345h353h3k32b43j3434wwa", (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		EntSendTxEntity entity= (EntSendTxEntity)resource.data;
+		EntSendTxEntity entity= resource.data;
 		String txId = entity.getTxId();
 		//TODO
 	} else if(resource.status == Status.ERROR) {
@@ -339,7 +353,7 @@ public void estimateFee(int network, Callback callback)
 RPCApiManager manager = new RPCApiManager(activity);
 manager.estimateFee(42, (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		EntFeeEntity entity= (EntFeeEntity)resource.data;
+		EntFeeEntity entity= resource.data;
 		String highFee = entity.getHighFee();
 		String mediumFee = entity.getMediumFee();
 		String lowFee = entity.getLowFee();
@@ -363,7 +377,7 @@ public void getUnSpend(int network, String address, Callback callback)
 RPCApiManager manager = new RPCApiManager(activity);
 manager.getUnspend(42, "mjsdsah12hads3234h", (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		List<EntUtxoEntity> list= (List<EntUtxoEntity>)resource.data;
+		List<EntUtxoEntity> list= resource.data;
 		for(EntUnspendEntity entity:list) {
             String balance = entity.getBalance();
             String script = entity.getScipt();
@@ -391,7 +405,7 @@ public void estimateGas(int network, String from, String to, String value, Strin
 RPCApiManager manager = new RPCApiManager(activity);
 manager.estimateGas(42, "0xewkwjshsgsg333433",""0xewej2o1j3j2jljvnej34ew", "3000000000000000", "9000000000", "0xdasdader343434", (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		EntGasEntity entity= (EntGasEntity)resource.data;
+		EntGasEntity entity= resource.data;
 		String gas = entity.getResult();
 		//TODO
 	} else if(resource.status == Status.ERROR) {
@@ -413,7 +427,7 @@ public void getGasPrice(int network, Callback callback)
 RPCApiManager manager = new RPCApiManager(activity);
 manager.getGasPrice(42, (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		EntGasPriceEntity entity= (EntGasPriceEntity)resource.data;
+		EntGasPriceEntity entity= resource.data;
 		String low = entity.getLow();
 		String standard = entity.getStandard();
 		String fast = entity.getFast();
@@ -438,7 +452,7 @@ public void getNonce(int network, String address, Callback callback)
 RPCApiManager manager = new RPCApiManager(activity);
 manager.getNonce(42, "0xsugjauwr23sjd3shdsj1", (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		EntNonceEntity entity= (EntNonceEntity)resource.data;
+		EntNonceEntity entity= resource.data;
 		String nonce = entity.getResult();
 		//TODO
 	} else if(resource.status == Status.ERROR) {
@@ -460,7 +474,7 @@ public void call(int network, String toAddress, String data, Callback callback)
 RPCApiManager manager = new RPCApiManager(activity);
 manager.callCertPublickKey(42, "0xdsaew3332we4tteesdafdf", "0xhasidjrrit7373737sjsjsnvnv", (resource)-> {
     if(resource.status == Status.SUCCESS) {
-		String hex= (String)resource.data;
+		String hex= resource.data;
 		//TODO
 	} else if(resource.status == Status.ERROR) {
 		String errorMsg = resource.msg;

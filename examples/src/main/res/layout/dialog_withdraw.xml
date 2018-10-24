@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/dimen_15dp">
+
+
+    <TextView
+        android:id="@+id/tv_amount_t"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_5dp"
+        android:minWidth="@dimen/card_item_min_width"
+        android:text="@string/tx_balance"
+        android:textColor="@color/black"
+        android:textSize="@dimen/card_label" />
+
+    <TextView
+        android:id="@+id/tv_amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_5dp"
+        android:layout_below="@+id/tv_amount_t"
+        android:textColor="@color/gray"
+        android:textSize="@dimen/card_label" />
+
+    <TextView
+        android:id="@+id/tv_fee_t"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_amount"
+        android:layout_marginTop="@dimen/dimen_5dp"
+        android:minWidth="@dimen/card_item_min_width"
+        android:text="@string/tx_fees"
+        android:textColor="@color/black"
+        android:textSize="@dimen/card_label" />
+
+    <TextView
+        android:id="@+id/tv_fee"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_fee_t"
+        android:layout_marginTop="@dimen/dimen_5dp"
+        android:textColor="@color/gray"
+        android:textSize="@dimen/card_label" />
+
+    <TextView
+        android:id="@+id/tv_to_address_t"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_fee"
+        android:layout_marginTop="@dimen/dimen_5dp"
+        android:minWidth="@dimen/card_item_min_width"
+        android:text="@string/tx_send_address"
+        android:textColor="@color/black"
+        android:textSize="@dimen/card_label" />
+
+    <TextView
+        android:id="@+id/tv_to_address"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_to_address_t"
+        android:layout_marginTop="@dimen/dimen_5dp"
+        android:textColor="@color/gray"
+        android:textSize="@dimen/card_label" />
+</RelativeLayout>

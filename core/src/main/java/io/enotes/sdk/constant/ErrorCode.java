@@ -45,4 +45,9 @@ public class ErrorCode {
      * sdk self error
      */
     public static final int SDK_ERROR = 108;
+
+    /**
+     * not find right card when withdraw
+     */
+    public static final int NOT_FIND_RIGHT_CARD = 109;
 }

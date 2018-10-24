@@ -22,7 +22,7 @@ public class BaseTest {
         rpcApiManager.getUnSpend(card.getCert().getNetWork(),card.getAddress(),(resource -> {
             assertTrue(resource.status == Status.SUCCESS);
             assertTrue(resource.data instanceof List);
-            List<EntUtxoEntity> utxoEntities=(List<EntUtxoEntity>)resource.data;
+            List<EntUtxoEntity> utxoEntities=resource.data;
             assertTrue(utxoEntities.size()>0);
             List<EntUtxoEntity> confirmedList = new ArrayList<>();
             for(EntUtxoEntity entity:utxoEntities){
@@ -34,11 +34,11 @@ public class BaseTest {
             rpcApiManager.estimateFee(card.getCert().getNetWork(),(feeResource -> {
                 assertTrue(feeResource.status == Status.SUCCESS);
                 assertTrue(feeResource.data instanceof EntFeesEntity);
-                EntFeesEntity feesEntity=(EntFeesEntity)feeResource.data;
+                EntFeesEntity feesEntity=feeResource.data;
                 cardManager.getBtcRawTransaction(card,feesEntity.getFast(),card.getAddress(),confirmedList,(resource1 -> {
                     threadLock.assertResource(resource1);
                     if(resource1.status == Status.SUCCESS){
-                        String hex = (String)resource1.data;
+                        String hex = resource1.data;
                         Log.i(TAG,"btc raw transaction hex = "+hex);
                         threadLock.notifyLock();
                     }
@@ -51,23 +51,23 @@ public class BaseTest {
         rpcApiManager.getBalance(card.getCert().getBlockChain(),card.getCert().getNetWork(),card.getAddress(),(resource -> {
             assertTrue(resource.status == Status.SUCCESS);
             assertTrue(resource.data instanceof EntBalanceEntity);
-            EntBalanceEntity balanceEntity = (EntBalanceEntity)resource.data;
+            EntBalanceEntity balanceEntity = resource.data;
             rpcApiManager.getNonce(card.getCert().getNetWork(),card.getAddress(),(nonceResource->{
                 assertTrue(nonceResource.status == Status.SUCCESS);
                 assertTrue(nonceResource.data instanceof EntNonceEntity);
-                EntNonceEntity nonceEntity=(EntNonceEntity)nonceResource.data;
+                EntNonceEntity nonceEntity=nonceResource.data;
                 rpcApiManager.getGasPrice(card.getCert().getNetWork(),(gasPriceResource->{
                     assertTrue(gasPriceResource.status == Status.SUCCESS);
                     assertTrue(gasPriceResource.data instanceof EntGasPriceEntity);
-                    EntGasPriceEntity gasPriceEntity=(EntGasPriceEntity)gasPriceResource.data;
+                    EntGasPriceEntity gasPriceEntity=gasPriceResource.data;
                     rpcApiManager.estimateGas(card.getCert().getNetWork(),card.getAddress(),card.getAddress(),balanceEntity.getBalance(),gasPriceEntity.getFast(),null,(gasResource->{
                         assertTrue(gasResource.status == Status.SUCCESS);
                         assertTrue(gasResource.data instanceof EntGasEntity);
-                        EntGasEntity gasEntity=(EntGasEntity)gasResource.data;
+                        EntGasEntity gasEntity=gasResource.data;
                         cardManager.getEthRawTransaction(card,nonceEntity.getNonce(),gasEntity.getGas(),gasPriceEntity.getFast(),card.getAddress(),balanceEntity.getBalance(),null,(txResource->{
                             threadLock.assertResource(txResource);
                             if(txResource.status == Status.SUCCESS){
-                                String hex = (String)txResource.data;
+                                String hex = txResource.data;
                                 Log.i(TAG,"eth raw transaction hex = "+hex);
                                 threadLock.notifyLock();
                             }
