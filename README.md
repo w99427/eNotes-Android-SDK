@@ -1,6 +1,6 @@
 # eNotes-Android-SDK
 
-[ ![Download](https://api.bintray.com/packages/enotes/eNotes/core/images/download.svg) ](https://bintray.com/enotes/eNotes/core/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/enotes/eNotes/core/images/download.svg) ](https://bintray.com/enotes/eNotes/core/_latestVersion)[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ##### Project website:[https://github.com/w99427/eNotes-Android-SDK](https://github.com/w99427/eNotes-Android-SDK)
 
@@ -123,5 +123,24 @@ cardManager.setReadCardCallback(resource -> {
 
 
 For more details, you can read the apiDoc and the Example of the project.
+
+
+## License
+
+``` 
+Copyright 2014-present Marshal Chen
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
 
 
