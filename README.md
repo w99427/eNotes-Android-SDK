@@ -1,6 +1,6 @@
 # eNotes-Android-SDK
 
-[ ![Download](https://api.bintray.com/packages/enotes/eNotes/core/images/download.svg) ]
+[ ![Download](https://api.bintray.com/packages/enotes/eNotes/core/images/download.svg) ](https://bintray.com/enotes/eNotes/core/_latestVersion)
 
 ##### Project website:[https://github.com/w99427/eNotes-Android-SDK](https://github.com/w99427/eNotes-Android-SDK)
 
