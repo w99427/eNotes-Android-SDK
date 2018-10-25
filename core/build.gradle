@@ -4,10 +4,10 @@ apply plugin: 'com.novoda.bintray-release'
 publish {
     def groupProjectID = 'io.enotes.sdk'
     def artifactProjectID = 'core'
-    def publishVersionID = '1.0.7'
+    def publishVersionID = '0.1.0'
 
     userOrg = 'enotes'
-    repoName = 'eNotes'
+    repoName = 'sdk'
     groupId = groupProjectID
     artifactId = artifactProjectID
     publishVersion = publishVersionID
@@ -20,7 +20,7 @@ android {
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 27
-        versionCode 9
+        versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -32,7 +32,7 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

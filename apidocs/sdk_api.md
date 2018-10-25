@@ -69,18 +69,18 @@ public class NetworkConfig{
 
 ### network
 - Bitcoin
-    | network    | value                               |
-    | :-            | :-                                    |
-    | mainnet      | 0    |
-    | testnet     | 1    |
-    
+| network    | value                               |
+| :-            | :-                                    |
+| mainnet      | 0    |
+| testnet     | 1    |
+
 - Ethereum
-    | network    | value                               |
-    | :-            | :-                                    |
-    | mainnet      | 1    |
-    | ropsten     | 3    |
-    | rinkeby     | 4    |
-    | kovan     | 42    |
+| network    | value                               |
+| :-            | :-                                    |
+| mainnet      | 1    |
+| ropsten     | 3    |
+| rinkeby     | 4    |
+| kovan     | 42    |
 
 ###  Status
 

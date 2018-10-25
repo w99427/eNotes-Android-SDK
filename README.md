@@ -1,6 +1,6 @@
 # eNotes-Android-SDK
 
-[ ![Download](https://api.bintray.com/packages/enotes/eNotes/core/images/download.svg) ](https://bintray.com/enotes/eNotes/core/_latestVersion)[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[ ![Download](https://api.bintray.com/packages/enotes/sdk/core/images/download.svg) ](https://bintray.com/enotes/sdk/core/_latestVersion)[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ##### Project website:[https://github.com/w99427/eNotes-Android-SDK](https://github.com/w99427/eNotes-Android-SDK)
 
@@ -18,7 +18,7 @@ The eNotes library is a Java implementation of the verify and manage your eNotes
 * Support BTC (mainnet and testnet)
 * Support ETH (mainnet , ropsten , rinkeby and kovan)
 * Support ERC20 token
-* Verify physical form of digital asserts with NFC and bluetooth
+* Verify physical form digital asserts with NFC and bluetooth
 
 ### Getting started
 #### 1.Using Gradle:
@@ -27,13 +27,13 @@ repositories {
         google()
         jcenter()
         maven {
-            url'https://dl.bintray.com/enotes/eNotes'
+            url'https://dl.bintray.com/enotes/sdk'
         }
     }
 ```
 
 ```
-implementation 'io.enotes.sdk:core:1.0.7'
+implementation 'io.enotes.sdk:core:0.1.0'
 ```
 
 #### 2.Building from the command line:
@@ -122,7 +122,7 @@ cardManager.setReadCardCallback(resource -> {
 ```
 
 
-For more details, you can read the apiDoc and the Example of the project.
+For more details, you can read the apidocs and the examples of the project.
 
 
 ## License

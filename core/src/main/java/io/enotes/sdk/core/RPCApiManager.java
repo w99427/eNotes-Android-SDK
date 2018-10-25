@@ -45,47 +45,47 @@ public class RPCApiManager implements RPCApiInterface {
 
     @Override
     public void getBalance(String blockchain, int network, String address, @NonNull Callback<EntBalanceEntity> callback) {
-        apiProvider.getBalance(blockchain, network, address).observe(fragmentActivity, (callback::onBack));
+        apiProvider.getBalance(blockchain, network, address).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
     public void getTransactionReceipt(String blockchain, int network, String txId, @NonNull Callback<EntConfirmedEntity> callback) {
-        apiProvider.getTransactionReceipt(blockchain, network, txId).observe(fragmentActivity, callback::onBack);
+        apiProvider.getTransactionReceipt(blockchain, network, txId).observe(fragmentActivity, callback::onCallBack);
     }
 
     @Override
     public void sendRawTransaction(String blockchain, int network, String hexString, @NonNull Callback<EntSendTxEntity> callback) {
-        apiProvider.sendRawTransaction(blockchain, network, hexString).observe(fragmentActivity, (callback::onBack));
+        apiProvider.sendRawTransaction(blockchain, network, hexString).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
     public void estimateFee(int network, @NonNull Callback<EntFeesEntity> callback) {
-        apiProvider.estimateFee(network).observe(fragmentActivity, (callback::onBack));
+        apiProvider.estimateFee(network).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
     public void getUnSpend(int network, String address, @NonNull Callback<List<EntUtxoEntity>> callback) {
-        apiProvider.getUnSpend(network, address).observe(fragmentActivity, (callback::onBack));
+        apiProvider.getUnSpend(network, address).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
     public void estimateGas(int network, String from, String to, String value, String gasPrice, String data, @NonNull Callback<EntGasEntity> callback) {
-        apiProvider.estimateGas(network, from, to, value, gasPrice, data).observe(fragmentActivity, (callback::onBack));
+        apiProvider.estimateGas(network, from, to, value, gasPrice, data).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
     public void getGasPrice(int network, @NonNull Callback<EntGasPriceEntity> callback) {
-        apiProvider.getGasPrice(network).observe(fragmentActivity, (callback::onBack));
+        apiProvider.getGasPrice(network).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
     public void getNonce(int network, String address, @NonNull Callback<EntNonceEntity> callback) {
-        apiProvider.getNonce(network, address).observe(fragmentActivity, (callback::onBack));
+        apiProvider.getNonce(network, address).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
     public void call(int network, String address, String data, @NonNull Callback<EntCallEntity> callback) {
-        apiProvider.call(network, address, data).observe(fragmentActivity, (callback::onBack));
+        apiProvider.call(network, address, data).observe(fragmentActivity, (callback::onCallBack));
     }
 
 

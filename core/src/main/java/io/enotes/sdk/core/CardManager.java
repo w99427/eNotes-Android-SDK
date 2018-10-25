@@ -58,13 +58,13 @@ public class CardManager implements CardInterface {
                 if (resource.status == Status.SUCCESS) {
                 }
                 if (readCardCallback != null) {
-                    readCardCallback.onBack(resource);
+                    readCardCallback.onCallBack(resource);
                 }
             }));
 
             cardProvider.getReader().observe(fragmentActivity, (resource -> {
                 if (scanCardCallback != null)
-                    scanCardCallback.onBack(resource);
+                    scanCardCallback.onCallBack(resource);
             }));
         }
     }
@@ -123,34 +123,34 @@ public class CardManager implements CardInterface {
     @Override
     public void getBtcRawTransaction(Card card, String fees, String toAddress, List<EntUtxoEntity> unSpends, @NonNull Callback<String> callback) {
         if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
-            callback.onBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
+            callback.onCallBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
             return;
         }
         BtcRawTransaction btcRawTransaction = new BtcRawTransaction();
         Transaction transaction = btcRawTransaction.createRawTransaction(card, cardProvider, Long.valueOf(fees), toAddress, 0, "", unSpends);
         try {
             btcRawTransaction.signTransactionInputs(transaction);
-            callback.onBack(Resource.success(ByteUtil.toHexString(transaction.bitcoinSerialize())));
+            callback.onCallBack(Resource.success(ByteUtil.toHexString(transaction.bitcoinSerialize())));
         } catch (CommandException e) {
             e.printStackTrace();
-            callback.onBack(Resource.error(e.getCode(), e.getMessage()));
+            callback.onCallBack(Resource.error(e.getCode(), e.getMessage()));
         }
     }
 
     @Override
     public void getEthRawTransaction(Card card, String nonce, String estimateGas, String gasPrice, String toAddress, String value, byte[] data, Callback<String> callback) {
         if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
-            callback.onBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
+            callback.onCallBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
             return;
         }
         EthRawTransaction ethRawTransaction = new EthRawTransaction();
         try {
             BigInteger toValue = new BigInteger(value).subtract((new BigInteger(gasPrice).multiply(new BigInteger(estimateGas))));
             String rawTransaction = ethRawTransaction.getRawTransaction(card, cardProvider, ByteUtil.bigIntegerToBytes(new BigInteger(nonce)), ByteUtil.bigIntegerToBytes(new BigInteger(gasPrice)), ByteUtil.bigIntegerToBytes(new BigInteger(estimateGas)), ByteUtil.hexStringToBytes(toAddress), ByteUtil.bigIntegerToBytes(toValue), data);
-            callback.onBack(Resource.success(rawTransaction));
+            callback.onCallBack(Resource.success(rawTransaction));
         } catch (CommandException e) {
             e.printStackTrace();
-            callback.onBack(Resource.error(e.getCode(), e.getMessage()));
+            callback.onCallBack(Resource.error(e.getCode(), e.getMessage()));
         }
     }
 
