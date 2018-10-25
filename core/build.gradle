@@ -104,4 +104,5 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.4'
 
     testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
