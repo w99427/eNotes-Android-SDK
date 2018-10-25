@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">eNotes</string>
+    <string name="card_close_to_phone_nfc">Please put the physical card near the NFC induction area</string>
+    <string name="card_name">Currency：</string>
+    <string name="card_balance">Balance</string>
+    <string name="card_balance1">Balance</string>
+    <string name="card_status">Safe Status</string>
+    <string name="card_tx_status">Send Status</string>
+    <string name="card_deno">Face Value</string>
+    <string name="card_serial_number">Serial Number</string>
+    <string name="card_issuer">Manufacture</string>
+    <string name="card_record_time">Production Date</string>
+    <string name="card_address">Address</string>
+    <string name="card_qr_code">Address QR code</string>
+    <string name="cancel">Remove</string>
+    <string name="cancel_success">Remove Successful！</string>
+    <string name="withdraw">Send</string>
+    <string name="safe">Safe</string>
+    <string name="dangerous">Danger</string>
+    <string name="address_copy_clipboard">The address has been copied to the clipboard</string>
+    <string name="tx_send_address">Send Address</string>
+    <string name="gas">Gas (estimate)</string>
+    <string name="gas_price">Gas Price</string>
+    <string name="get_gas_after_address">Fill in the address and estimate</string>
+    <string name="tx_fees">Transaction Fee (estimate)</string>
+    <string name="send">Send</string>
+    <string name="detail">Detail</string>
+    <string name="tx_photo">Scan QR code</string>
+    <string name="please_select_to_address">Please enter the address of the receiver</string>
+    <string name="network_unavailable">The network connection is not available, please check the network</string>
+    <string name="please_select_fees">Please enter the transaction fee</string>
+    <string name="illegal_address">Illegal Address</string>
+    <string name="please_select_gaslimit">Please enter the GasPrice</string>
+    <string name="please_select_gas">Please enter the Gas</string>
+    <string name="tx_balance">Send Amount</string>
+    <string name="withdraw_confirmed">Send Confirmed</string>
+    <string name="dialog_sure">Sure</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="send_success">Send Successful！</string>
+    <string-array name="tx_recommend">
+        <item>hourFee=</item>
+        <item>halfHourFee=</item>
+        <item>fastestFee=</item>
+    </string-array>
+    <string-array name="eth_tx_recommend">
+        <item>safeLow=</item>
+        <item>standard=</item>
+        <item>fast=</item>
+        <item>fastest=</item>
+    </string-array>
+</resources>
