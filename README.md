@@ -12,7 +12,7 @@ The eNotes library is a Java implementation of the verify and manage your eNotes
 
 * Java 8 for the core modules
 * [Gradle 3.4+](https://gradle.org/) - for building the project
-* Android SDK Version 28+ 
+* Android SDK Version 27+
 
 ### Features:
 * Support BTC (mainnet and testnet)

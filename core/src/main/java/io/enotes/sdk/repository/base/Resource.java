@@ -56,7 +56,6 @@ public class Resource<T> {
         return new Resource(Status.ERROR, errorCode, null, msg);
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {

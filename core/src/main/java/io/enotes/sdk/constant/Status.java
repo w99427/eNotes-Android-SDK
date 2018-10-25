@@ -36,4 +36,5 @@ public class Status {
      * card parse finish
      */
     public static final int CARD_PARSE_FINISH = 7;
+
 }

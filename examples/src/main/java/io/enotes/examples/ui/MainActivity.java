@@ -2,8 +2,11 @@ package io.enotes.examples.ui;
 
 import android.annotation.TargetApi;
 import android.app.ProgressDialog;
+import android.arch.lifecycle.LifecycleRegistry;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -31,6 +34,7 @@ import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.core.CardManager;
 import io.enotes.sdk.repository.card.Reader;
 import io.enotes.sdk.repository.db.entity.Card;
+import io.enotes.sdk.utils.ReaderUtils;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -58,13 +62,32 @@ public class MainActivity extends AppCompatActivity {
                 Card card = resource.data;
                 ((DemoApplication) getApplication()).setCard(card);
                 startActivity(new Intent(this, CardInfoActivity.class));
-            } else if (resource.status == Status.NFC_CONNECTED || resource.status == Status.BLUETOOTH_CONNECTING) {
-                progressDialog.show();
+            } else if (resource.status == Status.NFC_CONNECTED || resource.status == Status.BLUETOOTH_PARSING) {
+                if (!progressDialog.isShowing())
+                    progressDialog.show();
             } else if (resource.status == Status.ERROR) {
-                Toast.makeText(this,resource.message,Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, resource.message, Toast.LENGTH_SHORT).show();
                 progressDialog.dismiss();
             }
         }));
+
+        //check whether system nfc is open
+        if (ReaderUtils.isNfcClose(this)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Please enable NFC function in system settings ");
+            builder.setPositiveButton("sure", ((dialog, which) -> {
+                ReaderUtils.startNfcSetting(this);
+            }));
+        }
+
+        parseNfcTag();
+    }
+
+    private void parseNfcTag() {
+        Tag tag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        if (tag != null) {
+            cardManager.parseNfcTag(tag);
+        }
     }
 
     @Override
@@ -118,7 +141,9 @@ public class MainActivity extends AppCompatActivity {
             progressDialog.show();
             list.clear();
             adapter.notifyDataSetChanged();
+            int observerCount = ((LifecycleRegistry) getLifecycle()).getObserverCount();
             cardManager.startBluetoothScan((resource -> {
+                Log.i(TAG, "startBluetoothScan " + resource.status + "");
                 if (resource.status == Status.SUCCESS) {
                     Reader data = resource.data;
                     list.add(data.getDeviceInfo());

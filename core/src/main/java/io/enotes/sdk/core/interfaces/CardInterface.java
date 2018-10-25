@@ -3,6 +3,7 @@ package io.enotes.sdk.core.interfaces;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
+import android.nfc.Tag;
 import android.support.annotation.NonNull;
 
 import java.util.List;
@@ -114,4 +115,10 @@ public interface CardInterface {
      * @param command
      */
     String transmitApdu(@NonNull Command command) throws CommandException;
+
+    /**
+     * parse nfc tag from outside the application
+     * @param tag
+     */
+    void parseNfcTag(Tag tag);
 }

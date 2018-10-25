@@ -1,5 +1,6 @@
 package io.enotes.examples.ui;
 
+import android.arch.lifecycle.LifecycleRegistry;
 import android.content.ClipData;
 import android.content.Intent;
 import android.os.Bundle;
@@ -131,7 +132,9 @@ public class CardInfoActivity extends AppCompatActivity {
 
 
     private void getBalance() {
+        int observerCount = ((LifecycleRegistry) getLifecycle()).getObserverCount();
         rpcApiManager.getBalance(card.getCert().getBlockChain(), card.getCert().getNetWork(), card.getAddress(), (resource -> {
+            Log.i(TAG,"get balance = "+resource.status);
             if (resource.status == Status.SUCCESS) {
                 String balance = "";
                 if (CardUtils.isBTC(card.getCert().getBlockChain())) {

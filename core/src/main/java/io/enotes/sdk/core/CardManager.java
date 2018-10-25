@@ -3,9 +3,11 @@ package io.enotes.sdk.core;
 import android.app.Activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.bluetooth.BluetoothDevice;
+import android.nfc.Tag;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 
 import org.bitcoinj.core.Transaction;
 import org.ethereum.util.ByteUtil;
@@ -34,7 +36,7 @@ public class CardManager implements CardInterface {
     private @NonNull
     FragmentActivity fragmentActivity;
     private Callback readCardCallback;
-    private Card connectedCard;
+    private Callback scanCardCallback;
 
     public CardManager(FragmentActivity fragmentActivity) {
         this.fragmentActivity = fragmentActivity;
@@ -54,11 +56,15 @@ public class CardManager implements CardInterface {
         if (cardProvider != null) {
             cardProvider.getCard().observe(fragmentActivity, (resource -> {
                 if (resource.status == Status.SUCCESS) {
-                    connectedCard = resource.data;
                 }
                 if (readCardCallback != null) {
                     readCardCallback.onBack(resource);
                 }
+            }));
+
+            cardProvider.getReader().observe(fragmentActivity, (resource -> {
+                if (scanCardCallback != null)
+                    scanCardCallback.onBack(resource);
             }));
         }
     }
@@ -71,9 +77,7 @@ public class CardManager implements CardInterface {
     @Override
     public void startBluetoothScan(@NonNull Callback<Reader> callback) {
         cardProvider.startScan();
-        cardProvider.getReader().observe(fragmentActivity, (resource -> {
-            callback.onBack(resource);
-        }));
+        scanCardCallback = callback;
     }
 
     @Override
@@ -118,7 +122,7 @@ public class CardManager implements CardInterface {
 
     @Override
     public void getBtcRawTransaction(Card card, String fees, String toAddress, List<EntUtxoEntity> unSpends, @NonNull Callback<String> callback) {
-        if (!cardProvider.isPresent() || connectedCard == null || !connectedCard.getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
+        if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
             callback.onBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
             return;
         }
@@ -135,7 +139,7 @@ public class CardManager implements CardInterface {
 
     @Override
     public void getEthRawTransaction(Card card, String nonce, String estimateGas, String gasPrice, String toAddress, String value, byte[] data, Callback<String> callback) {
-        if (!cardProvider.isPresent() || connectedCard == null || !connectedCard.getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
+        if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
             callback.onBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
             return;
         }
@@ -153,5 +157,10 @@ public class CardManager implements CardInterface {
     @Override
     public String transmitApdu(@NonNull Command command) throws CommandException {
         return cardProvider.transceive(command);
+    }
+
+    @Override
+    public void parseNfcTag(Tag tag) {
+        cardProvider.parseAndConnect(new Reader().setTag(tag));
     }
 }

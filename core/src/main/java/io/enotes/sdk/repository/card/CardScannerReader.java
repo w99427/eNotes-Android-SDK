@@ -61,6 +61,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     private MutableLiveData<Resource<Card>> mCard = new MutableLiveData<>();
     private MutableLiveData<Resource<Reader>> mReader = new MutableLiveData<>();
     private Handler handler = new Handler();
+    private Card connectedCard;
 
     public static class Builder {
         private Context mContext;
@@ -179,7 +180,6 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         switch (card.status) {
             case SUCCESS:
                 // Usually UI observer display the card result and pass the card back by #parseAndConnect if it's manual mode.
-                mReader.postValue(card);
                 boolean isNfcCard = card.data.getTag() != null;
                 boolean isBleCard = card.data.getDeviceInfo() != null;
                 boolean isOneBleCard = true;
@@ -194,6 +194,8 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
                 if (autoConnectNfc || autoConnectBle) {
                     if (card.data.getDeviceInfo() == null)
                         parseAndConnect(card.data);
+                    else
+                        mReader.postValue(card);
                 }
                 break;
             case ERROR:
@@ -226,6 +228,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     // only for ble
     @Override
     public void startScan() {
+//        mReader.postValue(Resource.start("start scan"));
         List<ScannerReader> scannerReaders = mScannerReaders;
         for (ScannerReader scannerReader : scannerReaders) {
             if (scannerReader == mBleScannerReader) {
@@ -354,14 +357,17 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
                 }).start();
                 break;
             case ERROR:
+                connectedCard = null;
                 mCard.postValue(Resource.error(reader.errorCode, reader.message));
                 break;
             case BLUETOOTH_PARSING:
+                connectedCard = null;
                 mCard.postValue(Resource.bluetoothParsingCard(reader.message));
                 break;
             case BLUETOOTH_DISCONNECT:
+                connectedCard = null;
                 mCard.postValue(Resource.error(ErrorCode.BLUETOOTH_DISCONNECT, reader.message));
-                parseCardFinish();
+//                parseCardFinish();
                 break;
         }
         if (mConnectedCallback != null) mConnectedCallback.onCardConnected(reader);
@@ -371,8 +377,9 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     public void onCardDisconnected(@NonNull Resource<ICardReader> reader) {
         LogUtils.i(TAG, "onCardDisconnected status:" + reader.errorCode);
         if (reader.status == Status.ERROR) {
+            connectedCard = null;
             mCard.postValue(Resource.error(reader.errorCode, reader.message));
-            parseCardFinish();
+//            parseCardFinish();
         }
         if (mConnectedCallback != null) mConnectedCallback.onCardDisconnected(reader);
     }
@@ -402,6 +409,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             setCurrencyAddress(card);
             card.setStatus(readStatus());
             checkBlockChainPrv(CardUtils.isBTC(card.getCert().getBlockChain()) ? card.getBitCoinECKey().getPubKey() : card.getEthECKey().getPubKey());
+            connectedCard = card;
             //differentiate success type
             if (mCurrentScannerReader.mCardReader instanceof NfcCardReader)
                 mCard.postValue(Resource.success(card));
@@ -557,6 +565,10 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         LogUtils.d(TAG, "block chain private key challenge start");
         blockChainPrvChallenge(this, publicKey);
         LogUtils.d(TAG, "block chain private key challenge success");
+    }
+
+    public Card getConnectedCard() {
+        return connectedCard;
     }
 
     static class ScannerReader {

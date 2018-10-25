@@ -228,4 +228,8 @@ public class CardProvider implements BaseManager {
     public LiveData<Resource<Reader>> getReader() {
         return mCardScannerReader.getReader();
     }
+
+    public Card getConnectedCard(){
+        return mCardScannerReader.getConnectedCard();
+    }
 }
