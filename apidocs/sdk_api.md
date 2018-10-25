@@ -68,13 +68,13 @@ public class NetworkConfig{
 | ethereum      | 8000003c     |
 
 ### network
-- Bitcoin
+#### Bitcoin
 | network    | value                               |
 | :-            | :-                                    |
 | mainnet      | 0    |
 | testnet     | 1    |
 
-- Ethereum
+#### Ethereum
 | network    | value                               |
 | :-            | :-                                    |
 | mainnet      | 1    |
