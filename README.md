@@ -37,7 +37,7 @@ implementation 'io.enotes.sdk:core:0.1.0'
 ```
 
 #### 2.Building from the command line:
-To get started, it is best to have the latest JDK and Gradle installed. The HEAD of the `develop` branch contains the latest development code.
+To get started, it is best to have the latest JDK and Gradle installed. The HEAD of the `master` branch contains the latest development code.
 
 To perform a full build use
 ```
