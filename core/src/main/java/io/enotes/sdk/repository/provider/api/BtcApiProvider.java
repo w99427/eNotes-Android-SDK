@@ -71,7 +71,7 @@ public class BtcApiProvider extends BaseApiProvider {
         request.setBlockchain(C_BLOCKCHAIN_BITCOIN);
         request.setNetwork(eNotesNetWork.get(network));
         request.setAddress(address);
-        return addLiveDataSourceRandom(getBtcBalanceBy1st(network, address), getBtcBalanceBy2nd(network, address), getBtcBalanceBy3rd(network, address), addSourceForEsList(apiService.getBalanceListByES(listRequests), Constant.BlockChain.BITCOIN));
+        return addLiveDataSource(getBtcBalanceBy1st(network, address), getBtcBalanceBy2nd(network, address), getBtcBalanceBy3rd(network, address), addSourceForEsList(apiService.getBalanceListByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
     /**
@@ -82,7 +82,7 @@ public class BtcApiProvider extends BaseApiProvider {
      * @return
      */
     public LiveData<Resource<List<EntUtxoEntity>>> getBtcUnSpend(int network, String address) {
-        return addLiveDataSourceRandom(getUtxoListBy1st(network, address), getUtxoListBy2nd(network, address), getUtxoListBy3rd(network, address), getUtxoListByES(network, address));
+        return addLiveDataSource(getUtxoListBy1st(network, address), getUtxoListBy2nd(network, address), getUtxoListBy3rd(network, address), getUtxoListByES(network, address));
     }
 
     /**
@@ -99,7 +99,7 @@ public class BtcApiProvider extends BaseApiProvider {
         request.setBlockchain(C_BLOCKCHAIN_BITCOIN);
         request.setNetwork(eNotesNetWork.get(network));
         request.setTxid(txId);
-        return addLiveDataSourceRandom(isConfirmedTxForBitCoinBy1st(network, txId), isConfirmedTxForBitCoinBy2nd(network, txId), addSourceForEsList(apiService.getConfirmedListByES(listRequests), Constant.BlockChain.BITCOIN));
+        return addLiveDataSource(isConfirmedTxForBitCoinBy1st(network, txId), isConfirmedTxForBitCoinBy2nd(network, txId), addSourceForEsList(apiService.getConfirmedListByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
 
@@ -132,7 +132,7 @@ public class BtcApiProvider extends BaseApiProvider {
         request.setRawtx(hex);
         request.setBlockchain(C_BLOCKCHAIN_BITCOIN);
         request.setNetwork(eNotesNetWork.get(network));
-        return addLiveDataSourceRandom(sendBtcTxBy1st(network, hex), sendBtcTxBy2nd(network, hex), addSourceForEsList(apiService.sendRawTransactionByES(listRequests), Constant.BlockChain.BITCOIN));
+        return addLiveDataSource(sendBtcTxBy1st(network, hex), sendBtcTxBy2nd(network, hex), addSourceForEsList(apiService.sendRawTransactionByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
 

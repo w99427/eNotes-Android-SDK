@@ -220,7 +220,7 @@ public abstract class BaseApiProvider {
     protected <T> void handlerErrorLiveData(MediatorLiveData<Resource<T>> mediatorLiveData, String error) {
         mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, error));
         if (!error.contains("Too many requests. Please try again later")) {
-            if (error.contains("Insufficient funds") || error.contains("There is another transaction with same nonce in the queue") || error.contains("Transaction nonce is too low")) {
+            if (error.toLowerCase().contains("insufficient funds") || error.contains("There is another transaction with same nonce in the queue") || error.contains("too low")) {
                 mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, "error_no_utxo"));
             } else
             mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, error));
