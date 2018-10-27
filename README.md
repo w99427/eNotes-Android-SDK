@@ -128,7 +128,7 @@ For more details, you can read the apidocs and the examples of the project.
 ## License
 
 ``` 
-Copyright 2014-present Marshal Chen
+Copyright 2018 eNotes
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
