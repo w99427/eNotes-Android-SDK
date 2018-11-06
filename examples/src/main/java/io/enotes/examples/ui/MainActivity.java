@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         requestPermissions();
+        ENotesSDK.config.debugForAnalogCard=false;
         sharedPreferences= getSharedPreferences("example", Context.MODE_PRIVATE);
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("please wait ...");
@@ -180,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 builder.show();
             }else{
                 item.setTitle(R.string.open_debug);
-                ENotesSDK.config.debugForAnalogCard=true;
+                ENotesSDK.config.debugForAnalogCard=false;
             }
         }
 

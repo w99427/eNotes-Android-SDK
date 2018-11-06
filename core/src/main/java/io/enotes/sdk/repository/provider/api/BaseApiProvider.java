@@ -30,6 +30,7 @@ public abstract class BaseApiProvider {
 
     /**
      * add source in order
+     *
      * @param source
      * @param <T>
      * @return
@@ -41,13 +42,14 @@ public abstract class BaseApiProvider {
             sourceList.add(liveData);
         }
         //remove eNotes server
-        sourceList.remove(sourceList.size()-1);
+        sourceList.remove(sourceList.size() - 1);
         recurLiveDataSource(mutableLiveData, sourceList);
         return mutableLiveData;
     }
 
     /**
      * recur source
+     *
      * @param mutableLiveData
      * @param sourceList
      * @param <T>
@@ -73,6 +75,7 @@ public abstract class BaseApiProvider {
 
     /**
      * add source in random
+     *
      * @param source
      * @param <T>
      * @return
@@ -84,34 +87,35 @@ public abstract class BaseApiProvider {
             sourceList.add(liveData);
         }
         //remove eNotes server
-        sourceList.remove(sourceList.size()-1);
+        sourceList.remove(sourceList.size() - 1);
         recurLiveDataSourceRandom(mutableLiveData, sourceList);
         return mutableLiveData;
     }
 
     /**
      * recur source
+     *
      * @param mutableLiveData
      * @param sourceList
      * @param <T>
      */
     private <T> void recurLiveDataSourceRandom(MediatorLiveData<Resource<T>> mutableLiveData, List<LiveData<Resource<T>>> sourceList) {
         if (sourceList != null && sourceList.size() > 0) {
-            LiveData<Resource<T>> sourceLiveData=null;
-            if(sourceList.size()==1){
-                sourceLiveData= sourceList.get(0);
-            }else {
+            LiveData<Resource<T>> sourceLiveData = null;
+            if (sourceList.size() == 1) {
+                sourceLiveData = sourceList.get(0);
+            } else {
                 int r = new Random().nextInt(100) % (sourceList.size() - 1);
 
-                sourceLiveData= sourceList.get(r);
+                sourceLiveData = sourceList.get(r);
             }
             LiveData<Resource<T>> finalSourceLiveData = sourceLiveData;
             mutableLiveData.addSource(sourceLiveData, (newData) -> {
-                if (newData!=null&&newData.status == Status.SUCCESS) {
+                if (newData != null && newData.status == Status.SUCCESS) {
                     mutableLiveData.postValue(newData);
                 } else {
 //                    reportBug2Server(sourceList.size() == 1 ? true : false, newData.data == null ? "" : newData.data.getClass().getName(), newData.message);
-                    String message=newData==null?"":newData.message;
+                    String message = newData == null ? "" : newData.message;
                     if (sourceList.size() == 1) {
                         LogUtils.e(TAG, message);
                         handlerErrorLiveData(mutableLiveData, message);
@@ -220,16 +224,16 @@ public abstract class BaseApiProvider {
     protected <T> void handlerErrorLiveData(MediatorLiveData<Resource<T>> mediatorLiveData, String error) {
         mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, error));
         if (!error.contains("Too many requests. Please try again later")) {
-            if (error.toLowerCase().contains("insufficient funds") || error.contains("There is another transaction with same nonce in the queue") || error.contains("too low")) {
-                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, "error_no_utxo"));
+            if (error.toLowerCase().contains("insufficient funds") || error.contains("There is another transaction with same nonce in the queue") || error.contains("too low") || error.toLowerCase().contains("replacement transaction underpriced")) {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, "No balance available"));
             } else
-            mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, error));
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, error));
         }
     }
 
 
     protected BigInteger getSha3BigInteger(String str) {
-        LogUtils.i(TAG,str+"->"+ ByteUtil.toHexString(HashUtil.sha3((str.getBytes()))));
+        LogUtils.i(TAG, str + "->" + ByteUtil.toHexString(HashUtil.sha3((str.getBytes()))));
         return ByteUtil.bytesToBigInteger(HashUtil.sha3((str.getBytes())));
     }
 

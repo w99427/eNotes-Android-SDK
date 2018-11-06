@@ -272,7 +272,7 @@ public class WithdrawActivity extends AppCompatActivity {
                         //eth address is 20 bytes
                         if (toAddress.length() == 42) {
                             etGas.setText("");
-                            rpcApiManager.estimateGas(card.getCert().getNetWork(), card.getAddress(), toAddress, toValue.toString(), etFees.getText().toString(), null, (resource -> {
+                            rpcApiManager.estimateGas(card.getCert().getNetWork(), card.getAddress(), toAddress, toValue == null ? "0" : toValue.toString(), etFees.getText().toString(), null, (resource -> {
                                 if (resource.status == Status.SUCCESS) {
                                     BigInteger bigInteger = Utils.hexToBigInteger(resource.data.getGas());
                                     if (!bigInteger.toString().equals("21000")) {
@@ -373,8 +373,13 @@ public class WithdrawActivity extends AppCompatActivity {
                 cardManager.getBtcRawTransaction(card, etFees.getText().toString(), etAddress.getText().toString(), unspent_outputs, (resource -> {
                     if (resource.status == Status.SUCCESS) {
                         rpcApiManager.sendRawTransaction(card.getCert().getBlockChain(), card.getCert().getNetWork(), resource.data, (resource1 -> {
-                            Toast.makeText(WithdrawActivity.this, R.string.send_success, Toast.LENGTH_SHORT).show();
-                            finish();
+                            if (resource1.status == Status.SUCCESS) {
+                                Toast.makeText(WithdrawActivity.this, R.string.send_success, Toast.LENGTH_SHORT).show();
+                                finish();
+                            } else if (resource1.status == Status.ERROR) {
+                                Toast.makeText(WithdrawActivity.this, resource1.message, Toast.LENGTH_SHORT).show();
+
+                            }
                         }));
                     } else if (resource.status == Status.ERROR) {
                         Toast.makeText(WithdrawActivity.this, resource.message, Toast.LENGTH_SHORT).show();
@@ -385,8 +390,15 @@ public class WithdrawActivity extends AppCompatActivity {
                 cardManager.getEthRawTransaction(card, ethNonce, etGas.getText().toString(), etFees.getText().toString(), etAddress.getText().toString(), toValue.toString(), null, (resource -> {
                     if (resource.status == Status.SUCCESS) {
                         rpcApiManager.sendRawTransaction(card.getCert().getBlockChain(), card.getCert().getNetWork(), resource.data, (resource1 -> {
-                            Toast.makeText(WithdrawActivity.this, R.string.send_success, Toast.LENGTH_SHORT).show();
-                            finish();
+                            if (resource1.status == Status.SUCCESS) {
+                                Toast.makeText(WithdrawActivity.this, R.string.send_success, Toast.LENGTH_SHORT).show();
+                                finish();
+                            } else if (resource1.status == Status.ERROR) {
+                                Toast.makeText(WithdrawActivity.this, resource1.message, Toast.LENGTH_SHORT).show();
+
+                            }
+
+
                         }));
                     } else if (resource.status == Status.ERROR) {
                         Toast.makeText(WithdrawActivity.this, resource.message, Toast.LENGTH_SHORT).show();
