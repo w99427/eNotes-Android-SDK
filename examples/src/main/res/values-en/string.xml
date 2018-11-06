@@ -38,6 +38,8 @@
     <string name="dialog_sure">Sure</string>
     <string name="dialog_cancel">Cancel</string>
     <string name="send_success">Send Successful！</string>
+    <string name="open_debug">Open Debug</string>
+    <string name="close_debug">Close Debug</string>
     <string-array name="tx_recommend">
         <item>hourFee=</item>
         <item>halfHourFee=</item>

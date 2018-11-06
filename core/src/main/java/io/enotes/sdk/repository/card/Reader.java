@@ -3,6 +3,8 @@ package io.enotes.sdk.repository.card;
 import android.bluetooth.BluetoothDevice;
 import android.nfc.Tag;
 
+import io.enotes.sdk.repository.api.entity.response.simulate.BluetoothEntity;
+
 
 /**
  * A wrapper class for a NFC tag <b>or</b> some BLE devices.
@@ -11,7 +13,7 @@ import android.nfc.Tag;
 public class Reader {
     public static String DEFAULT_TARGET_AID = "654e6f7465734170706c6574";
     private Tag tag;
-    private BluetoothDevice device;
+    private BluetoothEntity device;
 
     public Tag getTag() {
         return tag;
@@ -31,7 +33,7 @@ public class Reader {
         return this;
     }
 
-    public BluetoothDevice getDeviceInfo() {
+    public BluetoothEntity getDeviceInfo() {
         return device;
     }
 
@@ -42,10 +44,22 @@ public class Reader {
      * @return
      */
     public Reader setDeviceInfo(BluetoothDevice device) {
+        this.device = new BluetoothEntity();
+        this.device.setName(device.getName());
+        this.device.setAddress(device.getAddress());
+        if (device != null) {
+            this.tag = null;
+        }
+        return this;
+    }
+
+    public Reader setDeviceInfo(BluetoothEntity device) {
         this.device = device;
         if (device != null) {
             this.tag = null;
         }
         return this;
     }
+
+
 }

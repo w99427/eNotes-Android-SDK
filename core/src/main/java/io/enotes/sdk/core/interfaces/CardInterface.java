@@ -10,6 +10,7 @@ import java.util.List;
 
 import io.enotes.sdk.core.Callback;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.api.entity.response.simulate.BluetoothEntity;
 import io.enotes.sdk.repository.card.Command;
 import io.enotes.sdk.repository.card.CommandException;
 import io.enotes.sdk.repository.card.Commands;
@@ -43,7 +44,7 @@ public interface CardInterface {
      *
      * @param bluetoothDevice
      */
-    void connectBluetooth(BluetoothDevice bluetoothDevice);
+    void connectBluetooth(BluetoothEntity bluetoothDevice);
 
     /**
      * disconnect bluetooth device,you can get connect statu from [setReadCardCallback](#setReadCardCallback)

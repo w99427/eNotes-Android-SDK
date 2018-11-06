@@ -2,7 +2,9 @@ package io.enotes.sdk.repository.card;
 
 import android.app.Activity;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -18,11 +20,19 @@ import java.util.List;
 import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.ErrorCode;
 import io.enotes.sdk.constant.Status;
+import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.repository.ProviderFactory;
+import io.enotes.sdk.repository.api.ApiResponse;
+import io.enotes.sdk.repository.api.RetrofitFactory;
+import io.enotes.sdk.repository.api.SimulateCardService;
+import io.enotes.sdk.repository.api.entity.ResponseEntity;
+import io.enotes.sdk.repository.api.entity.response.simulate.ApduEntity;
+import io.enotes.sdk.repository.api.entity.response.simulate.BluetoothEntity;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.repository.db.entity.Card;
 import io.enotes.sdk.repository.db.entity.Cert;
 import io.enotes.sdk.repository.db.entity.Mfr;
+import io.enotes.sdk.repository.provider.ApiProvider;
 import io.enotes.sdk.utils.CardUtils;
 import io.enotes.sdk.utils.LogUtils;
 import io.enotes.sdk.utils.ReaderUtils;
@@ -59,9 +69,11 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     private ICardScanner.ScanCallback mScanCallback;
     private ICardReader.ConnectedCallback mConnectedCallback;
     private MutableLiveData<Resource<Card>> mCard = new MutableLiveData<>();
-    private MutableLiveData<Resource<Reader>> mReader = new MutableLiveData<>();
+    private MediatorLiveData<Resource<Reader>> mReader = new MediatorLiveData<>();
     private Handler handler = new Handler();
     private Card connectedCard;
+    private SimulateCardService simulateCardService;
+    private long cardIdForSimulate;
 
     public static class Builder {
         private Context mContext;
@@ -228,6 +240,36 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     // only for ble
     @Override
     public void startScan() {
+        if (ENotesSDK.config.debugForAnalogCard) {
+            simulateCardService = RetrofitFactory.getSimulateCardService();
+            mReader.addSource(simulateCardService.getBluetoothList(), (responseEntityApiResponse -> {
+                if (responseEntityApiResponse.isSuccessful()) {
+                    if (responseEntityApiResponse.body.getCode() == 0 && responseEntityApiResponse.body.getData() != null) {
+                        List<BluetoothEntity> bList = responseEntityApiResponse.body.getData();
+                        new Thread(() -> {
+                            for (BluetoothEntity entity : bList) {
+                                Reader reader = new Reader();
+                                reader.setDeviceInfo(entity);
+                                handler.post(() -> {
+                                    mReader.postValue(Resource.success(reader));
+                                });
+                                try {
+                                    Thread.sleep(200);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            handler.post(() -> {
+                                mReader.postValue(Resource.bluetoothScanFinish(""));
+                            });
+                        }).start();
+                    }
+                } else {
+                    mReader.postValue(Resource.error(ErrorCode.NET_ERROR, "can not find server"));
+                }
+            }));
+            return;
+        }
 //        mReader.postValue(Resource.start("start scan"));
         List<ScannerReader> scannerReaders = mScannerReaders;
         for (ScannerReader scannerReader : scannerReaders) {
@@ -293,6 +335,27 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     public void parseAndConnect(@NonNull Reader reader) {
         List<ScannerReader> scannerReaders = mScannerReaders;
         for (ScannerReader scannerReader : scannerReaders) {
+            if (ENotesSDK.config.debugForAnalogCard) {
+                if (scannerReader.mCardReader instanceof BleCardReader && reader.getDeviceInfo() != null) {
+
+                    new Thread(() -> {
+                        try {
+                            ApiResponse<ResponseEntity<BluetoothEntity>> cardEntity = ApiProvider.getValue(simulateCardService.connectBluetooth(reader.getDeviceInfo().getAddress()));
+                            if (cardEntity.isSuccessful() && cardEntity.body.getCode() == 0) {
+                                cardIdForSimulate = cardEntity.body.getData().getId();
+                                mCurrentScannerReader = scannerReader;
+                                detectCard();
+                                parseCardFinish();
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+
+
+                    continue;
+                }
+            }
             // connect in parallel
             Completable.fromAction(() -> scannerReader.mCardReader.parseAndConnect(reader))
                     .subscribeOn(Schedulers.newThread()).subscribe();
@@ -318,6 +381,19 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
 
     @NonNull
     public TLVBox transceive2TLV(@NonNull Command command) throws CommandException {
+        if (ENotesSDK.config.debugForAnalogCard) {
+            try {
+                ApiResponse<ResponseEntity<ApduEntity>> entity = ApiProvider.getValue(simulateCardService.transceiveApdu(cardIdForSimulate, command.getCmdStr()));
+                if (entity.isSuccessful() && entity.body.getCode() == 0) {
+                    String apduString = entity.body.getData().getResult();
+                    byte[] bytes = ByteUtil.hexStringToBytes(apduString.substring(0, apduString.length() - 4));
+                    return TLVBox.parse(bytes, 0, bytes.length);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            throw new CommandException(ErrorCode.NFC_DISCONNECTED, "tag_connection_lost");
+        }
         ScannerReader scannerReader = mCurrentScannerReader;
         if (scannerReader != null) {
             TLVBox transceive = scannerReader.mCardReader.transceive2TLV(command);
@@ -399,7 +475,9 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         Card card = new Card();
         try {
             LogUtils.d(TAG, "detectCoin prepareToRead mCurrentScannerReader:" + mCurrentScannerReader);
-            prepareToRead(mTargetAID);
+            if (!ENotesSDK.config.debugForAnalogCard) {
+                prepareToRead(mTargetAID);
+            }
             if (mTargetAID != Reader.DEFAULT_TARGET_AID) {
                 mCard.postValue(Resource.success(card));
                 return;

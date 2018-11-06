@@ -19,6 +19,7 @@ import io.enotes.sdk.constant.ErrorCode;
 import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.core.interfaces.CardInterface;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.api.entity.response.simulate.BluetoothEntity;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.repository.card.Command;
 import io.enotes.sdk.repository.card.CommandException;
@@ -86,7 +87,7 @@ public class CardManager implements CardInterface {
     }
 
     @Override
-    public void connectBluetooth(BluetoothDevice bluetoothDevice) {
+    public void connectBluetooth(BluetoothEntity bluetoothDevice) {
         cardProvider.parseAndConnect(new Reader().setDeviceInfo(bluetoothDevice));
     }
 

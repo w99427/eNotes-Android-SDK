@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="io.enotes.myapplication.MainActivity">
     <item
+        android:id="@+id/action_debug"
+        android:title="@string/open_debug"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_settings"
         android:icon="@mipmap/sharp_bluetooth_white_24"
         android:orderInCategory="100"

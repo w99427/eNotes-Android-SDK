@@ -5,6 +5,7 @@ import android.arch.lifecycle.LiveData;
 import java.util.List;
 import java.util.Map;
 
+import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntCallEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
@@ -211,4 +212,5 @@ public interface ApiService {
 
     @GET("v1/eth_call/ethereum/{network}/")
     LiveData<ApiResponse<ResponseEntity<EntCallEntity>>> callByES(@Path("network") String network, @Query("to") String contractAddress, @Query("data") String data);
+
 }

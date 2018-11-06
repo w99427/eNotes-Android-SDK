@@ -5,6 +5,7 @@ import android.content.Context;
 import java.util.concurrent.TimeUnit;
 
 import io.enotes.sdk.constant.Constant;
+import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.utils.LogUtils;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -17,7 +18,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitFactory {
     private static ApiService apiService;
     private static ApiService transactionThirdService;
-    public static final String ENOTES_SERVER="https://api.enotes.io:8443/";
+    private static SimulateCardService simulateCardService;
+    public static final String ENOTES_SERVER = "https://api.enotes.io:8443/";
+    private static String DEBUG_SERVER ="";
+
     public static ApiService getTransactionService() {
         if (apiService == null) {
             apiService = getBaseRetrofit(true)
@@ -34,10 +38,28 @@ public class RetrofitFactory {
         return transactionThirdService;
     }
 
+    public static SimulateCardService getSimulateCardService() {
+        if (simulateCardService == null||!DEBUG_SERVER.equals(ENotesSDK.config.analogCardIp)) {
+            DEBUG_SERVER = ENotesSDK.config.analogCardIp;
+            simulateCardService = getSimulateRetrofit()
+                    .create(SimulateCardService.class);
+        }
+        return simulateCardService;
+    }
+
     private static Retrofit getBaseRetrofit(boolean eNotes) {
         return new Retrofit.Builder()
                 .baseUrl(ENOTES_SERVER)
                 .client(getOkHttpClient(eNotes))
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(new LiveDataCallAdapterFactory())
+                .build();
+    }
+
+    private static Retrofit getSimulateRetrofit() {
+        return new Retrofit.Builder()
+                .baseUrl("http://" + ENotesSDK.config.analogCardIp + ":8083/")
+                .client(getOkHttpClient(true))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(new LiveDataCallAdapterFactory())
                 .build();
@@ -49,10 +71,10 @@ public class RetrofitFactory {
         builder.hostnameVerifier((hostname, session) -> true);
         builder.addInterceptor(getHttpLoggingInterceptor());
         builder.addInterceptor(getRetryIntercept());
-        if(eNotes) {
+        if (eNotes) {
             builder.connectTimeout(8000, TimeUnit.MILLISECONDS)
                     .readTimeout(8000, TimeUnit.MILLISECONDS).writeTimeout(20000, TimeUnit.MILLISECONDS);
-        }else{
+        } else {
             builder.connectTimeout(2000, TimeUnit.MILLISECONDS)
                     .readTimeout(2000, TimeUnit.MILLISECONDS).writeTimeout(2000, TimeUnit.MILLISECONDS);
         }

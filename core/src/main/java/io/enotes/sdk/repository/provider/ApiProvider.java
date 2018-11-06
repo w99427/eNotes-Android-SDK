@@ -283,7 +283,7 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         return null;
     }
 
-    private static <T> T getValue(LiveData<T> liveData) throws InterruptedException {
+    public static <T> T getValue(LiveData<T> liveData) throws InterruptedException {
         final Object[] objects = new Object[1];
         final CountDownLatch latch = new CountDownLatch(1);
 

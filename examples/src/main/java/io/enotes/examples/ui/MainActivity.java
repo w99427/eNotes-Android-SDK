@@ -4,7 +4,9 @@ import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.arch.lifecycle.LifecycleRegistry;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -19,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +35,8 @@ import io.enotes.examples.common.runtimepermission.PermissionsManager;
 import io.enotes.examples.common.runtimepermission.PermissionsResultAction;
 import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.core.CardManager;
+import io.enotes.sdk.core.ENotesSDK;
+import io.enotes.sdk.repository.api.entity.response.simulate.BluetoothEntity;
 import io.enotes.sdk.repository.card.Reader;
 import io.enotes.sdk.repository.db.entity.Card;
 import io.enotes.sdk.utils.ReaderUtils;
@@ -41,14 +46,16 @@ public class MainActivity extends AppCompatActivity {
     private CardManager cardManager;
     private ListView listView;
     private TextView textView;
-    private List<BluetoothDevice> list = new ArrayList<>();
+    private List<BluetoothEntity> list = new ArrayList<>();
     private ProgressDialog progressDialog;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         requestPermissions();
+        sharedPreferences= getSharedPreferences("example", Context.MODE_PRIVATE);
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("please wait ...");
         listView = (ListView) findViewById(R.id.list_view);
@@ -150,13 +157,37 @@ public class MainActivity extends AppCompatActivity {
                     adapter.notifyDataSetChanged();
                 } else if (resource.status == Status.BLUETOOTH_SCAN_FINISH) {
                     progressDialog.dismiss();
+                }else if(resource.status == Status.ERROR){
+                    progressDialog.dismiss();
+                    Toast.makeText(this,resource.message,Toast.LENGTH_SHORT).show();
                 }
             }));
             return true;
+        }else if(id == R.id.action_debug){
+            if(item.getTitle().equals(getString(R.string.open_debug))){
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                EditText editText = new EditText(this);
+                editText.setText(sharedPreferences.getString("ip","192.168.10.11"));
+                builder.setView(editText);
+                builder.setPositiveButton("sure",((dialog, which) -> {
+                    SharedPreferences.Editor edit = sharedPreferences.edit();
+                    edit.putString("ip",editText.getText().toString());
+                    edit.commit();
+                    item.setTitle(R.string.close_debug);
+                    ENotesSDK.config.debugForAnalogCard=true;
+                    ENotesSDK.config.analogCardIp=editText.getText().toString();
+                }));
+                builder.show();
+            }else{
+                item.setTitle(R.string.open_debug);
+                ENotesSDK.config.debugForAnalogCard=true;
+            }
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+
 
 
     private BaseAdapter adapter = new BaseAdapter() {

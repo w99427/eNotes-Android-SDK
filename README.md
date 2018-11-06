@@ -46,7 +46,20 @@ To perform a full build use
 
 The outputs are under the `build` directory.
 
-#### 3.Usage:
+#### 3.Test for analog card
+* If you don't have our physical digital currency around, don't worry, we will provide you with a set of services to simulate physical digital currency for your debugging SDK.	According to the following steps, you can enable the debug analog card function.
+	* 1.run sdk server,you can find jar under the `server`directory.
+	```
+	java -jar eNotesSdkServer-0.1.0.jar
+	```
+	* 2.config sdk in your code.
+	```
+	ENotesSDK.config.debugForAnalogCard=true;
+	ENotesSDK.config.analogCardIp="192.168.10.11";
+	```
+
+
+#### 4.Usage:
 ##### NFC
 * init CardManager
 ```
