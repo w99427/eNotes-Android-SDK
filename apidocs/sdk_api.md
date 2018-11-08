@@ -22,6 +22,7 @@
   - [getBalance](#getBalance)
   - [getTransactionReceipt](#getTransactionReceipt)
   - [sendRawTransaction](#sendRawTransaction)
+  - [getExchangeRate](#getExchangeRate)
 
 - Bitcoin
   - [estimateFee](#estimateFee)
@@ -338,6 +339,28 @@ manager.sendRawTransaction("8000003c", 42, "0x21h43dsfetgdfgrsfse32423tryfsntrtr
 		//TODO
 	}
 })
+```
+#### getExchangeRate
+- Get exchange rate between pair of requested assets at specific or current time.
+- interface definition:
+```
+public void getExchangeRate(String exchange ,String asset ,String symbol)
+```
+- code example:
+```
+RPCApiManager manager = new RPCApiManager(activity);
+manager.getExchangeRate("coinbase" ,"BTC" ,"USD" ,(resource)->{
+   if(resource.status == Status.SUCCESS){
+       EntExchangeRateEntity entity = resource.data;
+       String latestPrice = entity.getLatestPrice();
+       //TODO
+       
+   } else if(resource.status == Status.ERROR){
+       String errorMsg = resource.msg;
+		int errorCode = resource.code;
+		//TODO
+   }
+});
 ```
 
 ### Bitcoin

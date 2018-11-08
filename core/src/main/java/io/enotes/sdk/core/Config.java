@@ -1,6 +1,6 @@
 package io.enotes.sdk.core;
 
 public class Config {
-    public boolean debugForAnalogCard=false;
-    public String analogCardIp;
+    public boolean debugForEmulatorCard=false;
+    public String emulatorCardIp;
 }

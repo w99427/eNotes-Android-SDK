@@ -129,7 +129,7 @@ public class CardManager implements CardInterface {
     public void getBtcRawTransaction(Card card, String fees, String toAddress, List<EntUtxoEntity> unSpends, @NonNull Callback<String> callback) {
         new Thread(() -> {
             if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
-                if (!ENotesSDK.config.debugForAnalogCard) {
+                if (!ENotesSDK.config.debugForEmulatorCard) {
                     handler.post(() -> {
                         callback.onCallBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
                     });
@@ -157,7 +157,7 @@ public class CardManager implements CardInterface {
     public void getEthRawTransaction(Card card, String nonce, String estimateGas, String gasPrice, String toAddress, String value, byte[] data, Callback<String> callback) {
         new Thread(() -> {
             if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
-                if (!ENotesSDK.config.debugForAnalogCard) {
+                if (!ENotesSDK.config.debugForEmulatorCard) {
                     handler.post(() -> {
                         callback.onCallBack(Resource.error(ErrorCode.NOT_FIND_RIGHT_CARD, "not find right card when withdraw"));
                     });

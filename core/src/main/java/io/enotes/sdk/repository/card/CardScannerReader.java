@@ -240,7 +240,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     // only for ble
     @Override
     public void startScan() {
-        if (ENotesSDK.config.debugForAnalogCard) {
+        if (ENotesSDK.config.debugForEmulatorCard) {
             simulateCardService = RetrofitFactory.getSimulateCardService();
             mReader.addSource(simulateCardService.getBluetoothList(), (responseEntityApiResponse -> {
                 if (responseEntityApiResponse.isSuccessful()) {
@@ -335,7 +335,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     public void parseAndConnect(@NonNull Reader reader) {
         List<ScannerReader> scannerReaders = mScannerReaders;
         for (ScannerReader scannerReader : scannerReaders) {
-            if (ENotesSDK.config.debugForAnalogCard) {
+            if (ENotesSDK.config.debugForEmulatorCard) {
                 if (scannerReader.mCardReader instanceof BleCardReader && reader.getDeviceInfo() != null) {
 
                     new Thread(() -> {
@@ -381,7 +381,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
 
     @NonNull
     public TLVBox transceive2TLV(@NonNull Command command) throws CommandException {
-        if (ENotesSDK.config.debugForAnalogCard) {
+        if (ENotesSDK.config.debugForEmulatorCard) {
             try {
                 ApiResponse<ResponseEntity<ApduEntity>> entity = ApiProvider.getValue(simulateCardService.transceiveApdu(cardIdForSimulate, command.getCmdStr()));
                 if (entity.isSuccessful() && entity.body.getCode() == 0) {
@@ -475,7 +475,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         Card card = new Card();
         try {
             LogUtils.d(TAG, "detectCoin prepareToRead mCurrentScannerReader:" + mCurrentScannerReader);
-            if (!ENotesSDK.config.debugForAnalogCard) {
+            if (!ENotesSDK.config.debugForEmulatorCard) {
                 prepareToRead(mTargetAID);
             }
             if (mTargetAID != Reader.DEFAULT_TARGET_AID) {

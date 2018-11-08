@@ -39,8 +39,8 @@ public class RetrofitFactory {
     }
 
     public static SimulateCardService getSimulateCardService() {
-        if (simulateCardService == null||!DEBUG_SERVER.equals(ENotesSDK.config.analogCardIp)) {
-            DEBUG_SERVER = ENotesSDK.config.analogCardIp;
+        if (simulateCardService == null||!DEBUG_SERVER.equals(ENotesSDK.config.emulatorCardIp)) {
+            DEBUG_SERVER = ENotesSDK.config.emulatorCardIp;
             simulateCardService = getSimulateRetrofit()
                     .create(SimulateCardService.class);
         }
@@ -58,7 +58,7 @@ public class RetrofitFactory {
 
     private static Retrofit getSimulateRetrofit() {
         return new Retrofit.Builder()
-                .baseUrl("http://" + ENotesSDK.config.analogCardIp + ":8083/")
+                .baseUrl("http://" + ENotesSDK.config.emulatorCardIp + ":8083/")
                 .client(getOkHttpClient(true))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(new LiveDataCallAdapterFactory())

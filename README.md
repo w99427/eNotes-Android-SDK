@@ -46,7 +46,22 @@ To perform a full build use
 
 The outputs are under the `build` directory.
 
-#### 3.Usage:
+#### 3.Debug for emulator card
+If you don't have our physical digital currency around, don't worry, we will provide you with a set of services to simulate digital currency for your debugging SDK. According to the following steps, you can enable the debug analog card function.
+* 1.run emulator server,you can find jar from [eNotes Emulator out directory](https://github.com/w99427/eNotes-Emulator/tree/master/out).
+ ```
+ java -jar eNotesSdkServer-0.1.0.jar
+ ```
+* 2.config sdk in your code.
+
+  ```
+  ENotesSDK.config.debugForEmulatorCard = true;
+  ENotesSDK.config.emulatorCardIp = "your server ip";
+  ```
+  
+For more detail ,you can access [eNotes Emulator](https://github.com/w99427/eNotes-Emulator) project.
+
+#### 4.Usage:
 ##### NFC
 * init CardManager
 ```

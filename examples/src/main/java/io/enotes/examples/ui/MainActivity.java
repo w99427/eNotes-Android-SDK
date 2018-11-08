@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         requestPermissions();
-        ENotesSDK.config.debugForAnalogCard=false;
+        ENotesSDK.config.debugForEmulatorCard=false;
         sharedPreferences= getSharedPreferences("example", Context.MODE_PRIVATE);
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("please wait ...");
@@ -175,13 +175,13 @@ public class MainActivity extends AppCompatActivity {
                     edit.putString("ip",editText.getText().toString());
                     edit.commit();
                     item.setTitle(R.string.close_debug);
-                    ENotesSDK.config.debugForAnalogCard=true;
-                    ENotesSDK.config.analogCardIp=editText.getText().toString();
+                    ENotesSDK.config.debugForEmulatorCard=true;
+                    ENotesSDK.config.emulatorCardIp=editText.getText().toString();
                 }));
                 builder.show();
             }else{
                 item.setTitle(R.string.open_debug);
-                ENotesSDK.config.debugForAnalogCard=false;
+                ENotesSDK.config.debugForEmulatorCard=false;
             }
         }
 
