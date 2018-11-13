@@ -20,6 +20,7 @@ import io.enotes.sdk.repository.api.RetrofitFactory;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntCallEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
+import io.enotes.sdk.repository.api.entity.EntExchangeRateEntity;
 import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
@@ -36,6 +37,7 @@ import io.enotes.sdk.repository.db.entity.Mfr;
 import io.enotes.sdk.repository.provider.api.BaseApiProvider;
 import io.enotes.sdk.repository.provider.api.BtcApiProvider;
 import io.enotes.sdk.repository.provider.api.EthApiProvider;
+import io.enotes.sdk.repository.provider.api.ExchangeRateApiProvider;
 import io.enotes.sdk.utils.ContractUtils;
 import io.enotes.sdk.utils.LogUtils;
 
@@ -46,16 +48,18 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
     private ApiService transactionThirdService;
     private BtcApiProvider btcApiManager;
     private EthApiProvider ethApiManager;
+    private ExchangeRateApiProvider exchangeRateApiProvider;
     private MfrDao mfrDao;
 
     public ApiProvider(Context context) {
         super();
-        apiService = RetrofitFactory.getTransactionService();
         if (context != null)
             mfrDao = AppDataBase.init(context).getMfrDao();
+        apiService = RetrofitFactory.getTransactionService();
         transactionThirdService = RetrofitFactory.getTransactionThirdService();
         btcApiManager = new BtcApiProvider(apiService, transactionThirdService);
         ethApiManager = new EthApiProvider(apiService, transactionThirdService);
+        exchangeRateApiProvider = new ExchangeRateApiProvider();
     }
 
     /**
@@ -281,6 +285,16 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * get digital currency exchange rate
+     *
+     * @param digiccy you can see EntExchangeRateEntity
+     * @return usd ,eur ,cny ,jpy
+     */
+    public LiveData<Resource<EntExchangeRateEntity>> getExchangeRate(String digiccy) {
+        return exchangeRateApiProvider.getExchangeRate(digiccy);
     }
 
     public static <T> T getValue(LiveData<T> liveData) throws InterruptedException {

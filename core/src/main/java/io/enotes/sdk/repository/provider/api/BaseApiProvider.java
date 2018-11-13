@@ -23,7 +23,6 @@ import io.enotes.sdk.utils.LogUtils;
 
 public abstract class BaseApiProvider {
     protected static final String TAG = "ApiProvider";
-    protected int networkErrorCount;
 
     public BaseApiProvider() {
     }
@@ -43,6 +42,23 @@ public abstract class BaseApiProvider {
         }
         //remove eNotes server
         sourceList.remove(sourceList.size() - 1);
+        recurLiveDataSource(mutableLiveData, sourceList);
+        return mutableLiveData;
+    }
+
+    /**
+     * add source in order
+     *
+     * @param source
+     * @param <T>
+     * @return
+     */
+    public <T> MediatorLiveData<Resource<T>> addLiveDataSourceNoENotes(LiveData<Resource<T>>... source) {
+        MediatorLiveData<Resource<T>> mutableLiveData = new MediatorLiveData<>();
+        List<LiveData<Resource<T>>> sourceList = new ArrayList<>();
+        for (LiveData<Resource<T>> liveData : source) {
+            sourceList.add(liveData);
+        }
         recurLiveDataSource(mutableLiveData, sourceList);
         return mutableLiveData;
     }

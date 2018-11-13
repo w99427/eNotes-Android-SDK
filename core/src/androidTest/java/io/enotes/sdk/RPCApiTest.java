@@ -14,6 +14,7 @@ import io.enotes.sdk.repository.ProviderFactory;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntCallEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
+import io.enotes.sdk.repository.api.entity.EntExchangeRateEntity;
 import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;

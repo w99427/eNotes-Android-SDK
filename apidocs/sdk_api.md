@@ -349,10 +349,14 @@ public void getExchangeRate(String exchange ,String asset ,String symbol)
 - code example:
 ```
 RPCApiManager manager = new RPCApiManager(activity);
-manager.getExchangeRate("coinbase" ,"BTC" ,"USD" ,(resource)->{
+manager.getExchangeRate("BTC"  ,(resource)->{
    if(resource.status == Status.SUCCESS){
        EntExchangeRateEntity entity = resource.data;
-       String latestPrice = entity.getLatestPrice();
+       EntExchangeRateEntity.Data data = entity.getData;
+       String usd = data.getUsd();
+       String eur = data.getEur();
+       String cny = data.getCny();
+       String jpy = data.getJpy();
        //TODO
        
    } else if(resource.status == Status.ERROR){

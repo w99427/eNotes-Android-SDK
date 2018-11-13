@@ -1,11 +1,9 @@
 package io.enotes.sdk.repository.api.entity;
 
-public class EntExchangeRateEntity {
+public class EntExchangeRateEntity extends BaseENotesEntity {
     private String exchange;
-    private String asset;
-    private String symbol;
-    private String latestPrice;
-    private String averagePrice;
+    private String digiccy;
+    private Data data;
 
     public String getExchange() {
         return exchange;
@@ -15,35 +13,63 @@ public class EntExchangeRateEntity {
         this.exchange = exchange;
     }
 
-    public String getAsset() {
-        return asset;
+    public String getDigiccy() {
+        return digiccy;
     }
 
-    public void setAsset(String asset) {
-        this.asset = asset;
+    public void setDigiccy(String digiccy) {
+        this.digiccy = digiccy;
     }
 
-    public String getSymbol() {
-        return symbol;
+    public Data getData() {
+        return data;
     }
 
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
+    public void setData(Data data) {
+        this.data = data;
     }
 
-    public String getLatestPrice() {
-        return latestPrice;
+    public static class Data {
+        private String usd;
+        private String eur;
+        private String cny;
+        private String jpy;
+
+        public String getUsd() {
+            return usd;
+        }
+
+        public void setUsd(String usd) {
+            this.usd = usd;
+        }
+
+        public String getEur() {
+            return eur;
+        }
+
+        public void setEur(String eur) {
+            this.eur = eur;
+        }
+
+        public String getCny() {
+            return cny;
+        }
+
+        public void setCny(String cny) {
+            this.cny = cny;
+        }
+
+        public String getJpy() {
+            return jpy;
+        }
+
+        public void setJpy(String jpy) {
+            this.jpy = jpy;
+        }
     }
 
-    public void setLatestPrice(String latestPrice) {
-        this.latestPrice = latestPrice;
-    }
-
-    public String getAveragePrice() {
-        return averagePrice;
-    }
-
-    public void setAveragePrice(String averagePrice) {
-        this.averagePrice = averagePrice;
+    @Override
+    public String toString() {
+        return "exchange = " + exchange + "\ndigiccy = " + digiccy + "\nrate = " + "usd : " + data.usd + " # eur : " + data.eur + " # cny : " + data.cny + " # jpy : " + data.jpy;
     }
 }

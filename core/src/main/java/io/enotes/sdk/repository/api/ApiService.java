@@ -5,7 +5,6 @@ import android.arch.lifecycle.LiveData;
 import java.util.List;
 import java.util.Map;
 
-import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntCallEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
@@ -48,7 +47,6 @@ import io.enotes.sdk.repository.api.entity.response.eth.infura.EthEstimateGasFor
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthGasPriceForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthNonceForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthSendRawTransactionForInfura;
-import io.enotes.sdk.repository.api.entity.response.exchange.BitcoinAverageEntity;
 import io.enotes.sdk.repository.api.entity.response.exchange.CryptoCompareEntity;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -62,11 +60,7 @@ import retrofit2.http.Query;
 public interface ApiService {
 
     /**********************************Exchange Price****************************************/
-    String URI_BITCOINAVERAGE = "apiv2.bitcoinaverage.com";
     String URI_CRYPTOCOMPARE = "min-api.cryptocompare.com";
-
-    @GET("https://" + URI_BITCOINAVERAGE + "/indices/global/ticker/short?crypto=BTC,ETH&fiat=USD,CNY")
-    LiveData<ApiResponse<Map<String, BitcoinAverageEntity>>> getExchangePriceForBitcoinavage();
 
     @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?fsyms=ETH,BTC,GUSD&tsyms=USD,CNY")
     LiveData<ApiResponse<Map<String, CryptoCompareEntity>>> getExchangePriceForCryptocompare();

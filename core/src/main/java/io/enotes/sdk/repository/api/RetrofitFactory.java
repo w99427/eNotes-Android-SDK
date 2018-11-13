@@ -18,6 +18,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitFactory {
     private static ApiService apiService;
     private static ApiService transactionThirdService;
+    private static ExchangeRateApiService exchangeRateApiService;
     private static SimulateCardService simulateCardService;
     public static final String ENOTES_SERVER = "https://api.enotes.io:8443/";
     private static String DEBUG_SERVER ="";
@@ -36,6 +37,14 @@ public class RetrofitFactory {
                     .create(ApiService.class);
         }
         return transactionThirdService;
+    }
+
+    public static ExchangeRateApiService getExchangeRateService() {
+        if (exchangeRateApiService == null) {
+            exchangeRateApiService = getBaseRetrofit(true)
+                    .create(ExchangeRateApiService.class);
+        }
+        return exchangeRateApiService;
     }
 
     public static SimulateCardService getSimulateCardService() {
