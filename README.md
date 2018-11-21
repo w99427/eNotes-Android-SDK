@@ -1,6 +1,6 @@
 # eNotes Android SDK
 
-[ ![Download](https://api.bintray.com/packages/enotes/sdk/core/images/download.svg) ](https://bintray.com/enotes/sdk/core/_latestVersion)[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[ ![Download](https://api.bintray.com/packages/enoteschain/sdk/core/images/download.svg) ](https://bintray.com/enoteschain/sdk/core/_latestVersion)[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## Description
 
@@ -32,13 +32,13 @@ repositories {
     google()
     jcenter()
     maven {
-        url 'https://dl.bintray.com/enotes/sdk'
+        url 'https://dl.bintray.com/enoteschain/sdk'
     }
 }
 ```
 
 ```
-implementation 'io.enotes.sdk:core:0.1.0'
+implementation 'io.enotes.sdk:sdk:0.1.2'
 ```
 
 #### Building from source code
