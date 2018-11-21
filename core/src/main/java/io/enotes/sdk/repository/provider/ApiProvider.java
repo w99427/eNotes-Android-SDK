@@ -4,6 +4,7 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -27,6 +28,7 @@ import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntNotificationEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.api.entity.request.EntNotificationListRequest;
 import io.enotes.sdk.repository.base.BaseManager;
@@ -63,7 +65,28 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
     }
 
     /**
-     * get diff coin balance for list view
+     * get diff coin balance list
+     *
+     * @param network
+     * @param addresses
+     * @param blockChain
+     * @return
+     */
+    public LiveData<Resource<List<EntBalanceEntity>>> getBalanceList(String blockChain, int network, String[] addresses) {
+        if (Constant.BlockChain.BITCOIN.equals(blockChain)) {
+            LogUtils.i(TAG, "get BitCoin Balance");
+            return btcApiManager.getBtcBalanceList(network, addresses);
+
+        } else if (Constant.BlockChain.ETHEREUM.equals(blockChain)) {
+            LogUtils.i(TAG, "get Eth Balance");
+            return ethApiManager.getEthBalanceList(network, addresses);
+        }
+
+        return new MediatorLiveData<>();
+    }
+
+    /**
+     * get diff coin balance
      *
      * @param network
      * @param address
@@ -78,8 +101,6 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         } else if (Constant.BlockChain.ETHEREUM.equals(blockChain)) {
             LogUtils.i(TAG, "get Eth Balance");
             return ethApiManager.getEthBalance(network, address);
-
-
         }
 
         return new MediatorLiveData<>();
@@ -225,6 +246,14 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
      */
     public LiveData<Resource<EntNonceEntity>> getNonce(int network, String address) {
         return ethApiManager.getEthNonce(network, address);
+    }
+
+    public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(@NonNull String blockChain, int network, @NonNull String address, String tokenAddress) {
+        if (Constant.BlockChain.ETHEREUM.equals(blockChain)) {
+            return ethApiManager.getTransactionList(network, address, tokenAddress);
+        } else {
+            return btcApiManager.getTransactionList(network, address);
+        }
     }
 
     /**

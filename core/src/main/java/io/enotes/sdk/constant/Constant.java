@@ -19,4 +19,9 @@ public class Constant {
         public static final String ABI_ADDRESS="0x9A21e2c918026D9420DdDb2357C8205216AdD269";
         public static final String ABI_KOVAN_ADDRESS="0x5C036d8490127ED26E3A142024082eaEE482BbA2";
     }
+
+    public static class APDU{
+        public static final int CERT_VERSION = 1;
+        public static final String APDU_VERSION = "1.0.0";
+    }
 }

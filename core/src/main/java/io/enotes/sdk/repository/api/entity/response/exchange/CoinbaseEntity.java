@@ -21,6 +21,8 @@ public class CoinbaseEntity implements BaseThirdEntity{
         rateEntity.setDigiccy(data.currency.toUpperCase());
         rateEntity.setExchange("coinbase");
         EntExchangeRateEntity.Data exData = new EntExchangeRateEntity.Data();
+        exData.setBtc(data.rates.BTC);
+        exData.setEth(data.rates.ETH);
         exData.setUsd(data.rates.USD);
         exData.setEur(data.rates.EUR);
         exData.setCny(data.rates.CNY);
@@ -51,10 +53,28 @@ public class CoinbaseEntity implements BaseThirdEntity{
     }
 
     public static class Rate{
+        private String BTC;
+        private String ETH;
         private String USD;
         private String EUR;
         private String CNY;
         private String JPY;
+
+        public String getBTC() {
+            return BTC;
+        }
+
+        public void setBTC(String BTC) {
+            this.BTC = BTC;
+        }
+
+        public String getETH() {
+            return ETH;
+        }
+
+        public void setETH(String ETH) {
+            this.ETH = ETH;
+        }
 
         public String getUSD() {
             return USD;

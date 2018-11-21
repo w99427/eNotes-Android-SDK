@@ -20,9 +20,11 @@
 - Universal
   - [setNetworkConfig](#setNetworkConfig)
   - [getBalance](#getBalance)
+  - [getBalanceList](#getBalanceList)
   - [getTransactionReceipt](#getTransactionReceipt)
   - [sendRawTransaction](#sendRawTransaction)
   - [getExchangeRate](#getExchangeRate)
+  - [getTransactionList](#getTransactionList)
 
 - Bitcoin
   - [estimateFee](#estimateFee)
@@ -112,6 +114,7 @@ public class NetworkConfig{
 | CALL_CERT_PUB_KEY_ERROR       | 107               |  Call cert public key error      |
 | SDK_ERROR       | 108               |  sdk self error      |
 | NOT_FIND_RIGHT_CARD       | 109               |  not find right card when withdraw      |
+| NOT_SUPPORT_CARD       | 110               |  not support it, need update app or sdk      |
 
 
 
@@ -284,10 +287,30 @@ public void getBalance(String blockchain, int network, String address, Callback 
 - code example:
 ```
 RPCApiManager manager = new RPCApiManager(activity);
-manager.getBalance("8000003c", 42, (resource)-> {
+manager.getBalance("8000003c", 42, "2nsjshdaa231", (resource)-> {
     if(resource.status == Status.SUCCESS) {
 		EntBalanceEntity entity= resource.data;
 		String balance = entity.getBalance();
+		//TODO
+	} else if(resource.status == Status.ERROR) {
+		String errorMsg = resource.msg;
+		//TODO
+	}
+})
+```
+
+#### getBalanceList
+- Returns the balance list of the account of given addresses.
+- interface definition:
+```
+public void getBalanceList(String blockchain, int network, String[] addresses, Callback callback)
+```
+- code example:
+```
+RPCApiManager manager = new RPCApiManager(activity);
+manager.getBalanceList("8000003c", 42, [2jsuahdabahs,2jshsabahs83"], (resource)-> {
+    if(resource.status == Status.SUCCESS) {
+		List<EntBalanceEntity> entity= resource.data;
 		//TODO
 	} else if(resource.status == Status.ERROR) {
 		String errorMsg = resource.msg;
@@ -344,7 +367,7 @@ manager.sendRawTransaction("8000003c", 42, "0x21h43dsfetgdfgrsfse32423tryfsntrtr
 - Get exchange rate between pair of requested assets at specific or current time.
 - interface definition:
 ```
-public void getExchangeRate(String exchange ,String asset ,String symbol)
+public void getExchangeRate(String digiccy)
 ```
 - code example:
 ```
@@ -357,6 +380,28 @@ manager.getExchangeRate("BTC"  ,(resource)->{
        String eur = data.getEur();
        String cny = data.getCny();
        String jpy = data.getJpy();
+       //TODO
+       
+   } else if(resource.status == Status.ERROR){
+       String errorMsg = resource.msg;
+		int errorCode = resource.code;
+		//TODO
+   }
+});
+```
+
+#### getTransactionList
+- Get transaction list for single addres.
+- interface definition:
+```
+public void getTransactionList(String blockchain ,int network ,String address)
+```
+- code example:
+```
+RPCApiManager manager = new RPCApiManager(activity);
+manager.getTransactionList("8000003c" ,42 ,"0xdsduahdsuer8hy"  ,(resource)->{
+   if(resource.status == Status.SUCCESS){
+       List<EntTransactionEntity> list = resource.data;
        //TODO
        
    } else if(resource.status == Status.ERROR){

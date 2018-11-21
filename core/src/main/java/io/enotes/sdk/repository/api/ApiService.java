@@ -24,30 +24,35 @@ import io.enotes.sdk.repository.api.entity.request.btc.blockcypher.BtcRequestSen
 import io.enotes.sdk.repository.api.entity.request.eth.infura.EthRequestForInfura;
 import io.enotes.sdk.repository.api.entity.response.btc.bitcoinfees.BtcFeesEntity;
 import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcBalanceForBlockChain;
+import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcBalanceListForBlockChain;
+import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcTransactionListForBlockChain;
 import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcUtxoForBlockChain;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcBalanceForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcConfirmedForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcFeesForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcSendRawTransactionForBlockCypher;
+import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcTransactionListForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcUtxoForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcBalanceForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcConfirmedForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcSendRawTransactionForBlockExplorer;
+import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcUtxoForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.eth.etherchain.EthGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthBalanceForEtherScan;
+import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthBalanceListForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthConfirmedForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthEstimateGasForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthGasPriceForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthNonceForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthSendTxForEtherScan;
+import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthTransactionListForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthBalanceForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthConfirmedForInfua;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthEstimateGasForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthGasPriceForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthNonceForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthSendRawTransactionForInfura;
-import io.enotes.sdk.repository.api.entity.response.exchange.CryptoCompareEntity;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
@@ -58,25 +63,23 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
-
-    /**********************************Exchange Price****************************************/
-    String URI_CRYPTOCOMPARE = "min-api.cryptocompare.com";
-
-    @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?fsyms=ETH,BTC,GUSD&tsyms=USD,CNY")
-    LiveData<ApiResponse<Map<String, CryptoCompareEntity>>> getExchangePriceForCryptocompare();
-
     /**********************************BTC****************************************/
-    String URI_BLOCKCHAIN="blockchain.info";
-    String URI_BLOCKCYPHER="api.blockcypher.com";
-    String URI_BLOCKEXPLORER="blockexplorer.com";
+    String URI_BLOCKCHAIN = "blockchain.info";
+    String URI_BLOCKCYPHER = "api.blockcypher.com";
+    String URI_BLOCKEXPLORER = "blockexplorer.com";
+
+    /*****Balance List Api***/
+    @GET("https://{network}" + URI_BLOCKCHAIN + "/multiaddr?n=1limit=0&filter=5")
+    LiveData<ApiResponse<BtcBalanceListForBlockChain>> getBalanceListForBtcByBlockChain(@Path("network") String network, @Query("active") String addresses);
+
     /*****Balance Api***/
-    @GET("https://{network}"+URI_BLOCKCHAIN+"/rawaddr/{address}?limit=0&filter=5")
+    @GET("https://{network}" + URI_BLOCKCHAIN + "/rawaddr/{address}?limit=0&filter=5")
     LiveData<ApiResponse<BtcBalanceForBlockChain>> getBalanceForBtcByBlockChain(@Path("network") String network, @Path("address") String address);
 
-    @GET("https://"+URI_BLOCKCYPHER+"/v1/btc/{network}/addrs/{address}/balance")
+    @GET("https://" + URI_BLOCKCYPHER + "/v1/btc/{network}/addrs/{address}/balance")
     LiveData<ApiResponse<BtcBalanceForBlockCypher>> getBalanceForBtcByBlockCypher(@Path("network") String network, @Path("address") String address, @Query("tokens") String token);
 
-    @GET("https://{network}"+URI_BLOCKEXPLORER+"/api/addr/{address}")
+    @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/addr/{address}")
     LiveData<ApiResponse<BtcBalanceForBlockExplorer>> getBalanceForBtcByBlockExplorer(@Path("network") String network, @Path("address") String address);
 
 
@@ -84,91 +87,104 @@ public interface ApiService {
     @GET("https://bitcoinfees.earn.com/api/v1/fees/recommended")
     LiveData<ApiResponse<BtcFeesEntity>> getFeesForBtcByBitcoinFees();
 
-    @GET("https://{network}"+URI_BLOCKEXPLORER+"/api/utils/estimatefee?nbBlocks=3")
-    LiveData<ApiResponse<Map<String,String>>> getFeesForBtcByBlockExplorer(@Path("network") String network);
+    @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/utils/estimatefee?nbBlocks=3")
+    LiveData<ApiResponse<Map<String, String>>> getFeesForBtcByBlockExplorer(@Path("network") String network);
 
     @GET("https://api.blockcypher.com/v1/btc/{network}")
     LiveData<ApiResponse<BtcFeesForBlockCypher>> getFeesForBtcByBlockCypher(@Path("network") String network);
 
 
     /*****TransactionReceipt Api***/
-    @GET("https://"+URI_BLOCKCYPHER+"/v1/btc/{network}/txs/{TXID}")
+    @GET("https://" + URI_BLOCKCYPHER + "/v1/btc/{network}/txs/{TXID}")
     LiveData<ApiResponse<BtcConfirmedForBlockCypher>> isConfirmedTxForBitCoinByBlockCypher(@Path("network") String network, @Path("TXID") String TxId, @Query("tokens") String token);
 
-    @GET("https://{network}"+URI_BLOCKEXPLORER+"/api/tx/{TXID}")
+    @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/tx/{TXID}")
     LiveData<ApiResponse<BtcConfirmedForBlockExplorer>> isConfirmedTxForBitCoinByBlockExplorer(@Path("network") String network, @Path("TXID") String TxId);
 
     /*****SendRawTransaction Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://"+URI_BLOCKCYPHER+"/v1/btc/{network}/txs/push")
+    @POST("https://" + URI_BLOCKCYPHER + "/v1/btc/{network}/txs/push")
     LiveData<ApiResponse<BtcSendRawTransactionForBlockCypher>> sendRawTransactionForBitCoinByBlockCypher(@Path("network") String network, @Body BtcRequestSendRawTransaction hex, @Query("tokens") String token);
 
     @FormUrlEncoded
-    @POST("https://{network}"+URI_BLOCKEXPLORER+"/api/tx/send")
+    @POST("https://{network}" + URI_BLOCKEXPLORER + "/api/tx/send")
     LiveData<ApiResponse<BtcSendRawTransactionForBlockExplorer>> sendRawTransactionForBitCoinByBlockExplorer(@Path("network") String network, @Field("rawtx") String hex);
 
     /*****UnSpend Api***/
-    @GET("https://{network}"+URI_BLOCKCHAIN+"/unspent")
+    @GET("https://{network}" + URI_BLOCKCHAIN + "/unspent")
     LiveData<ApiResponse<BtcUtxoForBlockChain>> getUTXOForBitCoinByBlockChain(@Path("network") String network, @Query("active") String address);
 
-    @GET("https://"+URI_BLOCKCYPHER+"/v1/btc/{network}/addrs/{address}?unspentOnly=true&includeScript=true")
+    @GET("https://" + URI_BLOCKCYPHER + "/v1/btc/{network}/addrs/{address}?unspentOnly=true&includeScript=true")
     LiveData<ApiResponse<BtcUtxoForBlockCypher>> getUTXOForBitCoinByBlockCypher(@Path("network") String network, @Path("address") String address, @Query("tokens") String token);
 
-    @GET("https://{network}"+URI_BLOCKEXPLORER+"/api/addrs/{address}/utxo")
+    @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/addrs/{address}/utxo")
     LiveData<ApiResponse<List<BtcUtxoForBlockExplorer>>> getUTXOForBitCoinByBlockExplorer(@Path("network") String network, @Path("address") String address);
 
+    /*****Transaction List Api***/
+    @GET("https://{network}" + URI_BLOCKCHAIN + "/rawaddr/{address}")
+    LiveData<ApiResponse<BtcTransactionListForBlockChain>> getTransactionListByBlockChain(@Path("network") String network, @Path("address") String address);
+
+    @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/addrs/{address}/txs/?from=0&to=100")
+    LiveData<ApiResponse<BtcTransactionListForBlockExplorer>> getTransactionListByBlockExplorer(@Path("network") String network, @Path("address") String address);
+
+    @GET("https://" + URI_BLOCKCYPHER + "/v1/btc/{network}/addrs/{address}")
+    LiveData<ApiResponse<BtcTransactionListForBlockCypher>> getTransactionListByBlockCypher(@Path("network") String network, @Path("address") String address);
 
     /**********************************ETH****************************************/
-    String URI_INFURA="infura.io";
-    String URI_ETHERSCAN="etherscan.io";
+    String URI_INFURA = "infura.io";
+    String URI_ETHERSCAN = "etherscan.io";
+
+    /*****Balance List Api***/
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=account&action=balancemulti&tag=latest")
+    LiveData<ApiResponse<EthBalanceListForEtherScan>> getBalanceListForEthByEtherScan(@Path("network") String network, @Query("address") String address, @Query("apikey") String apiKey);
 
     /*****Balance Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://{network}."+URI_INFURA)
+    @POST("https://{network}." + URI_INFURA)
     LiveData<ApiResponse<EthBalanceForInfura>> getBalanceForEthByInfura(@Path("network") String network, @Body EthRequestForInfura request, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=account&action=balance")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=account&action=balance")
     LiveData<ApiResponse<EthBalanceForEtherScan>> getBalanceForEthByEtherScan(@Path("network") String network, @Query("address") String address, @Query("apikey") String apiKey);
 
     /*****Nonce Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://{network}."+URI_INFURA)
+    @POST("https://{network}." + URI_INFURA)
     LiveData<ApiResponse<EthNonceForInfura>> getNonceForEthByInfura(@Path("network") String network, @Body EthRequestForInfura request, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=proxy&action=eth_getTransactionCount&tag=latest")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=proxy&action=eth_getTransactionCount&tag=latest")
     LiveData<ApiResponse<EthNonceForEtherScan>> getNonceForEthByEtherScan(@Path("network") String network, @Query("address") String address, @Query("apikey") String apiKey);
 
     /*****EstimateGas Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://{network}."+URI_INFURA)
+    @POST("https://{network}." + URI_INFURA)
     LiveData<ApiResponse<EthEstimateGasForInfura>> estimateGasForEthByInfura(@Path("network") String network, @Body EthRequestForInfura request, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=proxy&action=eth_estimateGas")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=proxy&action=eth_estimateGas")
     LiveData<ApiResponse<EthEstimateGasForEtherScan>> getGasLimitForEthByEtherScan(@Path("network") String network, @Query("to") String to, @Query("from") String from, @Query("value") String value, @Query("gasPrice") String gasPrice, @Query("data") String data, @Query("apikey") String apiKey);
 
     /*****TransactionReceipt Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://{network}."+URI_INFURA)
+    @POST("https://{network}." + URI_INFURA)
     LiveData<ApiResponse<EthConfirmedForInfua>> isConfirmedTxForEthByInfura(@Path("network") String network, @Body EthRequestForInfura request, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=proxy&action=eth_getTransactionReceipt")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=proxy&action=eth_getTransactionReceipt")
     LiveData<ApiResponse<EthConfirmedForEtherScan>> isConfirmedTxForEthByEtherScan(@Path("network") String network, @Query("txhash") String TxId, @Query("apikey") String apiKey);
 
     /*****SendRawTransaction Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://{network}."+URI_INFURA)
+    @POST("https://{network}." + URI_INFURA)
     LiveData<ApiResponse<EthSendRawTransactionForInfura>> sendRawTransactionForEthByInfura(@Path("network") String network, @Body EthRequestForInfura request, @Query("token") String apiKey);
 
     @FormUrlEncoded
-    @POST("https://{network}."+URI_ETHERSCAN+"/api?module=proxy&action=eth_sendRawTransaction")
+    @POST("https://{network}." + URI_ETHERSCAN + "/api?module=proxy&action=eth_sendRawTransaction")
     LiveData<ApiResponse<EthSendTxForEtherScan>> sendRawTransactionForEthByEtherScan(@Path("network") String network, @Field("hex") String hex, @Query("apikey") String apiKey);
 
     /*****GasPrice Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://{network}."+URI_INFURA)
+    @POST("https://{network}." + URI_INFURA)
     LiveData<ApiResponse<EthGasPriceForInfura>> getGasPriceForEthByInfura(@Path("network") String network, @Body EthRequestForInfura request, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=proxy&action=eth_gasPrice")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=proxy&action=eth_gasPrice")
     LiveData<ApiResponse<EthGasPriceForEtherScan>> getGasPriceForEthByEtherScan(@Path("network") String network, @Query("apikey") String apiKey);
 
 
@@ -177,11 +193,18 @@ public interface ApiService {
 
     /*****Call Api***/
     @Headers({"Content-Type: application/json", "Accept: application/json"})
-    @POST("https://{network}."+URI_INFURA)
+    @POST("https://{network}." + URI_INFURA)
     LiveData<ApiResponse<EntCallEntity>> callForEthByInfura(@Path("network") String network, @Body EthRequestForInfura request, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=proxy&action=eth_call&tag=latest")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=proxy&action=eth_call&tag=latest")
     LiveData<ApiResponse<EntCallEntity>> callForEthByEtherScan(@Path("network") String network, @Query("to") String contractAddress, @Query("data") String data, @Query("apikey") String apiKey);
+
+    /*****Transaction List Api***/
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=account&action=txlist&page=1&offset=100&sort=desc")
+    LiveData<ApiResponse<EthTransactionListForEtherScan>> getTransactionListByEtherScan(@Path("network") String network, @Query("address") String address, @Query("token") String apiKey);
+
+    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=account&action=tokentx&page=1&offset=100&sort=desc")
+    LiveData<ApiResponse<EthTransactionListForEtherScan>> getTokenTransactionListByEtherScan(@Path("network") String network, @Query("contractaddress") String contractAddress, @Query("address") String address, @Query("token") String apiKey);
 
     /**********************************ENOTES****************************************/
 

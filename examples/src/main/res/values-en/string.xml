@@ -13,6 +13,7 @@
     <string name="card_record_time">Production Date</string>
     <string name="card_address">Address</string>
     <string name="card_qr_code">Address QR code</string>
+    <string name="join_card">Join Card</string>
     <string name="cancel">Remove</string>
     <string name="cancel_success">Remove Successful！</string>
     <string name="withdraw">Send</string>

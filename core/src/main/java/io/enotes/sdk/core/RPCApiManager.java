@@ -12,11 +12,13 @@ import io.enotes.sdk.core.interfaces.RPCApiInterface;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntCallEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
+import io.enotes.sdk.repository.api.entity.EntExchangeRateEntity;
 import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.provider.ApiProvider;
 import io.enotes.sdk.viewmodel.RPCApiViewModel;
@@ -44,6 +46,11 @@ public class RPCApiManager implements RPCApiInterface {
     }
 
     @Override
+    public void getBalanceList(String blockChain, int network, String[] addresses, @NonNull Callback<List<EntBalanceEntity>> callback) {
+        apiProvider.getBalanceList(blockChain, network, addresses).observe(fragmentActivity, (callback::onCallBack));
+    }
+
+    @Override
     public void getBalance(String blockchain, int network, String address, @NonNull Callback<EntBalanceEntity> callback) {
         apiProvider.getBalance(blockchain, network, address).observe(fragmentActivity, (callback::onCallBack));
     }
@@ -56,6 +63,16 @@ public class RPCApiManager implements RPCApiInterface {
     @Override
     public void sendRawTransaction(String blockchain, int network, String hexString, @NonNull Callback<EntSendTxEntity> callback) {
         apiProvider.sendRawTransaction(blockchain, network, hexString).observe(fragmentActivity, (callback::onCallBack));
+    }
+
+    @Override
+    public void getTransactionList(@NonNull String blockChain, int network, @NonNull String address, String tokenAddress, @NonNull Callback<List<EntTransactionEntity>> callback) {
+        apiProvider.getTransactionList(blockChain, network, address, tokenAddress).observe(fragmentActivity, (callback::onCallBack));
+    }
+
+    @Override
+    public void getExchangeRate(String digiccy, @NonNull Callback<EntExchangeRateEntity> callback) {
+        apiProvider.getExchangeRate(digiccy).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override

@@ -3,6 +3,7 @@
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
     <string name="card_close_to_phone_nfc">请将实体币靠近手机NFC感应处</string>
     <string name="card_balance">余额</string>
+    <string name="card_balance1">余额</string>
     <string name="card_status">安全状态</string>
     <string name="card_tx_status">交易状态</string>
     <string name="card_deno">面额</string>
@@ -15,6 +16,7 @@
     <string name="cancel_success">删除成功！</string>
     <string name="withdraw">发送</string>
     <string name="join_card">加入卡包</string>
+    <string name="card_name">Currency：</string>
     <string name="safe">安全</string>
     <string name="dangerous">危险</string>
     <string name="address_copy_clipboard">地址已复制到粘贴板</string>

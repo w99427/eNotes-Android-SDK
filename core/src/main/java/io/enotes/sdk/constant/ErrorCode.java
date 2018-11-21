@@ -50,4 +50,9 @@ public class ErrorCode {
      * not find right card when withdraw
      */
     public static final int NOT_FIND_RIGHT_CARD = 109;
+
+    /**
+     * not support it, need update app or sdk
+     */
+    public static final int NOT_SUPPORT_CARD = 110;
 }

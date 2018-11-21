@@ -1,5 +1,6 @@
 package io.enotes.sdk.core.interfaces;
 
+import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
 import java.util.List;
@@ -8,16 +9,28 @@ import io.enotes.sdk.core.Callback;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntCallEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
+import io.enotes.sdk.repository.api.entity.EntExchangeRateEntity;
 import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.base.Resource;
 
 public interface RPCApiInterface {
 
     ///////////////////////Universal////////////////////////////////
+
+    /**
+     * Returns the balance list of the account of given addresses
+     *
+     * @param blockChain
+     * @param network
+     * @param addresses
+     */
+    void getBalanceList(String blockChain, int network, String[] addresses, @NonNull Callback<List<EntBalanceEntity>> callback);
 
     /**
      * Returns the balance of the account of given address
@@ -49,6 +62,24 @@ public interface RPCApiInterface {
      */
     void sendRawTransaction(String blockchain, int network, String hexString, @NonNull Callback<EntSendTxEntity> callback);
 
+    /**
+     * get transaction list by address
+     *
+     * @param blockChain
+     * @param network
+     * @param address
+     * @param tokenAddress
+     */
+    void getTransactionList(@NonNull String blockChain, int network, @NonNull String address, String tokenAddress, @NonNull Callback<List<EntTransactionEntity>> callback);
+
+
+    /**
+     * get exchange rate for digital currency
+     *
+     * @param digiccy
+     * @param callback
+     */
+    void getExchangeRate(String digiccy, @NonNull Callback<EntExchangeRateEntity> callback);
     ///////////////////////BTC////////////////////////////////
 
     /**

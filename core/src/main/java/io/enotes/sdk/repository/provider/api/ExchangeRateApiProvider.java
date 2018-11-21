@@ -8,6 +8,7 @@ import android.support.annotation.StringDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigDecimal;
+import java.util.List;
 
 import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.repository.api.ExchangeRateApiService;
@@ -15,6 +16,7 @@ import io.enotes.sdk.repository.api.RetrofitFactory;
 import io.enotes.sdk.repository.api.entity.EntExchangeRateEntity;
 import io.enotes.sdk.repository.api.entity.EntExchangeRateUSDEntity;
 import io.enotes.sdk.repository.api.entity.response.exchange.CryptoCompareEntity;
+import io.enotes.sdk.repository.api.entity.response.exchange.OkexGUSDBTCEntity;
 import io.enotes.sdk.repository.base.Resource;
 
 import static io.enotes.sdk.constant.ErrorCode.NET_ERROR;
@@ -23,6 +25,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
     public static final String DIGICCY_BTC = "BTC";
     public static final String DIGICCY_ETH = "ETH";
     public static final String DIGICCY_GUSD = "GUSD";
+
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({DIGICCY_BTC, DIGICCY_ETH, DIGICCY_GUSD})
     public @interface RateMode {
@@ -37,9 +40,9 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
 
     public LiveData<Resource<EntExchangeRateEntity>> getExchangeRate(@RateMode String digiccy) {
         if (digiccy.contains(DIGICCY_GUSD)) {
-            return addLiveDataSourceNoENotes(getExchangeRateGUSD1st(digiccy), getExchangeRate4ur(digiccy));
+            return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy), getExchangeRateGUSD1st(digiccy));
         } else {
-            return addLiveDataSourceNoENotes(getExchangeRate1st(digiccy), getExchangeRate2nd(digiccy), getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy));
+            return addLiveDataSourceNoENotes(getExchangeRate1st(digiccy), getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
         }
     }
 
@@ -56,28 +59,56 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
     }
 
     private LiveData<Resource<EntExchangeRateEntity>> getExchangeRate2nd(String digiccy) {
+
         MediatorLiveData<Resource<EntExchangeRateEntity>> mediatorLiveData = new MediatorLiveData<>();
-        String symbol = digiccy.equals(DIGICCY_BTC) ? "btc_usd" : "eth_usd";
-        mediatorLiveData.addSource(exchangeRateApiService.getExchangeRateOkex(symbol), (resource -> {
-            if (resource.isSuccessful()) {
-                mediatorLiveData.addSource(getExchangeRateUSD(), (resource1 -> {
-                    if (resource1.status == Status.SUCCESS) {
-                        EntExchangeRateEntity rateEntity = new EntExchangeRateEntity();
-                        rateEntity.setDigiccy(digiccy);
-                        rateEntity.setExchange("okex");
-                        EntExchangeRateEntity.Data exData = new EntExchangeRateEntity.Data();
-                        exData.setUsd(resource.body.getFuture_index());
-                        exData.setEur(new BigDecimal(resource.body.getFuture_index()).multiply(new BigDecimal(resource1.data.getEur())).toString());
-                        exData.setCny(new BigDecimal(resource.body.getFuture_index()).multiply(new BigDecimal(resource1.data.getCny())).toString());
-                        exData.setJpy(new BigDecimal(resource.body.getFuture_index()).multiply(new BigDecimal(resource1.data.getJpy())).toString());
-                        rateEntity.setData(exData);
-                        mediatorLiveData.postValue(Resource.success(rateEntity));
+        mediatorLiveData.addSource(exchangeRateApiService.getExchangeRateAllForOkex(), (resource0 -> {
+            if (resource0.isSuccessful()) {
+                mediatorLiveData.addSource(exchangeRateApiService.getExchangeRateOkex("btc_usd"), (resource -> {
+                    if (resource.isSuccessful()) {
+                        mediatorLiveData.addSource(getExchangeRateUSD(), (resource1 -> {
+                            if (resource1.status == Status.SUCCESS) {
+                                EntExchangeRateEntity rateEntity = new EntExchangeRateEntity();
+                                rateEntity.setDigiccy(digiccy);
+                                rateEntity.setExchange("okex");
+                                EntExchangeRateEntity.Data exData = new EntExchangeRateEntity.Data();
+
+                                List<OkexGUSDBTCEntity> listAll = resource0.body;
+                                String eth2btc = "0";
+                                for (OkexGUSDBTCEntity gusdbtcEntity : listAll) {
+                                    if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.ETH_BTC)) {
+                                        eth2btc = gusdbtcEntity.getLast();
+                                    }
+                                }
+                                String scale = "1";
+                                if (digiccy.equals(DIGICCY_BTC)) {
+                                    scale = "1";
+                                    exData.setBtc(scale);
+                                    exData.setEth(new BigDecimal(scale).divide(new BigDecimal(eth2btc),10, BigDecimal.ROUND_HALF_UP).toString());
+
+                                } else if (digiccy.equals(DIGICCY_ETH)) {
+                                    scale = eth2btc;
+                                    exData.setBtc(eth2btc);
+                                    exData.setEth("1");
+
+                                }
+                                String digi2usd = new BigDecimal(scale).multiply(new BigDecimal(resource.body.getFuture_index())).toString();
+                                exData.setUsd(digi2usd);
+                                exData.setEur(new BigDecimal(digi2usd).multiply(new BigDecimal(resource1.data.getEur())).toString());
+                                exData.setCny(new BigDecimal(digi2usd).multiply(new BigDecimal(resource1.data.getCny())).toString());
+                                exData.setJpy(new BigDecimal(digi2usd).multiply(new BigDecimal(resource1.data.getJpy())).toString());
+                                rateEntity.setData(exData);
+                                mediatorLiveData.postValue(Resource.success(rateEntity));
+                            } else {
+                                mediatorLiveData.postValue(Resource.error(NET_ERROR, resource.errorMessage));
+                            }
+                        }));
                     } else {
                         mediatorLiveData.postValue(Resource.error(NET_ERROR, resource.errorMessage));
                     }
                 }));
+
             } else {
-                mediatorLiveData.postValue(Resource.error(NET_ERROR, resource.errorMessage));
+                mediatorLiveData.postValue(Resource.error(NET_ERROR, resource0.errorMessage));
             }
         }));
         return mediatorLiveData;
@@ -104,6 +135,8 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                 rateEntity.setDigiccy(digiccy.toUpperCase());
                 CryptoCompareEntity entity = resource.body.get(digiccy.toUpperCase());
                 EntExchangeRateEntity.Data data = new EntExchangeRateEntity.Data();
+                data.setBtc(entity.getBTC());
+                data.setEth(entity.getETH());
                 data.setUsd(entity.getUSD());
                 data.setEur(entity.getEUR());
                 data.setCny(entity.getCNY());
@@ -120,7 +153,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
 
     private LiveData<Resource<EntExchangeRateEntity>> getExchangeRateGUSD1st(String digiccy) {
         MediatorLiveData<Resource<EntExchangeRateEntity>> mediatorLiveData = new MediatorLiveData<>();
-        mediatorLiveData.addSource(exchangeRateApiService.getExchangeRateGUSDBTCForOkex(), (resource0 -> {
+        mediatorLiveData.addSource(exchangeRateApiService.getExchangeRateAllForOkex(), (resource0 -> {
             if (resource0.isSuccessful()) {
                 mediatorLiveData.addSource(exchangeRateApiService.getExchangeRateOkex("btc_usd"), (resource -> {
                     if (resource.isSuccessful()) {
@@ -130,8 +163,25 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                                 rateEntity.setDigiccy(digiccy);
                                 rateEntity.setExchange("okex");
                                 EntExchangeRateEntity.Data exData = new EntExchangeRateEntity.Data();
-                                String gusd2usd = new BigDecimal(resource0.body.getLast()).multiply(new BigDecimal(resource.body.getFuture_index())).toString();
+
+                                List<OkexGUSDBTCEntity> listAll = resource0.body;
+                                String gusd2btc = "1";
+                                String gusd2eth = "1";
+                                String eth2btc="1";
+                                for (OkexGUSDBTCEntity gusdbtcEntity : listAll) {
+                                    if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.GUSD_BTC)) {
+                                        gusd2btc = gusdbtcEntity.getLast();
+                                    }
+                                    if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.ETH_BTC)) {
+                                        eth2btc = gusdbtcEntity.getLast();
+                                    }
+                                }
+                                gusd2eth = new BigDecimal(gusd2btc).divide(new BigDecimal(eth2btc), 10, BigDecimal.ROUND_HALF_UP).toString();
+
+                                String gusd2usd = new BigDecimal(gusd2btc).multiply(new BigDecimal(resource.body.getFuture_index())).toString();
                                 exData.setUsd(gusd2usd);
+                                exData.setBtc(gusd2btc);
+                                exData.setEth(gusd2eth);
                                 exData.setEur(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getEur())).toString());
                                 exData.setCny(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getCny())).toString());
                                 exData.setJpy(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getJpy())).toString());

@@ -4,7 +4,10 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,13 +21,17 @@ import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
 import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.api.entity.request.EntBalanceListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntConfirmedListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntSendTxListRequest;
 import io.enotes.sdk.repository.api.entity.request.btc.blockcypher.BtcRequestSendRawTransaction;
+import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcBalanceListForBlockChain;
 import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcUtxoForBlockChain;
+import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcTransactionListForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcUtxoForBlockCypher;
+import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcUtxoForBlockExplorer;
 import io.enotes.sdk.repository.base.Resource;
 
@@ -55,6 +62,10 @@ public class BtcApiProvider extends BaseApiProvider {
         super();
         this.apiService = apiService;
         this.transactionThirdService = transactionThirdService;
+    }
+
+    public LiveData<Resource<List<EntBalanceEntity>>> getBtcBalanceList(int network, String[] address) {
+        return addLiveDataSourceNoENotes(getBtcBalanceListBy1st(network, address));
     }
 
     /**
@@ -135,6 +146,111 @@ public class BtcApiProvider extends BaseApiProvider {
         return addLiveDataSource(sendBtcTxBy1st(network, hex), sendBtcTxBy2nd(network, hex), addSourceForEsList(apiService.sendRawTransactionByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
+
+    public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(int network, String address) {
+        return addLiveDataSourceNoENotes(getTransactionList1st(network, address), getTransactionList2nd(network, address));
+    }
+
+    private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList1st(int network, String address) {
+        MediatorLiveData<Resource<List<EntTransactionEntity>>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(transactionThirdService.getTransactionListByBlockExplorer(secondNetWork.get(network), address), (resource -> {
+            if (resource.isSuccessful()) {
+                List<EntTransactionEntity> list = new ArrayList<>();
+                List<BtcTransactionListForBlockExplorer.Tx> txs = resource.body.getTxs();
+                if (txs != null) {
+                    for (BtcTransactionListForBlockExplorer.Tx tx : txs) {
+                        EntTransactionEntity entTransactionEntity = new EntTransactionEntity();
+                        entTransactionEntity.setConfirmations(tx.getConfirmations());
+                        entTransactionEntity.setTime(tx.getTime() + "");
+                        entTransactionEntity.setTxId(tx.getTxid());
+                        for (BtcTransactionListForBlockExplorer.Input input : tx.getVin()) {
+                            if (input.getAddr().equals(address)) {
+                                entTransactionEntity.setSent(true);
+                                break;
+                            }
+                        }
+                        entTransactionEntity.setAmount(!entTransactionEntity.isSent() ? tx.getValueOut() : tx.getValueIn());
+                        entTransactionEntity.setAmount(new BigDecimal(entTransactionEntity.getAmount()).multiply(new BigDecimal("100000000")).toBigInteger().toString());
+                        list.add(entTransactionEntity);
+                    }
+                }
+                mediatorLiveData.postValue(Resource.success(list));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
+    }
+
+    private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList2nd(int network, String address) {
+        MediatorLiveData<Resource<List<EntTransactionEntity>>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(transactionThirdService.getTransactionListByBlockCypher(firstNetWork.get(network), address), (resource -> {
+            if (resource.isSuccessful()) {
+                BtcTransactionListForBlockCypher cypher = resource.body;
+                List<EntTransactionEntity> list = new ArrayList<>();
+                List<BtcTransactionListForBlockCypher.Tx> txrefs = cypher.getTxrefs();
+                if (txrefs != null) {
+                    for (BtcTransactionListForBlockCypher.Tx tx : txrefs) {
+                        EntTransactionEntity entTransactionEntity = new EntTransactionEntity();
+                        entTransactionEntity.setAmount(tx.getValue());
+                        entTransactionEntity.setSent(tx.getSpent() == null);
+                        entTransactionEntity.setTxId(tx.getTx_hash());
+                        String UTCString = tx.getConfirmed();
+                        UTCString = UTCString.replace("T", " ").replace("Z", "");
+                        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        try {
+                            Date date = utcFormat.parse(UTCString);
+                            entTransactionEntity.setTime(date.getTime() + "");
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                        entTransactionEntity.setConfirmations(tx.getConfirmations());
+                        list.add(entTransactionEntity);
+                    }
+                }
+                mediatorLiveData.postValue(Resource.success(list));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
+    }
+
+    /**
+     * getBitBalanceList By first network
+     *
+     * @param network
+     * @param addresses
+     * @return
+     */
+    private LiveData<Resource<List<EntBalanceEntity>>> getBtcBalanceListBy1st(int network, String[] addresses) {
+        MediatorLiveData<Resource<List<EntBalanceEntity>>> mediatorLiveData = new MediatorLiveData<>();
+        StringBuffer addressArr = new StringBuffer();
+        for (int i = 0; i < addresses.length; i++) {
+            addressArr.append(addresses[i]);
+            if (i != addresses.length - 1) {
+                addressArr.append("|");
+            }
+        }
+        mediatorLiveData.addSource(transactionThirdService.getBalanceListForBtcByBlockChain(secondNetWork.get(network), addressArr.toString()), (resource -> {
+            if (resource.isSuccessful()) {
+                BtcBalanceListForBlockChain body = resource.body;
+                List<EntBalanceEntity> balanceEntityList = new ArrayList<>();
+                if (body.getAddresses() != null) {
+                    for (BtcBalanceListForBlockChain.Address address : body.getAddresses()) {
+                        EntBalanceEntity balanceEntity = new EntBalanceEntity();
+                        balanceEntity.setAddress(address.getAddress());
+                        balanceEntity.setBalance(address.getFinal_balance());
+                        balanceEntityList.add(balanceEntity);
+                    }
+                }
+                mediatorLiveData.postValue(Resource.success(balanceEntityList));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
+    }
 
     /**
      * getBitBalance By first network

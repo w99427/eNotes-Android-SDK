@@ -20,6 +20,7 @@ import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.repository.provider.ApiProvider;
@@ -34,7 +35,7 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public class RPCApiTest {
     private static final String TAG = "RPCApiTest";
-    private static final String BTC_ADDRESS = "2N1rjhumXA3ephUQTDMfGhufxGQPZuZUTMk";
+    private static final String BTC_ADDRESS = "2N5rJVCfwz2X8iiYmPqKsuczohSwptrVxLk";
     private static final String ETH_ADDRESS = "0xC954D9BC070Ba97Bb80E0095ad2CC3A037906540";
     private static final String BTC_TXID = "7f827d4a3ae3b6e408fa1737f12f9dbfa2bb8fd79e0e3e63256a6e78310790a4";
     private static final String ETH_TXID = "0xa4bcfc7d1dd2db21df8d74da00fb865775033b4b94821a45a3dd94aacf3cda4f";
@@ -55,7 +56,7 @@ public class RPCApiTest {
         Resource<EntBalanceEntity> balance = getValue(apiProvider.getBalance(Constant.BlockChain.BITCOIN, Constant.Network.BTC_TESTNET, BTC_ADDRESS));
         assertTrue(balance != null);
         assertTrue(balance.status == Status.SUCCESS);
-        assertNotNull(balance.data );
+        assertNotNull(balance.data);
         Log.i(TAG, "btc balance = " + balance.data.getBalance());
     }
 
@@ -64,7 +65,7 @@ public class RPCApiTest {
         Resource<EntBalanceEntity> balance = getValue(apiProvider.getBalance(Constant.BlockChain.ETHEREUM, Constant.Network.ETH_KOVAN, ETH_ADDRESS));
         assertTrue(balance != null);
         assertTrue(balance.status == Status.SUCCESS);
-        assertNotNull(balance.data );
+        assertNotNull(balance.data);
         Log.i(TAG, "eth balance = " + balance.data.getBalance());
     }
 
@@ -73,7 +74,7 @@ public class RPCApiTest {
         Resource<EntConfirmedEntity> confirmed = getValue(apiProvider.getTransactionReceipt(Constant.BlockChain.BITCOIN, Constant.Network.BTC_TESTNET, BTC_TXID));
         assertTrue(confirmed != null);
         assertTrue(confirmed.status == Status.SUCCESS);
-        assertNotNull(confirmed.data );
+        assertNotNull(confirmed.data);
         Log.i(TAG, "btc transaction receipt = " + confirmed.data.getConfirmations());
 
     }
@@ -83,7 +84,7 @@ public class RPCApiTest {
         Resource<EntConfirmedEntity> confirmed = getValue(apiProvider.getTransactionReceipt(Constant.BlockChain.ETHEREUM, Constant.Network.ETH_KOVAN, ETH_TXID));
         assertTrue(confirmed != null);
         assertTrue(confirmed.status == Status.SUCCESS);
-        assertNotNull(confirmed.data );
+        assertNotNull(confirmed.data);
         Log.i(TAG, "eth transaction receipt = " + confirmed.data.getConfirmations());
 
     }
@@ -118,58 +119,91 @@ public class RPCApiTest {
 
     ///////////////////Bitcoin//////////////////////
     @Test
-    public void testEstimateFee(){
+    public void testEstimateFee() {
         Resource<EntFeesEntity> entity = getValue(apiProvider.estimateFee(Constant.Network.BTC_TESTNET));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
-        assertNotNull(entity.data );
+        assertNotNull(entity.data);
         Log.i(TAG, "btc estimate fees = " + entity.data.getFast());
     }
 
     @Test
-    public void testUnSpend(){
-        Resource<List<EntUtxoEntity>> entity = getValue(apiProvider.getUnSpend(Constant.Network.BTC_TESTNET,BTC_ADDRESS));
+    public void testUnSpend() {
+        Resource<List<EntUtxoEntity>> entity = getValue(apiProvider.getUnSpend(Constant.Network.BTC_TESTNET, BTC_ADDRESS));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
-        assertNotNull(entity.data );
+        assertNotNull(entity.data);
         Log.i(TAG, "btc utxo size = " + entity.data.size());
     }
 
     ///////////////////Ethereum//////////////////////
     @Test
-    public void testEstimateGas(){
-        Resource<EntGasEntity> entity = getValue(apiProvider.estimateGas(Constant.Network.ETH_KOVAN,ETH_ADDRESS,ETH_ADDRESS,"10000000000000000","0",null));
+    public void testEstimateGas() {
+        Resource<EntGasEntity> entity = getValue(apiProvider.estimateGas(Constant.Network.ETH_KOVAN, ETH_ADDRESS, ETH_ADDRESS, "10000000000000000", "0", null));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
-        assertNotNull(entity.data );
+        assertNotNull(entity.data);
         Log.i(TAG, "eth estimate gas = " + entity.data.getGas());
     }
 
     @Test
-    public void testGasPrice(){
+    public void testGasPrice() {
         Resource<EntGasPriceEntity> entity = getValue(apiProvider.getGasPrice(Constant.Network.ETH_KOVAN));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
-        assertNotNull(entity.data );
+        assertNotNull(entity.data);
         Log.i(TAG, "eth gas price = " + entity.data.getFast());
     }
 
     @Test
-    public void testNonce(){
-        Resource<EntNonceEntity> entity = getValue(apiProvider.getNonce(Constant.Network.ETH_KOVAN,ETH_ADDRESS));
+    public void testNonce() {
+        Resource<EntNonceEntity> entity = getValue(apiProvider.getNonce(Constant.Network.ETH_KOVAN, ETH_ADDRESS));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
-        assertNotNull(entity.data );
+        assertNotNull(entity.data);
         Log.i(TAG, "eth nonce = " + entity.data.getNonce());
     }
 
     @Test
-    public void testCall(){
-        Resource<EntCallEntity> entity = getValue(apiProvider.call(Constant.Network.ETH_KOVAN,CONTRACT_ADDRESS,CALL_DATA));
+    public void testCall() {
+        Resource<EntCallEntity> entity = getValue(apiProvider.call(Constant.Network.ETH_KOVAN, CONTRACT_ADDRESS, CALL_DATA));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
-        assertNotNull(entity.data );
+        assertNotNull(entity.data);
         Log.i(TAG, "eth call = " + entity.data.getResult());
+    }
+
+    @Test
+    public void testBtcTransactionList() {
+        Resource<List<EntTransactionEntity>> entity = getValue(apiProvider.getTransactionList(Constant.BlockChain.BITCOIN, Constant.Network.BTC_TESTNET, BTC_ADDRESS,""));
+        assertTrue(entity != null);
+        assertTrue(entity.status == Status.SUCCESS);
+        assertNotNull(entity.data);
+        for (EntTransactionEntity entTransactionEntity : entity.data) {
+            Log.i(TAG, "TransactionList -> \n" + entTransactionEntity.toString());
+        }
+    }
+
+    @Test
+    public void testEthTransactionList() {
+        Resource<List<EntTransactionEntity>> entity = getValue(apiProvider.getTransactionList(Constant.BlockChain.ETHEREUM, Constant.Network.ETH_KOVAN, ETH_ADDRESS,""));
+        assertTrue(entity != null);
+        assertTrue(entity.status == Status.SUCCESS);
+        assertNotNull(entity.data);
+        for (EntTransactionEntity entTransactionEntity : entity.data) {
+            Log.i(TAG, "TransactionList -> \n" + entTransactionEntity.toString());
+        }
+    }
+
+    @Test
+    public void testEthTokenTransactionList() {
+        Resource<List<EntTransactionEntity>> entity = getValue(apiProvider.getTransactionList(Constant.BlockChain.ETHEREUM, Constant.Network.ETH_KOVAN, "0x4013F07264c31A4B0303B05eA5a6eBD08dC919a0","0x0F57219668B6B82f2a846fc84BBD2c7D4ceA3B1b"));
+        assertTrue(entity != null);
+        assertTrue(entity.status == Status.SUCCESS);
+        assertNotNull(entity.data);
+        for (EntTransactionEntity entTransactionEntity : entity.data) {
+            Log.i(TAG, "TransactionList -> \n" + entTransactionEntity.toString());
+        }
     }
 
     private static <T> T getValue(LiveData<T> liveData) {

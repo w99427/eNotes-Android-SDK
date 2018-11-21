@@ -4,8 +4,12 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
 import android.text.TextUtils;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +26,17 @@ import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.request.EntBalanceListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntConfirmedListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntSendTxListRequest;
 import io.enotes.sdk.repository.api.entity.request.eth.infura.EthRequestForInfura;
+import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcBalanceListForBlockChain;
+import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcTransactionListForBlockChain;
+import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcTransactionListForBlockCypher;
+import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
+import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthBalanceListForEtherScan;
+import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthTransactionListForEtherScan;
 import io.enotes.sdk.repository.base.Resource;
 
 import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_ETHER;
@@ -61,6 +72,10 @@ public class EthApiProvider extends BaseApiProvider {
         super();
         this.apiService = apiService;
         this.transactionThirdService = transactionThirdService;
+    }
+
+    public LiveData<Resource<List<EntBalanceEntity>>> getEthBalanceList(int network, String[] address) {
+        return addLiveDataSourceNoENotes(getEthBalanceListBy1st(network, address));
     }
 
     /**
@@ -171,6 +186,103 @@ public class EthApiProvider extends BaseApiProvider {
      */
     public LiveData<Resource<EntCallEntity>> callEth(int network, String toAddress, String datta) {
         return addLiveDataSource(callEthBy1st(firstNetWork.get(network), toAddress, datta), callEthBy2nd(secondNetWork.get(network), toAddress, datta), addSourceForES(apiService.callByES(eNotesNetWork.get(network), toAddress, datta)));
+    }
+
+    public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(int network, String address, String tokenAddress) {
+        if (TextUtils.isEmpty(tokenAddress)) {
+            return addLiveDataSourceNoENotes(getTransactionList1st(network, address));
+        } else
+            return addLiveDataSourceNoENotes(getTokenTransactionList1st(network, tokenAddress, address));
+    }
+
+    private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList1st(int network, String address) {
+        MediatorLiveData<Resource<List<EntTransactionEntity>>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(transactionThirdService.getTransactionListByEtherScan(secondNetWork.get(network), address, get2ndRandomApiKey()), (resource -> {
+            if (resource.isSuccessful()) {
+                EthTransactionListForEtherScan body = resource.body;
+                List<EntTransactionEntity> list = new ArrayList<>();
+                if (body.getResult() != null) {
+                    for (EthTransactionListForEtherScan.Tx tx : body.getResult()) {
+                        EntTransactionEntity transactionEntity = new EntTransactionEntity();
+                        transactionEntity.setAmount(tx.getValue());
+                        transactionEntity.setConfirmations(tx.getConfirmations());
+                        transactionEntity.setTime(tx.getTimeStamp());
+                        transactionEntity.setTxId(tx.getHash());
+                        transactionEntity.setSent(!address.toLowerCase().equals(tx.getTo().toLowerCase()));
+                        transactionEntity.setFrom(tx.getFrom());
+                        transactionEntity.setTokenAddress(tx.getContractAddress());
+                        list.add(transactionEntity);
+                    }
+                }
+                mediatorLiveData.postValue(Resource.success(list));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
+    }
+
+    private LiveData<Resource<List<EntTransactionEntity>>> getTokenTransactionList1st(int network, String tokenAddress, String address) {
+        MediatorLiveData<Resource<List<EntTransactionEntity>>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(transactionThirdService.getTokenTransactionListByEtherScan(secondNetWork.get(network),tokenAddress, address, get2ndRandomApiKey()), (resource -> {
+            if (resource.isSuccessful()) {
+                EthTransactionListForEtherScan body = resource.body;
+                List<EntTransactionEntity> list = new ArrayList<>();
+                if (body.getResult() != null) {
+                    for (EthTransactionListForEtherScan.Tx tx : body.getResult()) {
+                        EntTransactionEntity transactionEntity = new EntTransactionEntity();
+                        transactionEntity.setAmount(tx.getValue());
+                        transactionEntity.setConfirmations(tx.getConfirmations());
+                        transactionEntity.setTime(tx.getTimeStamp());
+                        transactionEntity.setTxId(tx.getHash());
+                        transactionEntity.setSent(!address.toLowerCase().equals(tx.getTo().toLowerCase()));
+                        transactionEntity.setFrom(tx.getFrom());
+                        transactionEntity.setTokenAddress(tx.getContractAddress());
+                        list.add(transactionEntity);
+                    }
+                }
+                mediatorLiveData.postValue(Resource.success(list));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
+    }
+
+    /**
+     * getBitBalanceList By first network
+     *
+     * @param network
+     * @param addresses
+     * @return
+     */
+    private LiveData<Resource<List<EntBalanceEntity>>> getEthBalanceListBy1st(int network, String[] addresses) {
+        MediatorLiveData<Resource<List<EntBalanceEntity>>> mediatorLiveData = new MediatorLiveData<>();
+        StringBuffer addressArr = new StringBuffer();
+        for (int i = 0; i < addresses.length; i++) {
+            addressArr.append(addresses[i]);
+            if (i != addresses.length - 1) {
+                addressArr.append(",");
+            }
+        }
+        mediatorLiveData.addSource(transactionThirdService.getBalanceListForEthByEtherScan(secondNetWork.get(network), addressArr.toString(), get2ndRandomApiKey()), (resource -> {
+            if (resource.isSuccessful()) {
+                EthBalanceListForEtherScan body = resource.body;
+                List<EntBalanceEntity> balanceEntityList = new ArrayList<>();
+                if (body.getResult() != null) {
+                    for (EthBalanceListForEtherScan.Account address : body.getResult()) {
+                        EntBalanceEntity balanceEntity = new EntBalanceEntity();
+                        balanceEntity.setAddress(address.getAccount());
+                        balanceEntity.setBalance(address.getBalance());
+                        balanceEntityList.add(balanceEntity);
+                    }
+                }
+                mediatorLiveData.postValue(Resource.success(balanceEntityList));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
     }
 
     /**

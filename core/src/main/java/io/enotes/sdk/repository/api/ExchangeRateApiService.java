@@ -2,6 +2,7 @@ package io.enotes.sdk.repository.api;
 
 import android.arch.lifecycle.LiveData;
 
+import java.util.List;
 import java.util.Map;
 
 import io.enotes.sdk.repository.api.entity.response.exchange.BitzEntity;
@@ -19,7 +20,7 @@ public interface ExchangeRateApiService {
     String URI_COINBASE = "api.coinbase.com";
     String URI_OKEX = "www.okex.com";
 
-    @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?tsyms=USD,CNY,EUR,JPY")
+    @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?tsyms=USD,CNY,EUR,JPY,BTC,ETH")
     LiveData<ApiResponse<Map<String, CryptoCompareEntity>>> getExchangeRateForCryptocompare(@Query("fsyms") String fsyms);
 
     @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?fsyms=USD&tsyms=CNY,EUR,JPY")
@@ -34,8 +35,8 @@ public interface ExchangeRateApiService {
     @GET("https://" + URI_COINBASE + "/v2/exchange-rates")
     LiveData<ApiResponse<CoinbaseEntity>> getExchangeRateForCoinbase(@Query("currency") String coin);
 
-    @GET("https://" + URI_OKEX + "/api/spot/v3/instruments/GUSD-BtC/ticker")
-    LiveData<ApiResponse<OkexGUSDBTCEntity>> getExchangeRateGUSDBTCForOkex();
+    @GET("https://" + URI_OKEX + "/api/spot/v3/instruments/ticker")
+    LiveData<ApiResponse<List<OkexGUSDBTCEntity>>> getExchangeRateAllForOkex();
 
     @GET("https://" + URI_OKEX + "/api/v1/future_index.do")
     LiveData<ApiResponse<OkexBTCUSDEntity>> getExchangeRateOkex(@Query("symbol") String symbol);

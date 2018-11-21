@@ -41,6 +41,8 @@ public class BitzEntity implements BaseThirdEntity{
         rateEntity.setDigiccy(data.btc==null? ExchangeRateApiProvider.DIGICCY_ETH:ExchangeRateApiProvider.DIGICCY_ETH);
         Symbol symbol = data.btc==null?data.eth:data.btc;
         EntExchangeRateEntity.Data exData = new EntExchangeRateEntity.Data();
+        exData.setBtc(symbol.btc);
+        exData.setEth(symbol.eth);
         exData.setUsd(symbol.usd);
         exData.setEur(symbol.eur);
         exData.setCny(symbol.cny);
@@ -71,10 +73,28 @@ public class BitzEntity implements BaseThirdEntity{
     }
 
     public static class Symbol {
+        private String btc;
+        private String eth;
         private String usd;
         private String cny;
         private String eur;
         private String jpy;
+
+        public String getBtc() {
+            return btc;
+        }
+
+        public void setBtc(String btc) {
+            this.btc = btc;
+        }
+
+        public String getEth() {
+            return eth;
+        }
+
+        public void setEth(String eth) {
+            this.eth = eth;
+        }
 
         public String getUsd() {
             return usd;

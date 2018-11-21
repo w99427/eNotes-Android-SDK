@@ -482,6 +482,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
                 mCard.postValue(Resource.success(card));
                 return;
             }
+            readApduVersion();
             card.setCert(readCert());
             card.setCurrencyPubKey(readCurrencyPubKey());
             setCurrencyAddress(card);
@@ -498,6 +499,13 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             mCard.postValue(Resource.error(e.getCode(), e.getMessage()));
         } finally {
             LogUtils.d(TAG, "checkCard spend time: " + (System.currentTimeMillis() - startTime));
+        }
+    }
+
+    private void readApduVersion() throws CommandException {
+        String version = new String(transceive2TLV(Command.newCmd().setDesc("apdu version").setCmdStr("00CA0012")).getBytesValue(Commands.TLVTag.Apdu_Protocol_Version));
+        if(version.compareTo(Constant.APDU.APDU_VERSION)>0){
+            throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
         }
     }
 
@@ -524,6 +532,9 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             cert = Cert.fromHex(certHex);
             if (cert == null || cert.getPublicKey() == null) {
                 throw new CommandException(ErrorCode.INVALID_CARD, "No cert");
+            }
+            if(cert.getCertVersion()>Constant.APDU.CERT_VERSION){
+                throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
             LogUtils.i(TAG, cert.toString());
             //verify manufacture cert
