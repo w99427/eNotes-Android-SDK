@@ -34,6 +34,7 @@ import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcUtxoForBl
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcUtxoForBlockExplorer;
 import io.enotes.sdk.repository.base.Resource;
+import io.enotes.sdk.utils.Utils;
 
 import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_BITCOIN;
 
@@ -240,7 +241,7 @@ public class BtcApiProvider extends BaseApiProvider {
                     for (BtcBalanceListForBlockChain.Address address : body.getAddresses()) {
                         EntBalanceEntity balanceEntity = new EntBalanceEntity();
                         balanceEntity.setAddress(address.getAddress());
-                        balanceEntity.setBalance(address.getFinal_balance());
+                        balanceEntity.setBalance(Utils.intToHexString(address.getFinal_balance()));
                         balanceEntityList.add(balanceEntity);
                     }
                 }

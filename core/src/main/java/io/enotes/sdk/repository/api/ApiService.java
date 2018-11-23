@@ -69,7 +69,7 @@ public interface ApiService {
     String URI_BLOCKEXPLORER = "blockexplorer.com";
 
     /*****Balance List Api***/
-    @GET("https://{network}" + URI_BLOCKCHAIN + "/multiaddr?n=1limit=0&filter=5")
+    @GET("https://{network}" + URI_BLOCKCHAIN + "/multiaddr?n=1&limit=0&filter=5")
     LiveData<ApiResponse<BtcBalanceListForBlockChain>> getBalanceListForBtcByBlockChain(@Path("network") String network, @Query("active") String addresses);
 
     /*****Balance Api***/

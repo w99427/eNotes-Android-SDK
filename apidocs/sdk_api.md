@@ -14,6 +14,10 @@
 - [isPresent](#isPresent)
 - [getBtcRawTransaction](#getBtcRawTransaction)
 - [getEthRawTransaction](#getEthRawTransaction)
+- [freezeTransaction](#freezeTransaction)
+- [unFreezeTransaction](#unFreezeTransaction)
+- [getFreezeStatus](#getFreezeStatus)
+- [getUnFresszeTries](#getUnFresszeTries)
 
 ## RPCApiManager
 
@@ -266,6 +270,36 @@ cardManager.getEthRawTransaction(Card card, string nonce, String estimateGas, St
 	}
 })
 ```
+
+### freezeTransaction
+- freezeTransaction.
+- interface definition：
+```
+public boolean freezeTransaction(String pin)
+```
+
+### unFreezeTransaction
+- unFreezeTransaction.
+- interface definition：
+```
+public boolean unFreezeTransaction(String pin)
+```
+
+### getFreezeStatus
+- getFreezeStatus.
+- interface definition：
+```
+public int getFreezeStatus()
+```
+
+### getUnFresszeTries
+- getUnFresszeTries.
+- interface definition：
+```
+public int getUnFresszeTries()
+```
+
+
 
 ## RPCApiManager Reference
 

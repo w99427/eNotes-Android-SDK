@@ -122,4 +122,9 @@ public interface CardInterface {
      * @param tag
      */
     void parseNfcTag(Tag tag);
+
+    int getFreezeStatus() throws CommandException;
+    int getUnFreezeTries() throws CommandException;
+    boolean freezeTransaction(String pin) throws CommandException;
+    boolean unFreezeTransaction(String pin) throws CommandException;
 }

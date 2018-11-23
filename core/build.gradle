@@ -4,7 +4,7 @@ apply plugin: 'com.novoda.bintray-release'
 publish {
     def groupProjectID = 'io.enotes.sdk'
     def artifactProjectID = 'sdk'
-    def publishVersionID = '0.1.2'
+    def publishVersionID = '0.1.5'
 
     userOrg = 'enoteschain'
     repoName = 'sdk'
@@ -20,7 +20,7 @@ android {
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 27
-        versionCode 3
+        versionCode 5
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 

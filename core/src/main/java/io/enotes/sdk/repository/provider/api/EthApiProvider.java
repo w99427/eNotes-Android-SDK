@@ -38,6 +38,7 @@ import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransac
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthBalanceListForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthTransactionListForEtherScan;
 import io.enotes.sdk.repository.base.Resource;
+import io.enotes.sdk.utils.Utils;
 
 import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_ETHER;
 
@@ -273,7 +274,7 @@ public class EthApiProvider extends BaseApiProvider {
                     for (EthBalanceListForEtherScan.Account address : body.getResult()) {
                         EntBalanceEntity balanceEntity = new EntBalanceEntity();
                         balanceEntity.setAddress(address.getAccount());
-                        balanceEntity.setBalance(address.getBalance());
+                        balanceEntity.setBalance(Utils.intToHexString(address.getBalance()));
                         balanceEntityList.add(balanceEntity);
                     }
                 }

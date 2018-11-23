@@ -24,6 +24,7 @@ import io.enotes.sdk.repository.api.entity.response.simulate.BluetoothEntity;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.repository.card.Command;
 import io.enotes.sdk.repository.card.CommandException;
+import io.enotes.sdk.repository.card.Commands;
 import io.enotes.sdk.repository.card.Reader;
 import io.enotes.sdk.repository.card.TLVBox;
 import io.enotes.sdk.repository.db.entity.Card;
@@ -189,5 +190,35 @@ public class CardManager implements CardInterface {
     @Override
     public void parseNfcTag(Tag tag) {
         cardProvider.parseAndConnect(new Reader().setTag(tag));
+    }
+
+    @Override
+    public int getFreezeStatus() throws CommandException {
+        byte[] bytes = ByteUtil.hexStringToBytes(transmitApdu(Commands.getFreezeStatus()));
+        TLVBox tlvBox = TLVBox.parse(bytes, 0, bytes.length);
+        return new BigInteger(tlvBox.getStringValue(Commands.TLVTag.Transaction_Freeze_Status), 16).intValue();
+    }
+
+    @Override
+    public int getUnFreezeTries() throws CommandException {
+        byte[] bytes = ByteUtil.hexStringToBytes(transmitApdu(Commands.getReadUnfreezeTries()));
+        TLVBox tlvBox = TLVBox.parse(bytes, 0, bytes.length);
+        return new BigInteger(tlvBox.getStringValue(Commands.TLVTag.Transaction_Freeze_Tries), 16).intValue();
+    }
+
+    @Override
+    public boolean freezeTransaction(String pin) throws CommandException {
+        TLVBox tlvBox = new TLVBox();
+        tlvBox.putBytesValue(Commands.TLVTag.Transaction_Freeze_Pin, pin.getBytes());
+        transmitApdu(Commands.freezeTx(tlvBox.serialize()));
+        return true;
+    }
+
+    @Override
+    public boolean unFreezeTransaction(String pin) throws CommandException {
+        TLVBox tlvBox = new TLVBox();
+        tlvBox.putBytesValue(Commands.TLVTag.Transaction_Freeze_Pin, pin.getBytes());
+        transmitApdu(Commands.unFreezeTx(tlvBox.serialize()));
+        return true;
     }
 }
