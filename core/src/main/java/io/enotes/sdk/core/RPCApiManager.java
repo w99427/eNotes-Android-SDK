@@ -17,9 +17,11 @@ import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
+import io.enotes.sdk.repository.api.entity.EntNotificationEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.api.entity.EntVersionEntity;
 import io.enotes.sdk.repository.provider.ApiProvider;
 import io.enotes.sdk.viewmodel.RPCApiViewModel;
 
@@ -105,6 +107,15 @@ public class RPCApiManager implements RPCApiInterface {
         apiProvider.call(network, address, data).observe(fragmentActivity, (callback::onCallBack));
     }
 
+    @Override
+    public void subscribeNotification(String blockChain, int network, String txId, String cId, @NonNull Callback<EntNotificationEntity> callback) {
+        apiProvider.subscribeNotification(blockChain, network, txId, cId).observe(fragmentActivity, (callback::onCallBack));
+    }
+
+    @Override
+    public void updateVersion(@NonNull Callback<EntVersionEntity> callback) {
+        apiProvider.updateVersion().observe(fragmentActivity, (callback::onCallBack));
+    }
 
     public static class NetworkConfig {
         public String[] etherscanKeys;

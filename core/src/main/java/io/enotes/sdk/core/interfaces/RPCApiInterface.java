@@ -14,9 +14,11 @@ import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
+import io.enotes.sdk.repository.api.entity.EntNotificationEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.api.entity.EntVersionEntity;
 import io.enotes.sdk.repository.base.Resource;
 
 public interface RPCApiInterface {
@@ -140,4 +142,8 @@ public interface RPCApiInterface {
      * @param callback
      */
     void call(int network, String address, String data, @NonNull Callback<EntCallEntity> callback);
+
+    void subscribeNotification(String blockChain, int network, String txId, String cId,@NonNull Callback<EntNotificationEntity> callback);
+
+    void updateVersion(@NonNull Callback<EntVersionEntity> callback);
 }

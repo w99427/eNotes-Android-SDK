@@ -15,6 +15,7 @@ import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntNotificationEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.api.entity.EntVersionEntity;
 import io.enotes.sdk.repository.api.entity.ResponseEntity;
 import io.enotes.sdk.repository.api.entity.request.EntBalanceListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntConfirmedListRequest;
@@ -124,7 +125,7 @@ public interface ApiService {
     @GET("https://{network}" + URI_BLOCKCHAIN + "/rawaddr/{address}")
     LiveData<ApiResponse<BtcTransactionListForBlockChain>> getTransactionListByBlockChain(@Path("network") String network, @Path("address") String address);
 
-    @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/addrs/{address}/txs/?from=0&to=100")
+    @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/addrs/{address}/txs/?from=0&to=50")
     LiveData<ApiResponse<BtcTransactionListForBlockExplorer>> getTransactionListByBlockExplorer(@Path("network") String network, @Path("address") String address);
 
     @GET("https://" + URI_BLOCKCYPHER + "/v1/btc/{network}/addrs/{address}")
@@ -200,10 +201,10 @@ public interface ApiService {
     LiveData<ApiResponse<EntCallEntity>> callForEthByEtherScan(@Path("network") String network, @Query("to") String contractAddress, @Query("data") String data, @Query("apikey") String apiKey);
 
     /*****Transaction List Api***/
-    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=account&action=txlist&page=1&offset=100&sort=desc")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=account&action=txlist&page=1&offset=50&sort=desc")
     LiveData<ApiResponse<EthTransactionListForEtherScan>> getTransactionListByEtherScan(@Path("network") String network, @Query("address") String address, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=account&action=tokentx&page=1&offset=100&sort=desc")
+    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=account&action=tokentx&page=1&offset=50&sort=desc")
     LiveData<ApiResponse<EthTransactionListForEtherScan>> getTokenTransactionListByEtherScan(@Path("network") String network, @Query("contractaddress") String contractAddress, @Query("address") String address, @Query("token") String apiKey);
 
     /**********************************ENOTES****************************************/
@@ -241,5 +242,8 @@ public interface ApiService {
 
     @GET("v1/eth_call/ethereum/{network}/")
     LiveData<ApiResponse<ResponseEntity<EntCallEntity>>> callByES(@Path("network") String network, @Query("to") String contractAddress, @Query("data") String data);
+
+    @GET("v1/version/check/")
+    LiveData<ApiResponse<EntVersionEntity>> updateVersion();
 
 }

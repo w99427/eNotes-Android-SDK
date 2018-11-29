@@ -1,11 +1,12 @@
 package io.enotes.sdk.repository.api.entity.response.exchange;
 
+import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.repository.api.entity.BaseENotesEntity;
 import io.enotes.sdk.repository.api.entity.BaseThirdEntity;
 import io.enotes.sdk.repository.api.entity.EntExchangeRateEntity;
 import io.enotes.sdk.repository.provider.api.ExchangeRateApiProvider;
 
-public class BitzEntity implements BaseThirdEntity{
+public class BitzEntity implements BaseThirdEntity {
     private int status;
     private String msg;
     private Data data;
@@ -38,8 +39,8 @@ public class BitzEntity implements BaseThirdEntity{
     public EntExchangeRateEntity parseToENotesEntity() {
         EntExchangeRateEntity rateEntity = new EntExchangeRateEntity();
         rateEntity.setExchange("bitz");
-        rateEntity.setDigiccy(data.btc==null? ExchangeRateApiProvider.DIGICCY_ETH:ExchangeRateApiProvider.DIGICCY_ETH);
-        Symbol symbol = data.btc==null?data.eth:data.btc;
+        rateEntity.setDigiccy(data.btc == null ? Constant.CardType.ETH : Constant.CardType.BTC);
+        Symbol symbol = data.btc == null ? data.eth : data.btc;
         EntExchangeRateEntity.Data exData = new EntExchangeRateEntity.Data();
         exData.setBtc(symbol.btc);
         exData.setEth(symbol.eth);

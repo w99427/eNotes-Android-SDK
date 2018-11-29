@@ -21,62 +21,64 @@ public class RetrofitFactory {
     private static ExchangeRateApiService exchangeRateApiService;
     private static SimulateCardService simulateCardService;
     public static final String ENOTES_SERVER = "https://api.enotes.io:8443/";
-    private static String DEBUG_SERVER ="";
+    private static String DEBUG_SERVER = "";
 
-    public static ApiService getTransactionService() {
+    public static ApiService getTransactionService(Context context) {
         if (apiService == null) {
-            apiService = getBaseRetrofit(true)
+            apiService = getBaseRetrofit(context, true)
                     .create(ApiService.class);
         }
         return apiService;
     }
 
-    public static ApiService getTransactionThirdService() {
+    public static ApiService getTransactionThirdService(Context context) {
         if (transactionThirdService == null) {
-            transactionThirdService = getBaseRetrofit(false)
+            transactionThirdService = getBaseRetrofit(context, false)
                     .create(ApiService.class);
         }
         return transactionThirdService;
     }
 
-    public static ExchangeRateApiService getExchangeRateService() {
+    public static ExchangeRateApiService getExchangeRateService(Context context) {
         if (exchangeRateApiService == null) {
-            exchangeRateApiService = getBaseRetrofit(true)
+            exchangeRateApiService = getBaseRetrofit(context, false)
                     .create(ExchangeRateApiService.class);
         }
         return exchangeRateApiService;
     }
 
-    public static SimulateCardService getSimulateCardService() {
-        if (simulateCardService == null||!DEBUG_SERVER.equals(ENotesSDK.config.emulatorCardIp)) {
+    public static SimulateCardService getSimulateCardService(Context context) {
+        if (simulateCardService == null || !DEBUG_SERVER.equals(ENotesSDK.config.emulatorCardIp)) {
             DEBUG_SERVER = ENotesSDK.config.emulatorCardIp;
-            simulateCardService = getSimulateRetrofit()
+            simulateCardService = getSimulateRetrofit(context)
                     .create(SimulateCardService.class);
         }
         return simulateCardService;
     }
 
-    private static Retrofit getBaseRetrofit(boolean eNotes) {
+    private static Retrofit getBaseRetrofit(Context context, boolean eNotes) {
         return new Retrofit.Builder()
                 .baseUrl(ENOTES_SERVER)
-                .client(getOkHttpClient(eNotes))
+                .client(getOkHttpClient(context, eNotes))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(new LiveDataCallAdapterFactory())
                 .build();
     }
 
-    private static Retrofit getSimulateRetrofit() {
+    private static Retrofit getSimulateRetrofit(Context context) {
         return new Retrofit.Builder()
                 .baseUrl("http://" + ENotesSDK.config.emulatorCardIp + ":8083/")
-                .client(getOkHttpClient(true))
+                .client(getOkHttpClient(context, false))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(new LiveDataCallAdapterFactory())
                 .build();
     }
 
-    private static OkHttpClient getOkHttpClient(boolean eNotes) {
+    private static OkHttpClient getOkHttpClient(Context context, boolean eNotes) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
+        if (eNotes && ENotesSDK.config.isRequestENotesServer) {
+            SslContextFactory.setHttpClientSSLFactory(builder, context);
+        }
         builder.hostnameVerifier((hostname, session) -> true);
         builder.addInterceptor(getHttpLoggingInterceptor());
         builder.addInterceptor(getRetryIntercept());
@@ -84,8 +86,8 @@ public class RetrofitFactory {
             builder.connectTimeout(8000, TimeUnit.MILLISECONDS)
                     .readTimeout(8000, TimeUnit.MILLISECONDS).writeTimeout(20000, TimeUnit.MILLISECONDS);
         } else {
-            builder.connectTimeout(2000, TimeUnit.MILLISECONDS)
-                    .readTimeout(2000, TimeUnit.MILLISECONDS).writeTimeout(2000, TimeUnit.MILLISECONDS);
+            builder.connectTimeout(20000, TimeUnit.MILLISECONDS)
+                    .readTimeout(20000, TimeUnit.MILLISECONDS).writeTimeout(20000, TimeUnit.MILLISECONDS);
         }
         return builder.build();
 

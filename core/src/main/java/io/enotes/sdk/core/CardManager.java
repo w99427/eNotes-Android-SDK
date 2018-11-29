@@ -167,7 +167,12 @@ public class CardManager implements CardInterface {
             }
             EthRawTransaction ethRawTransaction = new EthRawTransaction();
             try {
-                BigInteger toValue = new BigInteger(value).subtract((new BigInteger(gasPrice).multiply(new BigInteger(estimateGas))));
+                BigInteger toValue;
+                if (value.equals("0")) {
+                    toValue = new BigInteger(value);
+                } else {
+                    toValue = new BigInteger(value).subtract((new BigInteger(gasPrice).multiply(new BigInteger(estimateGas))));
+                }
                 String rawTransaction = ethRawTransaction.getRawTransaction(card, cardProvider, ByteUtil.bigIntegerToBytes(new BigInteger(nonce)), ByteUtil.bigIntegerToBytes(new BigInteger(gasPrice)), ByteUtil.bigIntegerToBytes(new BigInteger(estimateGas)), ByteUtil.hexStringToBytes(toAddress), ByteUtil.bigIntegerToBytes(toValue), data);
                 handler.post(() -> {
                     callback.onCallBack(Resource.success(rawTransaction));

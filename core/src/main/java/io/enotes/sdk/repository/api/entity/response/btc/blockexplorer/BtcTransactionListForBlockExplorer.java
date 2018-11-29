@@ -3,14 +3,14 @@ package io.enotes.sdk.repository.api.entity.response.btc.blockexplorer;
 import java.util.List;
 
 public class BtcTransactionListForBlockExplorer {
-    private List<Tx> txs;
+    private List<Tx> items;
 
-    public List<Tx> getTxs() {
-        return txs;
+    public List<Tx> getItems() {
+        return items;
     }
 
-    public void setTxs(List<Tx> txs) {
-        this.txs = txs;
+    public void setItems(List<Tx> items) {
+        this.items = items;
     }
 
     public static class Tx {

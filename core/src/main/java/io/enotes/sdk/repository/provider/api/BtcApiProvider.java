@@ -157,7 +157,7 @@ public class BtcApiProvider extends BaseApiProvider {
         mediatorLiveData.addSource(transactionThirdService.getTransactionListByBlockExplorer(secondNetWork.get(network), address), (resource -> {
             if (resource.isSuccessful()) {
                 List<EntTransactionEntity> list = new ArrayList<>();
-                List<BtcTransactionListForBlockExplorer.Tx> txs = resource.body.getTxs();
+                List<BtcTransactionListForBlockExplorer.Tx> txs = resource.body.getItems();
                 if (txs != null) {
                     for (BtcTransactionListForBlockExplorer.Tx tx : txs) {
                         EntTransactionEntity entTransactionEntity = new EntTransactionEntity();

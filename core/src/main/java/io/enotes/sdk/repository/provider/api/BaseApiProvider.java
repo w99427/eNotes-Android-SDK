@@ -13,6 +13,7 @@ import java.util.Random;
 
 import io.enotes.sdk.constant.ErrorCode;
 import io.enotes.sdk.constant.Status;
+import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.repository.api.ApiResponse;
 import io.enotes.sdk.repository.api.entity.BaseENotesEntity;
 import io.enotes.sdk.repository.api.entity.BaseEthEntity;
@@ -41,7 +42,8 @@ public abstract class BaseApiProvider {
             sourceList.add(liveData);
         }
         //remove eNotes server
-        sourceList.remove(sourceList.size() - 1);
+        if (!ENotesSDK.config.isRequestENotesServer)
+            sourceList.remove(sourceList.size() - 1);
         recurLiveDataSource(mutableLiveData, sourceList);
         return mutableLiveData;
     }
@@ -103,7 +105,8 @@ public abstract class BaseApiProvider {
             sourceList.add(liveData);
         }
         //remove eNotes server
-        sourceList.remove(sourceList.size() - 1);
+        if (!ENotesSDK.config.isRequestENotesServer)
+            sourceList.remove(sourceList.size() - 1);
         recurLiveDataSourceRandom(mutableLiveData, sourceList);
         return mutableLiveData;
     }

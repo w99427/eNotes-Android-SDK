@@ -43,7 +43,7 @@ public class ExChangeRateApiTest {
 
     @Test
     public void testBTCExchangeRate() {
-        Resource<EntExchangeRateEntity> entity = getValue(apiProvider.getExchangeRate(ExchangeRateApiProvider.DIGICCY_BTC));
+        Resource<EntExchangeRateEntity> entity = getValue(apiProvider.getExchangeRate(Constant.CardType.BTC));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
         assertNotNull(entity.data);
@@ -52,7 +52,7 @@ public class ExChangeRateApiTest {
 
     @Test
     public void testETHExchangeRate() {
-        Resource<EntExchangeRateEntity> entity = getValue(apiProvider.getExchangeRate(ExchangeRateApiProvider.DIGICCY_ETH));
+        Resource<EntExchangeRateEntity> entity = getValue(apiProvider.getExchangeRate(Constant.CardType.ETH));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
         assertNotNull(entity.data);
@@ -61,7 +61,7 @@ public class ExChangeRateApiTest {
 
     @Test
     public void testGUSDExchangeRate() {
-        Resource<EntExchangeRateEntity> entity = getValue(apiProvider.getExchangeRate(ExchangeRateApiProvider.DIGICCY_GUSD));
+        Resource<EntExchangeRateEntity> entity = getValue(apiProvider.getExchangeRate(Constant.CardType.GUSD));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
         assertNotNull(entity.data);

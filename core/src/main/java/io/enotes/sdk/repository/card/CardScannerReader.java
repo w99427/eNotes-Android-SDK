@@ -17,6 +17,7 @@ import org.ethereum.util.ByteUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.enotes.sdk.BuildConfig;
 import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.ErrorCode;
 import io.enotes.sdk.constant.Status;
@@ -241,7 +242,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     @Override
     public void startScan() {
         if (ENotesSDK.config.debugForEmulatorCard) {
-            simulateCardService = RetrofitFactory.getSimulateCardService();
+            simulateCardService = RetrofitFactory.getSimulateCardService(mContext);
             mReader.addSource(simulateCardService.getBluetoothList(), (responseEntityApiResponse -> {
                 if (responseEntityApiResponse.isSuccessful()) {
                     if (responseEntityApiResponse.body.getCode() == 0 && responseEntityApiResponse.body.getData() != null) {
@@ -496,7 +497,10 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
                 mCard.postValue(Resource.success(card, "bluetooth"));
         } catch (CommandException e) {
             LogUtils.d(TAG, "detectCoin exception: " + e.getMessage());
-            mCard.postValue(Resource.error(e.getCode(), e.getMessage()));
+            if (e.getMessage().contains("Tag was lost")) {
+                mCard.postValue(Resource.error(ErrorCode.NFC_DISCONNECTED, e.getMessage()));
+            } else
+                mCard.postValue(Resource.error(e.getCode(), e.getMessage()));
         } finally {
             LogUtils.d(TAG, "checkCard spend time: " + (System.currentTimeMillis() - startTime));
         }
@@ -504,7 +508,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
 
     private void readApduVersion() throws CommandException {
         String version = new String(transceive2TLV(Command.newCmd().setDesc("apdu version").setCmdStr("00CA0012")).getBytesValue(Commands.TLVTag.Apdu_Protocol_Version));
-        if(version.compareTo(Constant.APDU.APDU_VERSION)>0){
+        if (version.compareTo(Constant.APDU.APDU_VERSION) > 0 && !ENotesSDK.config.debugCard) {
             throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
         }
     }
@@ -533,7 +537,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             if (cert == null || cert.getPublicKey() == null) {
                 throw new CommandException(ErrorCode.INVALID_CARD, "No cert");
             }
-            if(cert.getCertVersion()>Constant.APDU.CERT_VERSION){
+            if (cert.getCertVersion() > Constant.APDU.CERT_VERSION && !ENotesSDK.config.debugCard) {
                 throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
             LogUtils.i(TAG, cert.toString());

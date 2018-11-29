@@ -10,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.math.BigDecimal;
 import java.util.List;
 
+import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.repository.api.ExchangeRateApiService;
 import io.enotes.sdk.repository.api.RetrofitFactory;
@@ -22,24 +23,21 @@ import io.enotes.sdk.repository.base.Resource;
 import static io.enotes.sdk.constant.ErrorCode.NET_ERROR;
 
 public class ExchangeRateApiProvider extends BaseApiProvider {
-    public static final String DIGICCY_BTC = "BTC";
-    public static final String DIGICCY_ETH = "ETH";
-    public static final String DIGICCY_GUSD = "GUSD";
 
     @Retention(RetentionPolicy.SOURCE)
-    @StringDef({DIGICCY_BTC, DIGICCY_ETH, DIGICCY_GUSD})
+    @StringDef({Constant.CardType.BTC, Constant.CardType.ETH, Constant.CardType.GUSD, Constant.CardType.OTHER_ERC20})
     public @interface RateMode {
     }
 
     private ExchangeRateApiService exchangeRateApiService;
     private EntExchangeRateUSDEntity entExchangeRateUSDEntity;
 
-    public ExchangeRateApiProvider() {
-        exchangeRateApiService = RetrofitFactory.getExchangeRateService();
+    public ExchangeRateApiProvider(ExchangeRateApiService exchangeRateApiService) {
+        this.exchangeRateApiService = exchangeRateApiService;
     }
 
     public LiveData<Resource<EntExchangeRateEntity>> getExchangeRate(@RateMode String digiccy) {
-        if (digiccy.contains(DIGICCY_GUSD)) {
+        if (digiccy.contains(Constant.CardType.GUSD)||digiccy.contains(Constant.CardType.OTHER_ERC20)) {
             return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy), getExchangeRateGUSD1st(digiccy));
         } else {
             return addLiveDataSourceNoENotes(getExchangeRate1st(digiccy), getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
@@ -80,12 +78,12 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                                     }
                                 }
                                 String scale = "1";
-                                if (digiccy.equals(DIGICCY_BTC)) {
+                                if (digiccy.equals(Constant.CardType.BTC)) {
                                     scale = "1";
                                     exData.setBtc(scale);
-                                    exData.setEth(new BigDecimal(scale).divide(new BigDecimal(eth2btc),10, BigDecimal.ROUND_HALF_UP).toString());
+                                    exData.setEth(new BigDecimal(scale).divide(new BigDecimal(eth2btc), 10, BigDecimal.ROUND_HALF_UP).toString());
 
-                                } else if (digiccy.equals(DIGICCY_ETH)) {
+                                } else if (digiccy.equals(Constant.CardType.ETH)) {
                                     scale = eth2btc;
                                     exData.setBtc(eth2btc);
                                     exData.setEth("1");
@@ -167,7 +165,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                                 List<OkexGUSDBTCEntity> listAll = resource0.body;
                                 String gusd2btc = "1";
                                 String gusd2eth = "1";
-                                String eth2btc="1";
+                                String eth2btc = "1";
                                 for (OkexGUSDBTCEntity gusdbtcEntity : listAll) {
                                     if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.GUSD_BTC)) {
                                         gusd2btc = gusdbtcEntity.getLast();

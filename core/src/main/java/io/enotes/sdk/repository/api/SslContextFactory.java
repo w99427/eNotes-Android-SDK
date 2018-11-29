@@ -38,6 +38,7 @@ public class SslContextFactory {
      */
     public static void setHttpClientSSLFactory(OkHttpClient.Builder builder, Context context) {
         try {
+            if(context == null)return;
             SSLParams client_bks = SslContextFactory.getSslSocketFactoryBase(null, context.getAssets().open(CLIENT_BKS), CLIENT_TRUST_PASSWORD, context.getAssets().open(CLIENT_CA));
             builder.sslSocketFactory(client_bks.sSLSocketFactory, client_bks.trustManager);
         } catch (IOException e) {

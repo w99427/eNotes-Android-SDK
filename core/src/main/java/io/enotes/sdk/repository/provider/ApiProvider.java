@@ -15,8 +15,10 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import io.enotes.sdk.constant.Constant;
+import io.enotes.sdk.constant.ErrorCode;
 import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.repository.api.ApiService;
+import io.enotes.sdk.repository.api.ExchangeRateApiService;
 import io.enotes.sdk.repository.api.RetrofitFactory;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntCallEntity;
@@ -30,6 +32,7 @@ import io.enotes.sdk.repository.api.entity.EntNotificationEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.api.entity.EntVersionEntity;
 import io.enotes.sdk.repository.api.entity.request.EntNotificationListRequest;
 import io.enotes.sdk.repository.base.BaseManager;
 import io.enotes.sdk.repository.base.Resource;
@@ -51,17 +54,19 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
     private BtcApiProvider btcApiManager;
     private EthApiProvider ethApiManager;
     private ExchangeRateApiProvider exchangeRateApiProvider;
+    private ExchangeRateApiService exchangeRateApiService;
     private MfrDao mfrDao;
 
     public ApiProvider(Context context) {
         super();
         if (context != null)
             mfrDao = AppDataBase.init(context).getMfrDao();
-        apiService = RetrofitFactory.getTransactionService();
-        transactionThirdService = RetrofitFactory.getTransactionThirdService();
+        apiService = RetrofitFactory.getTransactionService(context);
+        transactionThirdService = RetrofitFactory.getTransactionThirdService(context);
+        exchangeRateApiService = RetrofitFactory.getExchangeRateService(context);
         btcApiManager = new BtcApiProvider(apiService, transactionThirdService);
         ethApiManager = new EthApiProvider(apiService, transactionThirdService);
-        exchangeRateApiProvider = new ExchangeRateApiProvider();
+        exchangeRateApiProvider = new ExchangeRateApiProvider(exchangeRateApiService);
     }
 
     /**
@@ -314,6 +319,23 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * update version
+     *
+     * @return latest version
+     */
+    public LiveData<Resource<EntVersionEntity>> updateVersion() {
+        MediatorLiveData<Resource<EntVersionEntity>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(apiService.updateVersion(), (api -> {
+            if (api.isSuccessful()) {
+                mediatorLiveData.postValue(Resource.success(api.body));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
     }
 
     /**
