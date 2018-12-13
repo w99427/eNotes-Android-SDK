@@ -206,6 +206,15 @@ public class RPCApiTest {
         }
     }
 
+    @Test
+    public void testOmniBalance() {
+        Resource<EntBalanceEntity> entity = getValue(apiProvider.getOmniBalance(Constant.Network.BTC_MAINNET, "12aGZoKeX2pryP7ywyNFFfLiaUp1KyfZzD","31"));
+        assertTrue(entity != null);
+        assertTrue(entity.status == Status.SUCCESS);
+        assertNotNull(entity.data);
+        Log.i(TAG, "testOmniBalance -> \n" + entity.data.getBalance().toString());
+    }
+
     private static <T> T getValue(LiveData<T> liveData) {
         try {
             final Object[] objects = new Object[1];

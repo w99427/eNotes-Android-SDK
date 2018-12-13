@@ -39,8 +39,17 @@ public class BitzEntity implements BaseThirdEntity {
     public EntExchangeRateEntity parseToENotesEntity() {
         EntExchangeRateEntity rateEntity = new EntExchangeRateEntity();
         rateEntity.setExchange("bitz");
-        rateEntity.setDigiccy(data.btc == null ? Constant.CardType.ETH : Constant.CardType.BTC);
-        Symbol symbol = data.btc == null ? data.eth : data.btc;
+        Symbol symbol =null;
+        if(data.btc!=null){
+            rateEntity.setDigiccy(Constant.CardType.BTC);
+             symbol = data.btc;
+        }else if(data.eth!=null){
+            rateEntity.setDigiccy(Constant.CardType.ETH);
+            symbol = data.eth;
+        }else if(data.usdt!=null){
+            rateEntity.setDigiccy(Constant.CardType.USDT);
+            symbol = data.usdt;
+        }
         EntExchangeRateEntity.Data exData = new EntExchangeRateEntity.Data();
         exData.setBtc(symbol.btc);
         exData.setEth(symbol.eth);
@@ -48,6 +57,7 @@ public class BitzEntity implements BaseThirdEntity {
         exData.setEur(symbol.eur);
         exData.setCny(symbol.cny);
         exData.setJpy(symbol.jpy);
+        exData.setUsdt(symbol.usdt);
         rateEntity.setData(exData);
         return rateEntity;
     }
@@ -55,6 +65,7 @@ public class BitzEntity implements BaseThirdEntity {
     public static class Data {
         private Symbol btc;
         private Symbol eth;
+        private Symbol usdt;
 
         public Symbol getBtc() {
             return btc;
@@ -71,6 +82,14 @@ public class BitzEntity implements BaseThirdEntity {
         public void setEth(Symbol eth) {
             this.eth = eth;
         }
+
+        public Symbol getUsdt() {
+            return usdt;
+        }
+
+        public void setUsdt(Symbol usdt) {
+            this.usdt = usdt;
+        }
     }
 
     public static class Symbol {
@@ -80,6 +99,15 @@ public class BitzEntity implements BaseThirdEntity {
         private String cny;
         private String eur;
         private String jpy;
+        private String usdt;
+
+        public String getUsdt() {
+            return usdt;
+        }
+
+        public void setUsdt(String usdt) {
+            this.usdt = usdt;
+        }
 
         public String getBtc() {
             return btc;

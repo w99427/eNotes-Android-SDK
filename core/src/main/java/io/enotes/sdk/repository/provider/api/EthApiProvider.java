@@ -2,6 +2,7 @@ package io.enotes.sdk.repository.provider.api;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.content.Context;
 import android.text.TextUtils;
 
 import java.math.BigDecimal;
@@ -69,8 +70,8 @@ public class EthApiProvider extends BaseApiProvider {
         eNotesNetWork.put(Constant.Network.ETH_KOVAN, "kovan");
     }
 
-    public EthApiProvider(ApiService apiService, ApiService transactionThirdService) {
-        super();
+    public EthApiProvider(Context context, ApiService apiService, ApiService transactionThirdService) {
+        super(context);
         this.apiService = apiService;
         this.transactionThirdService = transactionThirdService;
     }
@@ -82,9 +83,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthBalance
      *
-     * @param network
-     * @param address
-     * @return
      */
     public LiveData<Resource<EntBalanceEntity>> getEthBalance(int network, String address) {
         List<EntBalanceListRequest> listRequests = new ArrayList<>();
@@ -99,9 +97,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * isConfirmedTxForEth
      *
-     * @param network
-     * @param txId
-     * @return
      */
     public LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForEth(int network, String txId) {
         List<EntConfirmedListRequest> listRequests = new ArrayList<>();
@@ -117,8 +112,6 @@ public class EthApiProvider extends BaseApiProvider {
      * get eth GasPrice
      * need select 2nd network, because of more recommend gasPrice
      *
-     * @param network
-     * @return
      */
     public LiveData<Resource<EntGasPriceEntity>> getEthGasPrice(int network) {
         return addLiveDataSource(getGasPriceForEthByThird(), getEthGasPriceBy1st(network), getEthGasPriceBy2nd(network), addSourceForES(apiService.getGasPriceByES(eNotesNetWork.get(network))));
@@ -127,9 +120,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * get eth nonce
      *
-     * @param network
-     * @param address
-     * @return
      */
     public LiveData<Resource<EntNonceEntity>> getEthNonce(int network, String address) {
         return addLiveDataSource(getEthNonceBy1st(network, address), getEthNonceBy2nd(network, address), addSourceForES(apiService.getNonceByES(eNotesNetWork.get(network), address)));
@@ -138,11 +128,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * get eth GasLimit
      *
-     * @param network
-     * @param toAddress
-     * @param value
-     * @param gasPrice
-     * @return
      */
     public LiveData<Resource<EntGasEntity>> estimateGas(int network, String from, String toAddress, String value, String gasPrice, String data) {
         if (!TextUtils.isEmpty(data)) value = "0";
@@ -152,8 +137,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * sendEthTx
      *
-     * @param hex
-     * @return
      */
     public LiveData<Resource<EntSendTxEntity>> sendEthTx(int network, String hex) {
         List<EntSendTxListRequest> listRequests = new ArrayList<>();
@@ -168,10 +151,7 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * call abi
      *
-     * @param toAddress
-     * @param datta
      * @param testCard  test card need call kovan network,release card call mainnet
-     * @return
      */
     public LiveData<Resource<EntCallEntity>> callEth(String toAddress, String datta, boolean testCard) {
         return addLiveDataSource(callEthBy1st(firstNetWork.get(testCard ? Constant.Network.ETH_KOVAN : Constant.Network.ETH_MAINNET), toAddress, datta), callEthBy2nd(secondNetWork.get(testCard ? Constant.Network.ETH_KOVAN : Constant.Network.ETH_MAINNET), toAddress, datta), addSourceForES(apiService.callByES(eNotesNetWork.get(testCard ? Constant.Network.ETH_KOVAN : Constant.Network.ETH_MAINNET), toAddress, datta)));
@@ -180,10 +160,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * call abi
      *
-     * @param network
-     * @param toAddress
-     * @param datta
-     * @return
      */
     public LiveData<Resource<EntCallEntity>> callEth(int network, String toAddress, String datta) {
         return addLiveDataSource(callEthBy1st(firstNetWork.get(network), toAddress, datta), callEthBy2nd(secondNetWork.get(network), toAddress, datta), addSourceForES(apiService.callByES(eNotesNetWork.get(network), toAddress, datta)));
@@ -253,9 +229,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getBitBalanceList By first network
      *
-     * @param network
-     * @param addresses
-     * @return
      */
     private LiveData<Resource<List<EntBalanceEntity>>> getEthBalanceListBy1st(int network, String[] addresses) {
         MediatorLiveData<Resource<List<EntBalanceEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -289,9 +262,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthBalance by first network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<EntBalanceEntity>> getEthBalanceBy1st(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -317,9 +287,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthBalance by second network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<EntBalanceEntity>> getEthBalanceBy2nd(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -339,8 +306,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthGasPrice by first network
      *
-     * @param network
-     * @return
      */
     private LiveData<Resource<EntGasPriceEntity>> getEthGasPriceBy1st(int network) {
         MediatorLiveData<Resource<EntGasPriceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -362,8 +327,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthGasPrice by second network
      *
-     * @param network
-     * @return
      */
     private LiveData<Resource<EntGasPriceEntity>> getEthGasPriceBy2nd(int network) {
         MediatorLiveData<Resource<EntGasPriceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -383,7 +346,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthGasPrice by third network
      *
-     * @return
      */
     private LiveData<Resource<EntGasPriceEntity>> getGasPriceForEthByThird() {
         MediatorLiveData<Resource<EntGasPriceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -400,9 +362,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthNonce by first network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<EntNonceEntity>> getEthNonceBy1st(int network, String address) {
         MediatorLiveData<Resource<EntNonceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -425,9 +384,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * getEthNonce by second network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<EntNonceEntity>> getEthNonceBy2nd(int network, String address) {
         MediatorLiveData<Resource<EntNonceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -444,11 +400,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * estimateGas by first network
      *
-     * @param network
-     * @param toAddress
-     * @param value
-     * @param gasPrice
-     * @return
      */
     private LiveData<Resource<EntGasEntity>> estimateGasBy1st(int network, String from, String toAddress, String value, String gasPrice, String data) {
         MediatorLiveData<Resource<EntGasEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -479,11 +430,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * estimateGas by second network
      *
-     * @param network
-     * @param toAddress
-     * @param value
-     * @param gasPrice
-     * @return
      */
     private LiveData<Resource<EntGasEntity>> estimateGasBy2nd(int network, String from, String toAddress, String value, String gasPrice, String data) {
         MediatorLiveData<Resource<EntGasEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -500,9 +446,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * sendEthTx by first network
      *
-     * @param network
-     * @param hex
-     * @return
      */
     private LiveData<Resource<EntSendTxEntity>> sendEthTxBy1st(int network, String hex) {
         MediatorLiveData<Resource<EntSendTxEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -525,9 +468,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * sendEthTx by second network
      *
-     * @param network
-     * @param hex
-     * @return
      */
     private LiveData<Resource<EntSendTxEntity>> sendEthTxBy2nd(int network, String hex) {
         MediatorLiveData<Resource<EntSendTxEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -548,9 +488,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * isConfirmedTxForEth by first network
      *
-     * @param network
-     * @param txId
-     * @return
      */
     private LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForEthBy1st(int network, String txId) {
         MediatorLiveData<Resource<EntConfirmedEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -570,9 +507,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * isConfirmedTxForEth by second network
      *
-     * @param network
-     * @param txId
-     * @return
      */
     private LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForEthBy2nd(int network, String txId) {
         MediatorLiveData<Resource<EntConfirmedEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -589,9 +523,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * callEthBy2nd by first network
      *
-     * @param toAddress
-     * @param data
-     * @return
      */
     private LiveData<Resource<EntCallEntity>> callEthBy1st(String network, String toAddress, String data) {
         MediatorLiveData<Resource<EntCallEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -616,9 +547,6 @@ public class EthApiProvider extends BaseApiProvider {
     /**
      * callEthBy2nd by second network
      *
-     * @param toAddress
-     * @param data
-     * @return
      */
     private LiveData<Resource<EntCallEntity>> callEthBy2nd(String network, String toAddress, String data) {
         MediatorLiveData<Resource<EntCallEntity>> mediatorLiveData = new MediatorLiveData<>();

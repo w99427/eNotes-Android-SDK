@@ -2,8 +2,10 @@ package io.enotes.sdk.repository.provider.api;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.content.Context;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcTransacti
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcUtxoForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcUtxoForBlockExplorer;
+import io.enotes.sdk.repository.api.entity.response.btc.omniexplorer.OmniBalance;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.utils.Utils;
 
@@ -59,8 +62,8 @@ public class BtcApiProvider extends BaseApiProvider {
         eNotesNetWork.put(Constant.Network.BTC_TESTNET, "testnet");
     }
 
-    public BtcApiProvider(ApiService apiService, ApiService transactionThirdService) {
-        super();
+    public BtcApiProvider(Context context, ApiService apiService, ApiService transactionThirdService) {
+        super(context);
         this.apiService = apiService;
         this.transactionThirdService = transactionThirdService;
     }
@@ -72,9 +75,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getBitBalance
      *
-     * @param network
-     * @param address
-     * @return
      */
     public LiveData<Resource<EntBalanceEntity>> getBtcBalance(int network, String address) {
         List<EntBalanceListRequest> listRequests = new ArrayList<>();
@@ -86,12 +86,13 @@ public class BtcApiProvider extends BaseApiProvider {
         return addLiveDataSource(getBtcBalanceBy1st(network, address), getBtcBalanceBy2nd(network, address), getBtcBalanceBy3rd(network, address), addSourceForEsList(apiService.getBalanceListByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
+    public LiveData<Resource<EntBalanceEntity>> getOmniBalance(int network, String address, String id) {
+        return getOmniBalanceBy1st(network,address,id);
+    }
+
     /**
      * get bitcoin unSpend list
      *
-     * @param network
-     * @param address
-     * @return
      */
     public LiveData<Resource<List<EntUtxoEntity>>> getBtcUnSpend(int network, String address) {
         return addLiveDataSource(getUtxoListBy1st(network, address), getUtxoListBy2nd(network, address), getUtxoListBy3rd(network, address), getUtxoListByES(network, address));
@@ -100,9 +101,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * bitcoin transaction confirmed
      *
-     * @param network
-     * @param txId
-     * @return
      */
     public LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForBitCoin(int network, String txId) {
         List<EntConfirmedListRequest> listRequests = new ArrayList<>();
@@ -119,8 +117,6 @@ public class BtcApiProvider extends BaseApiProvider {
      * getBitFees
      * because of enotes server result is not completion,so need to request third
      *
-     * @param network
-     * @return
      */
     public LiveData<Resource<EntFeesEntity>> getBtcFees(int network) {
         if (network == Constant.Network.BTC_TESTNET)
@@ -133,9 +129,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * sendBitTx
      *
-     * @param network
-     * @param hex
-     * @return
      */
     public LiveData<Resource<EntSendTxEntity>> sendBtcTx(int network, String hex) {
         List<EntSendTxListRequest> listRequests = new ArrayList<>();
@@ -220,9 +213,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getBitBalanceList By first network
      *
-     * @param network
-     * @param addresses
-     * @return
      */
     private LiveData<Resource<List<EntBalanceEntity>>> getBtcBalanceListBy1st(int network, String[] addresses) {
         MediatorLiveData<Resource<List<EntBalanceEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -253,12 +243,31 @@ public class BtcApiProvider extends BaseApiProvider {
         return mediatorLiveData;
     }
 
+    private LiveData<Resource<EntBalanceEntity>> getOmniBalanceBy1st(int network, String address, String id) {
+        MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(transactionThirdService.getOmniBalance(address), (api -> {
+            if (api.isSuccessful()) {
+                OmniBalance body = api.body;
+                for (OmniBalance.Balance b : body.getBalance()) {
+                    if (b.getId().equals(id)) {
+                        EntBalanceEntity balanceEntity = new EntBalanceEntity();
+                        balanceEntity.setBalance(new BigInteger(b.getValue()).toString(16));
+                        balanceEntity.setAddress(address);
+                        mediatorLiveData.postValue(Resource.success(balanceEntity));
+                        break;
+                    }
+                }
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
+            }
+        }));
+        return mediatorLiveData;
+    }
+
+
     /**
      * getBitBalance By first network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<EntBalanceEntity>> getBtcBalanceBy1st(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -278,9 +287,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getBitBalance By second network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<EntBalanceEntity>> getBtcBalanceBy2nd(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -300,9 +306,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getBitBalance By second network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<EntBalanceEntity>> getBtcBalanceBy3rd(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -322,8 +325,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getBitFees by first X network
      *
-     * @param network
-     * @return
      */
     private LiveData<Resource<EntFeesEntity>> getBtcFeesBy1Xst(int network) {
         MediatorLiveData<Resource<EntFeesEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -340,7 +341,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getBitFees by first network
      *
-     * @return
      */
     private LiveData<Resource<EntFeesEntity>> getBtcFeesBy1st() {
         MediatorLiveData<Resource<EntFeesEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -357,8 +357,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getBitFees by second network
      *
-     * @param network
-     * @return
      */
     private LiveData<Resource<EntFeesEntity>> getBtcFeesBy2nd(int network) {
         MediatorLiveData<Resource<EntFeesEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -389,9 +387,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * isConfirmedTxForBitCoin by first network
      *
-     * @param network
-     * @param txId
-     * @return
      */
     private LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForBitCoinBy1st(int network, String txId) {
         MediatorLiveData<Resource<EntConfirmedEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -408,9 +403,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * isConfirmedTxForBitCoin by second network
      *
-     * @param network
-     * @param txId
-     * @return
      */
     private LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForBitCoinBy2nd(int network, String txId) {
         MediatorLiveData<Resource<EntConfirmedEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -427,9 +419,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * sendBitTx by first network
      *
-     * @param network
-     * @param hex
-     * @return
      */
     private LiveData<Resource<EntSendTxEntity>> sendBtcTxBy1st(int network, String hex) {
         MediatorLiveData<Resource<EntSendTxEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -448,9 +437,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * sendBitTx by second network
      *
-     * @param network
-     * @param hex
-     * @return
      */
     private LiveData<Resource<EntSendTxEntity>> sendBtcTxBy2nd(int network, String hex) {
         MediatorLiveData<Resource<EntSendTxEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -467,9 +453,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getUtxoList by first network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListBy1st(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -492,9 +475,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getUtxoList by second network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListBy2nd(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -522,9 +502,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getUtxoList by third network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListBy3rd(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -547,9 +524,6 @@ public class BtcApiProvider extends BaseApiProvider {
     /**
      * getUtxoList by eNotes network
      *
-     * @param network
-     * @param address
-     * @return
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListByES(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();

@@ -8,7 +8,11 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.math.BigInteger;
+
+import io.enotes.sdk.repository.db.entity.Mfr;
 
 
 public class Utils {
@@ -82,9 +86,6 @@ public class Utils {
         }
         return false;
     }
-
-
-
 
 
 }

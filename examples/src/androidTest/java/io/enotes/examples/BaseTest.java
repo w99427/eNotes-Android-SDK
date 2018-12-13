@@ -35,7 +35,7 @@ public class BaseTest {
                 assertTrue(feeResource.status == Status.SUCCESS);
                 assertTrue(feeResource.data instanceof EntFeesEntity);
                 EntFeesEntity feesEntity=feeResource.data;
-                cardManager.getBtcRawTransaction(card,feesEntity.getFast(),card.getAddress(),confirmedList,(resource1 -> {
+                cardManager.getBtcRawTransaction(card,feesEntity.getFast(),card.getAddress(),confirmedList,"0",(resource1 -> {
                     threadLock.assertResource(resource1);
                     if(resource1.status == Status.SUCCESS){
                         String hex = resource1.data;

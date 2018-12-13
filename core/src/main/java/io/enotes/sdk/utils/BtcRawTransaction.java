@@ -1,5 +1,6 @@
 package io.enotes.sdk.utils;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.bitcoinj.core.Address;
@@ -18,6 +19,7 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.signers.TransactionSigner;
 import org.bitcoinj.wallet.KeyBag;
 import org.bitcoinj.wallet.KeyChainGroup;
@@ -30,6 +32,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -50,8 +53,13 @@ public class BtcRawTransaction {
     private CardProvider cardProvider;
     private Card card;
     private static NetworkParameters currentBtcNetWork;
+    public static final Coin MIN_NONDUST_OUTPUT = Coin.valueOf(546);
 
-    public Transaction createRawTransaction(Card card, CardProvider cardProvider, long fees, String toAddress, long changeCount, String changeAddress, List<EntUtxoEntity> utxos) {
+    public Transaction createRawTransaction(Card card, CardProvider cardProvider, long fees, String toAddress, long changeCount, String changeAddress, List<EntUtxoEntity> utxos) throws CommandException {
+        return createRawTransaction(card, cardProvider, fees, toAddress, changeCount, changeAddress, utxos, "0");
+    }
+
+    public Transaction createRawTransaction(Card card, CardProvider cardProvider, long fees, String toAddress, long changeCount, String changeAddress, List<EntUtxoEntity> utxos, String omniValue) throws CommandException {
         this.card = card;
         this.cardProvider = cardProvider;
         if (card.getCert().getNetWork() == Constant.Network.BTC_TESTNET) {
@@ -59,6 +67,7 @@ public class BtcRawTransaction {
         } else {
             currentBtcNetWork = MainNetParams.get();
         }
+
         Transaction transaction = new Transaction(currentBtcNetWork);
         long amount = 0;
         long toCount = 0;
@@ -89,7 +98,11 @@ public class BtcRawTransaction {
             }
             transaction.addInput(preTx.getOutput(unSpent.getOutput_no()));
         }
-
+        //create usdt transaction
+        if (!TextUtils.isEmpty(card.getCert().getTokenAddress()) && card.getCert().getTokenAddress().equals("31")) {
+            return createOmniRawTransaction(transaction, card, amount, fees, toAddress, utxos, omniValue);
+        }
+        // normal btc
         if (amount == 0) {
             Log.e(TAG, "utxo = 0 ");
         } else if (amount <= fees + changeCount) {
@@ -104,11 +117,90 @@ public class BtcRawTransaction {
             transaction.addOutput(change);
         }
         Log.i(TAG, "get no sign tx");
+        signTransactionInputs(transaction);
         return transaction;
     }
 
+    public Transaction createOmniRawTransaction(Transaction transaction, Card card, long totalInputAmount, long fees, String toAddress, List<EntUtxoEntity> utxos, String omniValue) throws CommandException {
+        Address refAddress = Address.fromBase58(currentBtcNetWork, toAddress);
+        if (refAddress != null) {
+            transaction.addOutput(Transaction.MIN_NONDUST_OUTPUT, refAddress);                   // Reference (destination) address output
+        }
 
-    public void signTransactionInputs(Transaction tx) throws CommandException {
+        long amountOut = sum(transaction.getOutputs());
+        long amountChange = totalInputAmount - amountOut - fees;
+
+        // If change is negative, transaction is invalid
+        if (amountChange < 0) {
+            throw new CommandException(ErrorCode.SDK_ERROR, "Insufficient Bitcoin to build Omni Transaction");
+        }
+        // If change is positive, return it all to the sending address
+        if (amountChange > 0) {
+            // Add a change output
+            transaction.addOutput(Coin.valueOf(amountChange), Address.fromBase58(currentBtcNetWork, card.getAddress()));
+        }
+        //6f6d6e69 is omni hex
+        try {
+            String txHex = "6f6d6e69" + createSimpleSendHex(Long.valueOf(card.getCert().getTokenAddress()), Long.valueOf(omniValue));
+            byte[] payload = hexToBinary(txHex);
+            Script opReturnScript = ScriptBuilder.createOpReturnScript(payload);
+            TransactionOutput output = new TransactionOutput(currentBtcNetWork, null, Coin.ZERO, opReturnScript.getProgram());
+            transaction.addOutput(output);// add omni output for simple send
+        } catch (Exception e) {
+            throw new CommandException(ErrorCode.SDK_ERROR, "create omni transaction fail");
+        }
+        signTransactionInputs(transaction);
+        return transaction;
+    }
+
+    /**
+     * Calculate the total value of a collection of transaction outputs.
+     *
+     * @param outputs list of transaction outputs to total
+     * @return total value in satoshis
+     */
+    private long sum(Collection<TransactionOutput> outputs) {
+        long sum = 0;
+        for (TransactionOutput output : outputs) {
+            sum += output.getValue().value;
+        }
+        return sum;
+    }
+
+    /**
+     * Creates a hex-encoded raw transaction of type 0: "simple send".
+     *
+     * @param currencyId currency ID to send
+     * @param amount     amount to send
+     * @return Hex encoded string for the transaction
+     */
+    public String createSimpleSendHex(long currencyId, long amount) {
+        String rawTxHex = String.format("00000000%08x%016x", currencyId, amount);
+        return rawTxHex;
+    }
+
+    /**
+     * Convert a hexadecimal string representation of binary data
+     * to byte array.
+     *
+     * @param hex Hexadecimal string
+     * @return binary data
+     */
+    static byte[] hexToBinary(String hex) {
+        int length = hex.length();
+        byte[] bin = new byte[length / 2];
+        for (int i = 0; i < length; i += 2) {
+            int hi = Character.digit(hex.charAt(i), 16);
+            int lo = Character.digit(hex.charAt(i + 1), 16);
+            bin[i / 2] = (byte) ((hi << 4) + lo);
+        }
+        return bin;
+    }
+
+
+    private void signTransactionInputs(Transaction tx) throws CommandException {
+        if (tx == null)
+            throw new CommandException(ErrorCode.SDK_ERROR, "transaction is null");
         String pubKey = card.getCurrencyPubKey();
         ECKey ecKey = ECKey.fromPublicOnly(ByteUtil.hexStringToBytes(pubKey));
         KeyChainGroup keyChainGroup = new KeyChainGroup(currentBtcNetWork);

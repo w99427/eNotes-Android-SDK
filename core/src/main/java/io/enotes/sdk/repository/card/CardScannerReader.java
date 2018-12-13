@@ -444,7 +444,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             case BLUETOOTH_DISCONNECT:
                 connectedCard = null;
                 mCard.postValue(Resource.error(ErrorCode.BLUETOOTH_DISCONNECT, reader.message));
-//                parseCardFinish();
+                parseCardFinish();
                 break;
         }
         if (mConnectedCallback != null) mConnectedCallback.onCardConnected(reader);
@@ -456,7 +456,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         if (reader.status == Status.ERROR) {
             connectedCard = null;
             mCard.postValue(Resource.error(reader.errorCode, reader.message));
-//            parseCardFinish();
+            parseCardFinish();
         }
         if (mConnectedCallback != null) mConnectedCallback.onCardDisconnected(reader);
     }
@@ -520,16 +520,17 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         int p1 = 0;
         Command command = Commands.getCertificate();
         while (flag) {
-            String stringValue = transceive2TLV(command.setCmdStr("00CA0" + p1 + "30")).getStringValue(Commands.TLVTag.Device_Certificate);
-            if (TextUtils.isEmpty(stringValue) || stringValue.length() < 506) {//if cert.bytes = 253,need read cert apdu again
+            String stringValue = transceive(command.setCmdStr("00CA0" + p1 + "30"));
+            if (TextUtils.isEmpty(stringValue) || stringValue.length() < 510) {//if cert.bytes = 253,need read cert apdu again
                 flag = false;
             } else {
                 p1++;
             }
             certSB.append(stringValue);
         }
-
-        String certHex = certSB.toString();
+        byte[] bytes = ByteUtil.hexStringToBytes(certSB.toString());
+        TLVBox tlvBox = TLVBox.parse(bytes, 0, bytes.length);
+        String certHex = tlvBox.getStringValue(Commands.TLVTag.Device_Certificate);
         LogUtils.d(TAG, "certHex=" + certHex);
         Cert cert;
         try {
@@ -561,9 +562,10 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     private void verifyCert(Cert cert) throws CommandException {
         LogUtils.i(TAG, "verify cert start");
         boolean testCard;
-        if (cert.getSerialNumber() != null && cert.getSerialNumber().toLowerCase().startsWith("test-")) {
+        if (cert.getSerialNumber() != null && (cert.getSerialNumber().toLowerCase().startsWith("test-") || cert.getSerialNumber().toLowerCase().startsWith("demo-")))
+        {
             testCard = true;
-        } else {
+        } else{
             testCard = false;
         }
         Mfr mfr = ProviderFactory.getInstance(mContext).getApiProvider()

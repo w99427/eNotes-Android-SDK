@@ -127,7 +127,7 @@ public class CardManager implements CardInterface {
     }
 
     @Override
-    public void getBtcRawTransaction(Card card, String fees, String toAddress, List<EntUtxoEntity> unSpends, @NonNull Callback<String> callback) {
+    public void getBtcRawTransaction(Card card, String fees, String toAddress, List<EntUtxoEntity> unSpends, String omniValue, @NonNull Callback<String> callback) {
         new Thread(() -> {
             if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
                 if (!ENotesSDK.config.debugForEmulatorCard) {
@@ -138,9 +138,8 @@ public class CardManager implements CardInterface {
                 }
             }
             BtcRawTransaction btcRawTransaction = new BtcRawTransaction();
-            Transaction transaction = btcRawTransaction.createRawTransaction(card, cardProvider, Long.valueOf(fees), toAddress, 0, "", unSpends);
             try {
-                btcRawTransaction.signTransactionInputs(transaction);
+                Transaction  transaction=btcRawTransaction.createRawTransaction(card, cardProvider, Long.valueOf(fees), toAddress, 0, "", unSpends, omniValue);
                 handler.post(() -> {
                     callback.onCallBack(Resource.success(ByteUtil.toHexString(transaction.bitcoinSerialize())));
                 });

@@ -117,6 +117,11 @@ public class RPCApiManager implements RPCApiInterface {
         apiProvider.updateVersion().observe(fragmentActivity, (callback::onCallBack));
     }
 
+    @Override
+    public void getOmniBalance(int network, String address, String id, @NonNull Callback<EntBalanceEntity> callback) {
+        apiProvider.getOmniBalance(network,address,id).observe(fragmentActivity, (callback::onCallBack));
+    }
+
     public static class NetworkConfig {
         public String[] etherscanKeys;
         public String[] infuraKeys;

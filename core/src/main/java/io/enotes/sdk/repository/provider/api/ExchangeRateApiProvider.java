@@ -2,6 +2,7 @@ package io.enotes.sdk.repository.provider.api;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.content.Context;
 import android.support.annotation.IntDef;
 import android.support.annotation.StringDef;
 
@@ -25,20 +26,23 @@ import static io.enotes.sdk.constant.ErrorCode.NET_ERROR;
 public class ExchangeRateApiProvider extends BaseApiProvider {
 
     @Retention(RetentionPolicy.SOURCE)
-    @StringDef({Constant.CardType.BTC, Constant.CardType.ETH, Constant.CardType.GUSD, Constant.CardType.OTHER_ERC20})
+    @StringDef({Constant.CardType.BTC, Constant.CardType.ETH, Constant.CardType.GUSD, Constant.CardType.USDT, Constant.CardType.OTHER_ERC20})
     public @interface RateMode {
     }
 
     private ExchangeRateApiService exchangeRateApiService;
     private EntExchangeRateUSDEntity entExchangeRateUSDEntity;
 
-    public ExchangeRateApiProvider(ExchangeRateApiService exchangeRateApiService) {
+    public ExchangeRateApiProvider(Context context, ExchangeRateApiService exchangeRateApiService) {
+        super(context);
         this.exchangeRateApiService = exchangeRateApiService;
     }
 
     public LiveData<Resource<EntExchangeRateEntity>> getExchangeRate(@RateMode String digiccy) {
-        if (digiccy.contains(Constant.CardType.GUSD)||digiccy.contains(Constant.CardType.OTHER_ERC20)) {
+        if (digiccy.contains(Constant.CardType.GUSD) || digiccy.contains(Constant.CardType.OTHER_ERC20)) {
             return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy), getExchangeRateGUSD1st(digiccy));
+        } else if (digiccy.contains(Constant.CardType.USDT)) {
+            return addLiveDataSourceNoENotes(getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
         } else {
             return addLiveDataSourceNoENotes(getExchangeRate1st(digiccy), getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
         }
@@ -72,9 +76,12 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
 
                                 List<OkexGUSDBTCEntity> listAll = resource0.body;
                                 String eth2btc = "0";
+                                String usdt2btc = "0";
                                 for (OkexGUSDBTCEntity gusdbtcEntity : listAll) {
                                     if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.ETH_BTC)) {
                                         eth2btc = gusdbtcEntity.getLast();
+                                    } else if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.USDT_BTC)) {
+                                        usdt2btc = gusdbtcEntity.getLast();
                                     }
                                 }
                                 String scale = "1";
@@ -82,6 +89,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                                     scale = "1";
                                     exData.setBtc(scale);
                                     exData.setEth(new BigDecimal(scale).divide(new BigDecimal(eth2btc), 10, BigDecimal.ROUND_HALF_UP).toString());
+                                    exData.setUsdt(new BigDecimal(scale).divide(new BigDecimal(usdt2btc), 10, BigDecimal.ROUND_HALF_UP).toString());
 
                                 } else if (digiccy.equals(Constant.CardType.ETH)) {
                                     scale = eth2btc;
@@ -139,6 +147,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                 data.setEur(entity.getEUR());
                 data.setCny(entity.getCNY());
                 data.setJpy(entity.getJPY());
+                data.setUsdt(entity.getUSDT());
                 rateEntity.setData(data);
                 mediatorLiveData.postValue(Resource.success(rateEntity));
             } else {
@@ -166,6 +175,9 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                                 String gusd2btc = "1";
                                 String gusd2eth = "1";
                                 String eth2btc = "1";
+                                String gusd2usdt = "1";
+                                String usdt2btc = "1";
+
                                 for (OkexGUSDBTCEntity gusdbtcEntity : listAll) {
                                     if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.GUSD_BTC)) {
                                         gusd2btc = gusdbtcEntity.getLast();
@@ -173,13 +185,17 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                                     if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.ETH_BTC)) {
                                         eth2btc = gusdbtcEntity.getLast();
                                     }
+                                    if (gusdbtcEntity.getInstrument_id().equals(OkexGUSDBTCEntity.USDT_BTC)) {
+                                        usdt2btc = gusdbtcEntity.getLast();
+                                    }
                                 }
                                 gusd2eth = new BigDecimal(gusd2btc).divide(new BigDecimal(eth2btc), 10, BigDecimal.ROUND_HALF_UP).toString();
-
+                                gusd2usdt = new BigDecimal(gusd2btc).divide(new BigDecimal(usdt2btc), 10, BigDecimal.ROUND_HALF_UP).toString();
                                 String gusd2usd = new BigDecimal(gusd2btc).multiply(new BigDecimal(resource.body.getFuture_index())).toString();
                                 exData.setUsd(gusd2usd);
                                 exData.setBtc(gusd2btc);
                                 exData.setEth(gusd2eth);
+                                exData.setUsdt(gusd2usdt);
                                 exData.setEur(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getEur())).toString());
                                 exData.setCny(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getCny())).toString());
                                 exData.setJpy(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getJpy())).toString());

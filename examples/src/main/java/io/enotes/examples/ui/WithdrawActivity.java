@@ -146,6 +146,7 @@ public class WithdrawActivity extends AppCompatActivity {
                 String balance = "";
                 if (CardUtils.isBTC(card.getCert().getBlockChain())) {
                     balance = resource.data.getIntBalance();
+                    balance = "100000";
                     BigDecimal bigDecimal = new BigDecimal(balance);
                     toValue = bigDecimal.toBigInteger();
                     balance = CardUtils.getBitcoinValue(bigDecimal.toBigInteger());
@@ -370,7 +371,7 @@ public class WithdrawActivity extends AppCompatActivity {
         alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(((view) -> {
             alertDialog.dismiss();
             if (CardUtils.isBTC(card.getCert().getBlockChain())) {
-                cardManager.getBtcRawTransaction(card, etFees.getText().toString(), etAddress.getText().toString(), unspent_outputs, (resource -> {
+                cardManager.getBtcRawTransaction(card, etFees.getText().toString(), etAddress.getText().toString(), unspent_outputs, "0", (resource -> {
                     if (resource.status == Status.SUCCESS) {
                         rpcApiManager.sendRawTransaction(card.getCert().getBlockChain(), card.getCert().getNetWork(), resource.data, (resource1 -> {
                             if (resource1.status == Status.SUCCESS) {

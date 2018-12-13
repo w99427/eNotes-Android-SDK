@@ -58,15 +58,15 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
     private MfrDao mfrDao;
 
     public ApiProvider(Context context) {
-        super();
+        super(context);
         if (context != null)
             mfrDao = AppDataBase.init(context).getMfrDao();
         apiService = RetrofitFactory.getTransactionService(context);
         transactionThirdService = RetrofitFactory.getTransactionThirdService(context);
         exchangeRateApiService = RetrofitFactory.getExchangeRateService(context);
-        btcApiManager = new BtcApiProvider(apiService, transactionThirdService);
-        ethApiManager = new EthApiProvider(apiService, transactionThirdService);
-        exchangeRateApiProvider = new ExchangeRateApiProvider(exchangeRateApiService);
+        btcApiManager = new BtcApiProvider(context, apiService, transactionThirdService);
+        ethApiManager = new EthApiProvider(context, apiService, transactionThirdService);
+        exchangeRateApiProvider = new ExchangeRateApiProvider(context, exchangeRateApiService);
     }
 
     /**
@@ -348,6 +348,10 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         return exchangeRateApiProvider.getExchangeRate(digiccy);
     }
 
+    public LiveData<Resource<EntBalanceEntity>> getOmniBalance(int network, String address, String id) {
+        return btcApiManager.getOmniBalance(network, address, id);
+    }
+
     public static <T> T getValue(LiveData<T> liveData) throws InterruptedException {
         final Object[] objects = new Object[1];
         final CountDownLatch latch = new CountDownLatch(1);
@@ -357,7 +361,11 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
             public void onChanged(@Nullable Object o) {
                 objects[0] = o;
                 latch.countDown();
-                liveData.removeObserver(this);
+                try {
+                    liveData.removeObserver(this);
+                } catch (Exception e) {
+                }
+
             }
         };
         liveData.observeForever(observer);

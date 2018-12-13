@@ -1,9 +1,11 @@
 package io.enotes.sdk.repository.db.entity;
 
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
+import org.spongycastle.asn1.ASN1Encodable;
 import org.spongycastle.asn1.ASN1GeneralizedTime;
 import org.spongycastle.asn1.ASN1InputStream;
 import org.spongycastle.asn1.ASN1Integer;
@@ -11,6 +13,7 @@ import org.spongycastle.asn1.ASN1Sequence;
 import org.spongycastle.asn1.DERIA5String;
 import org.spongycastle.asn1.DEROctetString;
 import org.spongycastle.asn1.DERPrintableString;
+import org.spongycastle.asn1.DERTaggedObject;
 import org.spongycastle.asn1.DLSequence;
 
 import java.math.BigInteger;
@@ -26,6 +29,7 @@ public class Cert {
     private long issuerDate;
     private String serialNumber;
     private String blockChain;
+    private String tokenProtocol;
     private String tokenAddress;
     private BigInteger coinDeno;
     private int netWork;
@@ -105,6 +109,14 @@ public class Cert {
         this.blockChain = blockChain;
     }
 
+    public String getTokenProtocol() {
+        return tokenProtocol;
+    }
+
+    public void setTokenProtocol(String tokenProtocol) {
+        this.tokenProtocol = tokenProtocol;
+    }
+
     public String getTokenAddress() {
         return tokenAddress;
     }
@@ -172,6 +184,7 @@ public class Cert {
                 ", issuerDate=" + issuerDate +
                 ", serialNumber='" + serialNumber + '\'' +
                 ", blockChain=" + blockChain +
+                ", tokenProtocol='" + tokenProtocol + '\'' +
                 ", tokenAddress='" + tokenAddress + '\'' +
                 ", coinDeno=" + coinDeno +
                 ", network=" + netWork + '\'' +
@@ -208,16 +221,42 @@ public class Cert {
                         cert.setCoinDeno(((ASN1Integer) subjectSequence.getObjectAt(0)).getValue());
                         cert.setBlockChain(ByteUtil.toHexString(((DEROctetString) subjectSequence.getObjectAt(1)).getOctets()));
                         cert.setNetWork(((ASN1Integer) subjectSequence.getObjectAt(2)).getValue().intValue());
-                        if (subjectSequence.size() == 4)
-                            cert.setTokenAddress(new String(((DEROctetString) subjectSequence.getObjectAt(3)).getOctets()));
+                        if (subjectSequence.size() == 4) {
+                            if (subjectSequence.getObjectAt(3) instanceof DEROctetString) {
+                                cert.setTokenProtocol("00000001");
+                                cert.setTokenAddress(ByteUtil.toHexString(((DEROctetString) subjectSequence.getObjectAt(3)).getOctets()));
+                                if (!TextUtils.isEmpty(cert.getTokenAddress())) {
+                                    cert.setTokenAddress("0x" + cert.getTokenAddress());
+                                }
+                            } else {
+                                DLSequence token = (DLSequence) subjectSequence.getObjectAt(3);
+                                cert.setTokenProtocol(ByteUtil.toHexString(((DEROctetString) token.getObjectAt(0)).getOctets()));
+                                DERTaggedObject taggedObject = (DERTaggedObject) token.getObjectAt(1);
+                                if (!cert.getTokenProtocol().equals("00000003")) {
+                                    DEROctetString objectParser = (DEROctetString) taggedObject.getObjectParser(taggedObject.getTagNo(), true);
+                                    if (cert.getTokenProtocol().equals("00000000")) {//omni layer
+                                        cert.setTokenAddress(new BigInteger(ByteUtil.toHexString(objectParser.getOctets()), 16).intValue() + "");
+                                    } else {//erc20 erc721
+                                        cert.setTokenAddress(ByteUtil.toHexString(objectParser.getOctets()));
+                                        if (!TextUtils.isEmpty(cert.getTokenAddress())) {
+                                            cert.setTokenAddress("0x" + cert.getTokenAddress());
+                                        }
+                                    }
+                                } else {
+                                    cert.setTokenAddress(((DERIA5String) taggedObject.getObjectParser(taggedObject.getTagNo(), true)).getString());
+                                }
+                            }
+
+                        }
                     } else {
                         throw new IllegalArgumentException("Cert : get subject fail");
                     }
 
-                    if (manufactureInfoSequence.size() == 3) {
+                    if (manufactureInfoSequence.size() >= 2) {
                         cert.setSerialNumber(((DERIA5String) manufactureInfoSequence.getObjectAt(0)).getString());
                         cert.setBatch(((DERIA5String) manufactureInfoSequence.getObjectAt(1)).getString());
-                        cert.setProductionDate(((ASN1GeneralizedTime) manufactureInfoSequence.getObjectAt(2)).getDate().getTime());
+                        if (manufactureInfoSequence.size() == 3)
+                            cert.setProductionDate(((ASN1GeneralizedTime) manufactureInfoSequence.getObjectAt(2)).getDate().getTime());
                     } else {
                         throw new IllegalArgumentException("Cert : get manufacturer fail");
                     }

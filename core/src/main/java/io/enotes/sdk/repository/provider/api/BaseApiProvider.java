@@ -2,6 +2,7 @@ package io.enotes.sdk.repository.provider.api;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.content.Context;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
@@ -20,20 +21,20 @@ import io.enotes.sdk.repository.api.entity.BaseEthEntity;
 import io.enotes.sdk.repository.api.entity.ResponseEntity;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.utils.LogUtils;
+import io.enotes.sdk.utils.Utils;
 
 
 public abstract class BaseApiProvider {
     protected static final String TAG = "ApiProvider";
+    private Context context;
 
-    public BaseApiProvider() {
+    public BaseApiProvider(Context context) {
+        this.context = context;
     }
 
     /**
      * add source in order
      *
-     * @param source
-     * @param <T>
-     * @return
      */
     public <T> MediatorLiveData<Resource<T>> addLiveDataSource(LiveData<Resource<T>>... source) {
         MediatorLiveData<Resource<T>> mutableLiveData = new MediatorLiveData<>();
@@ -51,9 +52,6 @@ public abstract class BaseApiProvider {
     /**
      * add source in order
      *
-     * @param source
-     * @param <T>
-     * @return
      */
     public <T> MediatorLiveData<Resource<T>> addLiveDataSourceNoENotes(LiveData<Resource<T>>... source) {
         MediatorLiveData<Resource<T>> mutableLiveData = new MediatorLiveData<>();
@@ -68,11 +66,12 @@ public abstract class BaseApiProvider {
     /**
      * recur source
      *
-     * @param mutableLiveData
-     * @param sourceList
-     * @param <T>
      */
     private <T> void recurLiveDataSource(MediatorLiveData<Resource<T>> mutableLiveData, List<LiveData<Resource<T>>> sourceList) {
+        if (context != null && !Utils.isNetworkConnected(context)) {
+            mutableLiveData.postValue(Resource.error(ErrorCode.NET_UNAVAILABLE, "net unavailable"));
+            return;
+        }
         if (sourceList != null && sourceList.size() > 0) {
             mutableLiveData.addSource(sourceList.get(0), (newData) -> {
                 if (newData.status == Status.SUCCESS) {
@@ -94,9 +93,6 @@ public abstract class BaseApiProvider {
     /**
      * add source in random
      *
-     * @param source
-     * @param <T>
-     * @return
      */
     public <T> MediatorLiveData<Resource<T>> addLiveDataSourceRandom(LiveData<Resource<T>>... source) {
         MediatorLiveData<Resource<T>> mutableLiveData = new MediatorLiveData<>();
@@ -114,9 +110,6 @@ public abstract class BaseApiProvider {
     /**
      * recur source
      *
-     * @param mutableLiveData
-     * @param sourceList
-     * @param <T>
      */
     private <T> void recurLiveDataSourceRandom(MediatorLiveData<Resource<T>> mutableLiveData, List<LiveData<Resource<T>>> sourceList) {
         if (sourceList != null && sourceList.size() > 0) {
@@ -151,9 +144,6 @@ public abstract class BaseApiProvider {
     /**
      * addSourceForES
      *
-     * @param es
-     * @param <T>
-     * @return
      */
     protected <T> LiveData<Resource<T>> addSourceForES(LiveData<ApiResponse<ResponseEntity<T>>> es) {
         MediatorLiveData<Resource<T>> mediatorLiveData = new MediatorLiveData<>();
@@ -173,10 +163,6 @@ public abstract class BaseApiProvider {
     /**
      * addSourceForEsList
      *
-     * @param es
-     * @param blockChain
-     * @param <T>
-     * @return
      */
     protected <T extends BaseENotesEntity> LiveData<Resource<T>> addSourceForEsList(LiveData<ApiResponse<List<ResponseEntity<T>>>> es, String blockChain) {
         MediatorLiveData<Resource<T>> mediatorLiveData = new MediatorLiveData<>();
@@ -198,9 +184,6 @@ public abstract class BaseApiProvider {
     /**
      * addSourceForEsListAll
      *
-     * @param es
-     * @param <T>
-     * @return
      */
     protected <T> LiveData<Resource<List<ResponseEntity<T>>>> addSourceForEsListAll(LiveData<ApiResponse<List<ResponseEntity<T>>>> es) {
         MediatorLiveData<Resource<List<ResponseEntity<T>>>> mediatorLiveData = new MediatorLiveData<>();
@@ -222,11 +205,6 @@ public abstract class BaseApiProvider {
     /**
      * checkEthError
      *
-     * @param mediatorLiveData
-     * @param obj
-     * @param showError
-     * @param <T>
-     * @return
      */
     protected <T> boolean checkEthError(MediatorLiveData<Resource<T>> mediatorLiveData, Object obj, boolean showError) {
         if (obj != null && obj instanceof BaseEthEntity) {

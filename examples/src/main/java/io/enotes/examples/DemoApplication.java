@@ -10,7 +10,7 @@ public class DemoApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        ENotesSDK.config.debugCard=true;
     }
 
     private Card card;

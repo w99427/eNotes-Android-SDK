@@ -4,7 +4,7 @@ apply plugin: 'com.novoda.bintray-release'
 publish {
     def groupProjectID = 'io.enotes.sdk'
     def artifactProjectID = 'sdk'
-    def publishVersionID = '0.1.16'
+    def publishVersionID = '0.1.43'
 
     userOrg = 'enoteschain'
     repoName = 'sdk'
@@ -20,7 +20,7 @@ android {
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 27
-        versionCode 16
+        versionCode 43
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -102,6 +102,7 @@ dependencies {
     implementation 'com.madgag.spongycastle:prov:1.53.0.0'
     implementation 'com.madgag.spongycastle:pkix:1.53.0.0'
     implementation 'org.apache.commons:commons-lang3:3.4'
+    implementation 'javax.money:money-api-bp:1.0.3'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

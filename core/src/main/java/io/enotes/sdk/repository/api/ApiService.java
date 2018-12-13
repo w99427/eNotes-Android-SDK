@@ -39,6 +39,7 @@ import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcConfirm
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcSendRawTransactionForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcUtxoForBlockExplorer;
+import io.enotes.sdk.repository.api.entity.response.btc.omniexplorer.OmniBalance;
 import io.enotes.sdk.repository.api.entity.response.eth.etherchain.EthGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthBalanceForEtherScan;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthBalanceListForEtherScan;
@@ -83,6 +84,11 @@ public interface ApiService {
     @GET("https://{network}" + URI_BLOCKEXPLORER + "/api/addr/{address}")
     LiveData<ApiResponse<BtcBalanceForBlockExplorer>> getBalanceForBtcByBlockExplorer(@Path("network") String network, @Path("address") String address);
 
+    /*****USDT Balance Api***/
+    @FormUrlEncoded
+    @Headers({"Content-Type: application/x-www-form-urlencoded", "Content-Type: application/x-www-form-urlencoded"})
+    @POST("https://api.omniexplorer.info/v1/address/addr/")
+    LiveData<ApiResponse<OmniBalance>> getOmniBalance(@Field("addr") String address);
 
     /*****Fee Api***/
     @GET("https://bitcoinfees.earn.com/api/v1/fees/recommended")

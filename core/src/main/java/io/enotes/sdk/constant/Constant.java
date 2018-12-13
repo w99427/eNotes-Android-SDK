@@ -29,6 +29,7 @@ public class Constant {
         public static final String BTC = "BTC";
         public static final String ETH = "ETH";
         public static final String GUSD = "GUSD";
+        public static final String USDT = "USDT";
         public static final String OTHER_ERC20 = "Other_erc20";
         public static final String OTHERS = "Others";
     }
