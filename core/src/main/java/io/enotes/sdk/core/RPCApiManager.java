@@ -78,13 +78,13 @@ public class RPCApiManager implements RPCApiInterface {
     }
 
     @Override
-    public void estimateFee(int network, @NonNull Callback<EntFeesEntity> callback) {
-        apiProvider.estimateFee(network).observe(fragmentActivity, (callback::onCallBack));
+    public void estimateFee(@NonNull String blockChain, int network, @NonNull Callback<EntFeesEntity> callback) {
+        apiProvider.estimateFee(blockChain, network).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override
-    public void getUnSpend(int network, String address, @NonNull Callback<List<EntUtxoEntity>> callback) {
-        apiProvider.getUnSpend(network, address).observe(fragmentActivity, (callback::onCallBack));
+    public void getUnSpend(@NonNull String blockChain, int network, String address, @NonNull Callback<List<EntUtxoEntity>> callback) {
+        apiProvider.getUnSpend(blockChain, network, address).observe(fragmentActivity, (callback::onCallBack));
     }
 
     @Override

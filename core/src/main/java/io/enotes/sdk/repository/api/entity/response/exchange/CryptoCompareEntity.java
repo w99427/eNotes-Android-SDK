@@ -8,6 +8,7 @@ public class CryptoCompareEntity {
     private String EUR;
     private String JPY;
     private String USDT;
+    private String BCH;
 
     public String getBTC() {
         return BTC;
@@ -63,5 +64,13 @@ public class CryptoCompareEntity {
 
     public void setUSDT(String USDT) {
         this.USDT = USDT;
+    }
+
+    public String getBCH() {
+        return BCH;
+    }
+
+    public void setBCH(String BCH) {
+        this.BCH = BCH;
     }
 }

@@ -162,7 +162,7 @@ public class WithdrawActivity extends AppCompatActivity {
         }));
         if (CardUtils.isBTC(card.getCert().getBlockChain())) { //for btc
             //get estimate fee
-            rpcApiManager.estimateFee(card.getCert().getNetWork(), (resource -> {
+            rpcApiManager.estimateFee(card.getCert().getBlockChain(), card.getCert().getNetWork(), (resource -> {
                 if (resource.status == Status.SUCCESS) {
                     if (TextUtils.isEmpty(etFees.getText())) {
 
@@ -180,7 +180,7 @@ public class WithdrawActivity extends AppCompatActivity {
             }));
 
             //get unSpemd
-            rpcApiManager.getUnSpend(card.getCert().getNetWork(), card.getAddress(), (resource -> {
+            rpcApiManager.getUnSpend(card.getCert().getBlockChain(), card.getCert().getNetWork(), card.getAddress(), (resource -> {
                 if (resource.status == Status.SUCCESS) {
                     unspent_outputs = resource.data;
                 }

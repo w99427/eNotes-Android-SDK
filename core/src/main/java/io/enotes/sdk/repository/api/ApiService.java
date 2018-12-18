@@ -23,6 +23,12 @@ import io.enotes.sdk.repository.api.entity.request.EntNotificationListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntSendTxListRequest;
 import io.enotes.sdk.repository.api.entity.request.btc.blockcypher.BtcRequestSendRawTransaction;
 import io.enotes.sdk.repository.api.entity.request.eth.infura.EthRequestForInfura;
+import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchBalanceForBlockdozer;
+import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchConfirmedForBlockdozer;
+import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchFeesForBlockdozer;
+import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchSendRawTransactionForBlockdozer;
+import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchTransactionListForBlockdozer;
+import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchUtxoForBlockdozer;
 import io.enotes.sdk.repository.api.entity.response.btc.bitcoinfees.BtcFeesEntity;
 import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcBalanceForBlockChain;
 import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcBalanceListForBlockChain;
@@ -213,6 +219,47 @@ public interface ApiService {
     @GET("https://{network}."+URI_ETHERSCAN+"/api?module=account&action=tokentx&page=1&offset=50&sort=desc")
     LiveData<ApiResponse<EthTransactionListForEtherScan>> getTokenTransactionListByEtherScan(@Path("network") String network, @Query("contractaddress") String contractAddress, @Query("address") String address, @Query("token") String apiKey);
 
+    /**********************************Bitcoin Cash****************************************/
+     String URI_BLOCKDOZER="blockdozer.com/insight-api";
+     String URI_BITPAY="bch-insight.bitpay.com/api";
+
+    /*****Balance Api***/
+    @GET("https://{network}" + URI_BLOCKDOZER + "/addr/{address}")
+    LiveData<ApiResponse<BchBalanceForBlockdozer>> getBalanceForBchByBlockZoder(@Path("network") String network, @Path("address") String address);
+    @GET("https://{network}" + URI_BITPAY + "/addr/{address}")
+    LiveData<ApiResponse<BchBalanceForBlockdozer>> getBalanceForBchByBitpay(@Path("network") String network, @Path("address") String address);
+
+    /*****TransactionReceipt Api***/
+    @GET("https://{network}" + URI_BLOCKDOZER + "/tx/{txid}")
+    LiveData<ApiResponse<BchConfirmedForBlockdozer>> isConfirmedTxForBchByBlockdozer(@Path("network") String network, @Path("txid") String TxId);
+    @GET("https://{network}" + URI_BITPAY + "/tx/{txid}")
+    LiveData<ApiResponse<BchConfirmedForBlockdozer>> isConfirmedTxForBchByBitpay(@Path("network") String network, @Path("txid") String TxId);
+
+    /*****Fee Api***/
+    @GET("https://{network}" + URI_BLOCKDOZER + "/utils/estimatefee")
+    LiveData<ApiResponse<Map<String,String>>> getFeesForBchByBlockdozer(@Path("network") String network);
+    @GET("https://{network}" + URI_BITPAY + "/utils/estimatefee")
+    LiveData<ApiResponse<Map<String,String>>> getFeesForBchByBitpay(@Path("network") String network);
+
+    /*****SendRawTransaction Api***/
+    @FormUrlEncoded
+    @POST("https://{network}" + URI_BLOCKDOZER + "/tx/send")
+    LiveData<ApiResponse<BchSendRawTransactionForBlockdozer>> sendRawTransactionForBchByBlockdozer(@Path("network") String network,@Field("rawtx") String hex);
+    @FormUrlEncoded
+    @POST("https://{network}" + URI_BITPAY + "/tx/send")
+    LiveData<ApiResponse<BchSendRawTransactionForBlockdozer>> sendRawTransactionForBchByBitpay(@Path("network") String network,@Field("rawtx") String hex);
+
+    /*****Transaction List Api***/
+    @GET("https://{network}" + URI_BLOCKDOZER + "/txs")
+    LiveData<ApiResponse<BchTransactionListForBlockdozer>> getTransactionListForBchByBlockdozer(@Path("network") String network, @Query("address") String address);
+    @GET("https://{network}" + URI_BITPAY + "/txs")
+    LiveData<ApiResponse<BchTransactionListForBlockdozer>> getTransactionListForBchByBitpay(@Path("network") String network, @Query("address") String address);
+
+    /*****UnSpend Api***/
+    @GET("https://{network}" + URI_BLOCKDOZER + "/addr/{addr}/utxo")
+    LiveData<ApiResponse<List<BchUtxoForBlockdozer>>> getUTXOForBchByBlockdozer(@Path("network") String network, @Path("addr") String address);
+    @GET("https://{network}" + URI_BITPAY + "/addr/{addr}/utxo")
+    LiveData<ApiResponse<List<BchUtxoForBlockdozer>>> getUTXOForBchByBitpay(@Path("network") String network, @Path("addr") String address);
     /**********************************ENOTES****************************************/
 
     @Headers({"Content-Type: application/json", "Accept: application/json"})

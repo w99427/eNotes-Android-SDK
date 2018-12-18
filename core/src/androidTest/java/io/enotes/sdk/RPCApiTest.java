@@ -120,7 +120,7 @@ public class RPCApiTest {
     ///////////////////Bitcoin//////////////////////
     @Test
     public void testEstimateFee() {
-        Resource<EntFeesEntity> entity = getValue(apiProvider.estimateFee(Constant.Network.BTC_TESTNET));
+        Resource<EntFeesEntity> entity = getValue(apiProvider.estimateFee(Constant.BlockChain.BITCOIN, Constant.Network.BTC_TESTNET));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
         assertNotNull(entity.data);
@@ -129,7 +129,7 @@ public class RPCApiTest {
 
     @Test
     public void testUnSpend() {
-        Resource<List<EntUtxoEntity>> entity = getValue(apiProvider.getUnSpend(Constant.Network.BTC_TESTNET, BTC_ADDRESS));
+        Resource<List<EntUtxoEntity>> entity = getValue(apiProvider.getUnSpend(Constant.BlockChain.BITCOIN, Constant.Network.BTC_TESTNET, BTC_ADDRESS));
         assertTrue(entity != null);
         assertTrue(entity.status == Status.SUCCESS);
         assertNotNull(entity.data);

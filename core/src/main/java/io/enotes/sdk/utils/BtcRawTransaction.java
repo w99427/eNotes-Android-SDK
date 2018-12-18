@@ -14,6 +14,7 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.UnsafeByteArrayOutputStream;
 import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.VarInt;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.params.MainNetParams;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -44,6 +46,11 @@ import io.enotes.sdk.repository.db.entity.Card;
 import io.enotes.sdk.repository.provider.CardProvider;
 
 import static io.enotes.sdk.utils.SignatureUtils.str2BtcSignature;
+import static org.bitcoinj.core.Utils.int64ToByteStreamLE;
+import static org.bitcoinj.core.Utils.reverseBytes;
+import static org.bitcoinj.core.Utils.uint32ToByteArrayLE;
+import static org.bitcoinj.core.Utils.uint32ToByteStreamLE;
+import static org.bitcoinj.core.Utils.uint64ToByteArrayLE;
 
 
 public class BtcRawTransaction {
@@ -254,7 +261,13 @@ public class BtcRawTransaction {
             Script inputScript = txIn.getScriptSig();
             byte[] script = redeemData.redeemScript.getProgram();
             try {
-                TransactionSignature signature = calculateSignature(tx, i, script, Transaction.SigHash.ALL, false);
+                TransactionSignature signature;
+                if (card.getCert().getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH)) {
+                    signature = calculateBCHSignature(tx, i, script);
+                } else {
+                    signature = calculateSignature(tx, i, script, Transaction.SigHash.ALL, false);
+                }
+
                 int sigIndex = 0;
                 inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), sigIndex);
                 txIn.setScriptSig(inputScript);
@@ -272,6 +285,14 @@ public class BtcRawTransaction {
                                                     Transaction.SigHash hashType, boolean anyoneCanPay) throws CommandException {
         Sha256Hash hash = hashForSignature(transaction, inputIndex, redeemScript, hashType, anyoneCanPay);
         return new TransactionSignature(getECDSASignature(hash.getBytes()), hashType, anyoneCanPay);
+    }
+
+    private TransactionSignature calculateBCHSignature(Transaction transaction, int inputIndex,
+                                                       byte[] redeemScript) throws CommandException {
+        Sha256Hash hash = hashForBCHSignature(transaction, inputIndex, redeemScript);
+        ECKey.ECDSASignature ecdsaSignature = getECDSASignature(hash.getBytes());
+        TransactionSignature transactionSignature = new TransactionSignature(ecdsaSignature.r, ecdsaSignature.s, 0x41);
+        return transactionSignature;
     }
 
 
@@ -366,6 +387,95 @@ public class BtcRawTransaction {
         return null;
     }
 
+    /**
+     * sign bch transaction
+     * need set hash type is 4
+     *
+     * @param transaction not sign transaction
+     */
+    private Sha256Hash hashForBCHSignature(Transaction transaction, int index, byte[] script) throws CommandException {
+        StringBuffer sbPrevouts = new StringBuffer();
+        StringBuffer sbSequence = new StringBuffer();
+        String outpoint = "";
+        long value = 0;
+        String sequence = "";
+        for (int i = 0; i < transaction.getInputs().size(); i++) {
+            TransactionInput input = transaction.getInput(i);
+            sbPrevouts.append(ByteUtil.toHexString(input.getOutpoint().unsafeBitcoinSerialize()));
+            sbSequence.append(new BigInteger(input.getSequenceNumber() + "").toString(16));
+            if (i == index) {
+                outpoint = ByteUtil.toHexString(input.getOutpoint().unsafeBitcoinSerialize());
+                value = input.getValue().value;
+                sequence = new BigInteger(input.getSequenceNumber() + "").toString(16);
+            }
+//            //txId
+//            LogUtils.i(TAG, "txID +index = " + ByteUtil.toHexString(input.getOutpoint().unsafeBitcoinSerialize()));
+//            //Sequence
+//            LogUtils.i(TAG, "Sequence = " + new BigInteger(input.getSequenceNumber() + "").toString(16));
+//            //script
+//            LogUtils.i(TAG, "Script = " + ByteUtil.toHexString(script));
+        }
+
+
+        Sha256Hash hashPrevouts = Sha256Hash.twiceOf(ByteUtil.hexStringToBytes(sbPrevouts.toString()));
+        Sha256Hash hashSequence = Sha256Hash.twiceOf(ByteUtil.hexStringToBytes(sbSequence.toString()));
+
+        ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(1024);
+        StringBuffer sbSignature = new StringBuffer();
+        try {
+            //version
+            byte[] bVersion = new byte[4];
+            uint32ToByteArrayLE(transaction.getVersion(), bVersion, 0);
+            String versionHex = ByteUtil.toHexString(bVersion);
+            LogUtils.i(TAG, "version = " + versionHex);
+            LogUtils.i(TAG, "sbPrevouts = " + sbPrevouts.toString());
+            LogUtils.i(TAG, "hashPrevouts = " + hashPrevouts.toString());
+            LogUtils.i(TAG, "sbSequence = " + hashSequence.toString());
+            LogUtils.i(TAG, "hashSequence = " + hashSequence.toString());
+            LogUtils.i(TAG, "outpoint = " + outpoint);
+            String scriptCode = ByteUtil.toHexString(new VarInt(script.length).encode()) + ByteUtil.toHexString(script);
+            LogUtils.i(TAG, "script = " + scriptCode);
+            byte[] bValue = new byte[8];
+            uint64ToByteArrayLE(value, bValue, 0);
+            String valueHex = ByteUtil.toHexString(bValue);
+            LogUtils.i(TAG, "value = " + valueHex);
+            LogUtils.i(TAG, "sequence = " + sequence);
+
+            StringBuffer sbOutput = new StringBuffer();
+            for (TransactionOutput out : transaction.getOutputs()) {
+                byte[] bValueOutput = new byte[8];
+                uint64ToByteArrayLE(out.getValue().value, bValueOutput, 0);
+                String valueHexOutput = ByteUtil.toHexString(bValueOutput);
+                String scriptOutput = ByteUtil.toHexString(new VarInt(out.getScriptBytes().length).encode()) + ByteUtil.toHexString(out.getScriptBytes());
+                sbOutput.append(valueHexOutput);
+                sbOutput.append(scriptOutput);
+            }
+            LogUtils.i(TAG, "sbOutput = " + sbOutput);
+            Sha256Hash hashOutput = Sha256Hash.twiceOf(ByteUtil.hexStringToBytes(sbOutput.toString()));
+            LogUtils.i(TAG, "hashOutput = " + hashOutput.toString());
+
+            byte[] bLockTime = new byte[4];
+            uint32ToByteArrayLE(transaction.getLockTime(), bLockTime, 0);
+            String lockTime = ByteUtil.toHexString(bLockTime);
+            LogUtils.i(TAG, "lockTime = " + lockTime);
+
+            byte[] bHashType = new byte[4];
+            uint32ToByteArrayLE(0x41, bHashType, 0);
+            String hashTypeString = ByteUtil.toHexString(bHashType);
+            LogUtils.i(TAG, "hashTypeString = " + hashTypeString);
+
+            sbSignature.append(versionHex).append(hashPrevouts.toString()).append(hashSequence.toString()).append(outpoint).append(scriptCode).append(valueHex).append(sequence).append(hashOutput.toString()).append(lockTime).append(hashTypeString);
+            LogUtils.i(TAG, "sbSignature = " + sbSignature.toString());
+            Sha256Hash hashSignature = Sha256Hash.twiceOf(ByteUtil.hexStringToBytes(sbSignature.toString()));
+            LogUtils.i(TAG, "hashSignature = " + hashSignature.toString());
+            return hashSignature;
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CommandException(ErrorCode.SDK_ERROR, "calculateBCHTransactionInputs error");
+        }
+    }
 
     private ArrayList<TransactionOutput> getOutputs(Transaction tx) {
         Class<? extends Transaction> txClass = tx.getClass();
@@ -420,5 +530,6 @@ public class BtcRawTransaction {
             e.printStackTrace();
         }
     }
+
 
 }

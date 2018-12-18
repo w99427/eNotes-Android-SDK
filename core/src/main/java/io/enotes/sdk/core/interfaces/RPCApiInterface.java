@@ -67,13 +67,13 @@ public interface RPCApiInterface {
      * Return current Bitcoin transaction fee predictions
      *
      */
-    void estimateFee(int network, @NonNull Callback<EntFeesEntity> callback);
+    void estimateFee(String blockChain, int network, @NonNull Callback<EntFeesEntity> callback);
 
     /**
      * Returns data contained in all unspend outputs
      *
      */
-    void getUnSpend(int network, String address, @NonNull Callback<List<EntUtxoEntity>> callback);
+    void getUnSpend(String blockChain, int network, String address, @NonNull Callback<List<EntUtxoEntity>> callback);
 
     ///////////////////////ETH////////////////////////////////
 

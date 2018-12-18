@@ -541,6 +541,9 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             if (cert.getCertVersion() > Constant.APDU.CERT_VERSION && !ENotesSDK.config.debugCard) {
                 throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
+            if (!cert.getBlockChain().equals(Constant.BlockChain.BITCOIN) && !cert.getBlockChain().equals(Constant.BlockChain.ETHEREUM) && !cert.getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH)) {
+                throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
+            }
             LogUtils.i(TAG, cert.toString());
             //verify manufacture cert
             verifyCert(cert);
@@ -562,10 +565,9 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     private void verifyCert(Cert cert) throws CommandException {
         LogUtils.i(TAG, "verify cert start");
         boolean testCard;
-        if (cert.getSerialNumber() != null && (cert.getSerialNumber().toLowerCase().startsWith("test-") || cert.getSerialNumber().toLowerCase().startsWith("demo-")))
-        {
+        if (cert.getSerialNumber() != null && (cert.getSerialNumber().toLowerCase().startsWith("test-") || cert.getSerialNumber().toLowerCase().startsWith("demo-"))) {
             testCard = true;
-        } else{
+        } else {
             testCard = false;
         }
         Mfr mfr = ProviderFactory.getInstance(mContext).getApiProvider()

@@ -20,7 +20,7 @@ public interface ExchangeRateApiService {
     String URI_COINBASE = "api.coinbase.com";
     String URI_OKEX = "www.okex.com";
 
-    @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?tsyms=USD,CNY,EUR,JPY,BTC,ETH,USDT")
+    @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?tsyms=USD,CNY,EUR,JPY,BTC,ETH,USDT,BCH")
     LiveData<ApiResponse<Map<String, CryptoCompareEntity>>> getExchangeRateForCryptocompare(@Query("fsyms") String fsyms);
 
     @GET("https://" + URI_CRYPTOCOMPARE + "/data/pricemulti?fsyms=USD&tsyms=CNY,EUR,JPY")

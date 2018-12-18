@@ -17,8 +17,12 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 
+import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.repository.db.entity.Card;
 
+import static io.enotes.sdk.constant.Constant.BlockChain.BITCOIN;
+import static io.enotes.sdk.constant.Constant.BlockChain.BITCOIN_CASH;
+import static io.enotes.sdk.constant.Constant.BlockChain.ETHEREUM;
 import static java.lang.Integer.parseInt;
 import static org.bitcoinj.core.Coin.COIN;
 import static org.bitcoinj.core.Coin.MICROCOIN;
@@ -26,11 +30,10 @@ import static org.bitcoinj.core.Coin.MILLICOIN;
 import static org.bitcoinj.core.Coin.SMALLEST_UNIT_EXPONENT;
 
 public class CardUtils {
-    public static final String COIN_TYPE_BTC = "80000000";
-    public static final String COIN_TYPE_ETH = "8000003c";
+
 
     @Retention(RetentionPolicy.SOURCE)
-    @StringDef(value = {COIN_TYPE_BTC, COIN_TYPE_ETH})
+    @StringDef(value = {BITCOIN, ETHEREUM, BITCOIN_CASH})
     @interface BlockChain {
     }
 
@@ -51,7 +54,7 @@ public class CardUtils {
      * @return
      */
     public static boolean isBTC(String blockChain) {
-        return COIN_TYPE_BTC.equals(blockChain);
+        return BITCOIN.equals(blockChain) || BITCOIN_CASH.equals(blockChain);
     }
 
     /**
@@ -61,7 +64,7 @@ public class CardUtils {
      * @return
      */
     public static boolean isETH(String blockChain) {
-        return COIN_TYPE_ETH.equals(blockChain);
+        return ETHEREUM.equals(blockChain);
     }
 
     /**
@@ -73,12 +76,17 @@ public class CardUtils {
      */
     @Nullable
     public static String getAddress(@NonNull Card card, @BlockChain String blockChain) {
-        if (blockChain.equals(COIN_TYPE_BTC)) {
+        if (blockChain.equals(BITCOIN)) {
             if (card.getCert().getNetWork() == 0)
                 return card.getBitcoinMainAddress();
             else
                 return card.getBitcoinTest3Address();
-        } else if (blockChain.equals(COIN_TYPE_ETH))
+        } else if (blockChain.equals(BITCOIN_CASH)) {
+            if (card.getCert().getNetWork() == 0)
+                return card.getBitcoinCashMainAddress();
+            else
+                return card.getBitcoinCashTest3Address();
+        } else if (blockChain.equals(ETHEREUM))
             return card.getEthTxAddress();
         return null;
     }
@@ -115,9 +123,9 @@ public class CardUtils {
      *                                  of a big decimal.
      */
     public static BigInteger main2SmallestUnit(String value, @BlockChain String blockChain) {
-        if (blockChain.equals(COIN_TYPE_BTC))
+        if (blockChain.equals(BITCOIN_CASH) || blockChain.equals(BITCOIN))
             return bitcoin2Satoshi(value);
-        else if (blockChain.equals(COIN_TYPE_ETH))
+        else if (blockChain.equals(ETHEREUM))
             return eth2wei(value);
         throw new IllegalArgumentException("unsupported code type:" + blockChain);
     }
@@ -131,9 +139,9 @@ public class CardUtils {
      * @return
      */
     public static BigDecimal smallestUnit2Main(BigInteger value, @BlockChain String blockChain) {
-        if (blockChain.equals(COIN_TYPE_BTC))
+        if (blockChain.equals(BITCOIN_CASH) || blockChain.equals(BITCOIN))
             return satoshi2bitcoin(value);
-        else if (blockChain.equals(COIN_TYPE_ETH))
+        else if (blockChain.equals(ETHEREUM))
             return wei2eth(value);
         throw new IllegalArgumentException("unsupported code type:" + blockChain);
     }
@@ -149,9 +157,9 @@ public class CardUtils {
      *                                  of a big decimal.
      */
     public static BigDecimal smallestUnit2Main(String value, @BlockChain String blockChain) {
-        if (blockChain.equals(COIN_TYPE_BTC))
+        if (blockChain.equals(BITCOIN_CASH) || blockChain.equals(BITCOIN))
             return satoshi2bitcoin(value);
-        else if (blockChain.equals(COIN_TYPE_ETH))
+        else if (blockChain.equals(ETHEREUM))
             return wei2eth(value);
         throw new IllegalArgumentException("unsupported code type:" + blockChain);
     }

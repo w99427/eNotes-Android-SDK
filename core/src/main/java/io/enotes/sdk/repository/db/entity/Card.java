@@ -16,6 +16,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
 
 import io.enotes.sdk.utils.CardUtils;
+import io.enotes.sdk.utils.bch.MoneyNetwork;
+import io.enotes.sdk.utils.bch.bitcoincash.BitcoinCashAddressFormatter;
+import io.enotes.sdk.utils.bch.bitcoincash.BitcoinCashAddressType;
 
 
 @Entity(tableName = "card")
@@ -173,5 +176,28 @@ public class Card {
             return null;
         }
         return bitCoinECKey.toAddress(TestNet3Params.get()).toBase58();
+    }
+
+    @Nullable
+    public String getBitcoinCashMainAddress() {
+        getBitCoinECKey();
+        if (bitCoinECKey == null) {
+            return null;
+        }
+        return BitcoinCashAddressFormatter.toCashAddress(BitcoinCashAddressType.P2PKH, bitCoinECKey.getPubKeyHash(),
+                MoneyNetwork.MAIN);
+    }
+
+    @Nullable
+    public String getBitcoinCashTest3Address() {
+        getBitCoinECKey();
+        if (bitCoinECKey == null) {
+            return null;
+        }
+        if (bitCoinECKey == null) {
+            return null;
+        }
+        return BitcoinCashAddressFormatter.toCashAddress(BitcoinCashAddressType.P2PKH, bitCoinECKey.getPubKeyHash(),
+                MoneyNetwork.TEST);
     }
 }

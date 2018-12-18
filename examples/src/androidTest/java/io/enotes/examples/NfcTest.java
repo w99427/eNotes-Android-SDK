@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import io.enotes.examples.test.TestNfcActivity;
 import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.core.CardManager;
+import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.core.RPCApiManager;
 import io.enotes.sdk.repository.card.CommandException;
 import io.enotes.sdk.repository.db.entity.Card;
@@ -29,6 +30,7 @@ public class NfcTest extends BaseTest {
     @Before
     public void setup() {
         activity = activityTestRule.getActivity();
+        ENotesSDK.config.debugCard=true;
     }
 
     @Test
