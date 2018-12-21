@@ -5,6 +5,7 @@ public class Constant {
         public static final String BITCOIN = "80000000";
         public static final String ETHEREUM = "8000003c";
         public static final String BITCOIN_CASH = "80000091";
+        public static final String RIPPLE = "80000090";
     }
 
     public static class Network {
@@ -32,6 +33,7 @@ public class Constant {
         public static final String GUSD = "GUSD";
         public static final String USDT = "USDT";
         public static final String BCH = "BCH";
+        public static final String XRP = "XRP";
         public static final String OTHER_ERC20 = "Other_erc20";
         public static final String OTHERS = "Others";
     }

@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 public class BaseTest {
     private static final String TAG = "BaseTest";
     protected void getBtcRawTransaction(ThreadLock threadLock, Card card, CardManager cardManager, RPCApiManager rpcApiManager){
-        rpcApiManager.getUnSpend(card.getCert().getNetWork(),card.getAddress(),(resource -> {
+        rpcApiManager.getUnSpend(card.getCert().getBlockChain(), card.getCert().getNetWork(),card.getAddress(),(resource -> {
             assertTrue(resource.status == Status.SUCCESS);
             assertTrue(resource.data instanceof List);
             List<EntUtxoEntity> utxoEntities=resource.data;
@@ -31,7 +31,7 @@ public class BaseTest {
                 }
             }
             assertTrue(confirmedList.size()>0);
-            rpcApiManager.estimateFee(card.getCert().getNetWork(),(feeResource -> {
+            rpcApiManager.estimateFee(card.getCert().getBlockChain(), card.getCert().getNetWork(),(feeResource -> {
                 assertTrue(feeResource.status == Status.SUCCESS);
                 assertTrue(feeResource.data instanceof EntFeesEntity);
                 EntFeesEntity feesEntity=feeResource.data;

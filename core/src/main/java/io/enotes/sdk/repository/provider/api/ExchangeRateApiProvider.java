@@ -39,12 +39,12 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
     }
 
     public LiveData<Resource<EntExchangeRateEntity>> getExchangeRate(@RateMode String digiccy) {
-        if (digiccy.contains(Constant.CardType.GUSD) || digiccy.contains(Constant.CardType.OTHER_ERC20)) {
+        if (digiccy.contains(Constant.CardType.BCH) || digiccy.contains(Constant.CardType.XRP)) {
+            return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy));
+        } else if (digiccy.contains(Constant.CardType.GUSD) || digiccy.contains(Constant.CardType.OTHER_ERC20)) {
             return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy), getExchangeRateGUSD1st(digiccy));
         } else if (digiccy.contains(Constant.CardType.USDT)) {
             return addLiveDataSourceNoENotes(getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
-        } else if (digiccy.contains(Constant.CardType.BCH)) {
-            return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy));
         } else {
             return addLiveDataSourceNoENotes(getExchangeRate1st(digiccy), getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
         }
@@ -151,6 +151,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                 data.setJpy(entity.getJPY());
                 data.setUsdt(entity.getUSDT());
                 data.setBch(entity.getBCH());
+                data.setXrp(entity.getXRP());
                 rateEntity.setData(data);
                 mediatorLiveData.postValue(Resource.success(rateEntity));
             } else {

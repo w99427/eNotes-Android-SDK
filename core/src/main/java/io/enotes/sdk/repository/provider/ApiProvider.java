@@ -44,6 +44,7 @@ import io.enotes.sdk.repository.provider.api.BchApiProvider;
 import io.enotes.sdk.repository.provider.api.BtcApiProvider;
 import io.enotes.sdk.repository.provider.api.EthApiProvider;
 import io.enotes.sdk.repository.provider.api.ExchangeRateApiProvider;
+import io.enotes.sdk.repository.provider.api.XrpApiProvider;
 import io.enotes.sdk.utils.ContractUtils;
 import io.enotes.sdk.utils.LogUtils;
 
@@ -51,11 +52,13 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
     public static final String C_BLOCKCHAIN_BITCOIN = "bitcoin";
     public static final String C_BLOCKCHAIN_ETHER = "ethereum";
     public static final String C_BLOCKCHAIN_BITCOIN_CASH = "bitcoin cash";
+    public static final String C_BLOCKCHAIN_RIPPLE = "ripple";
     private ApiService apiService;
     private ApiService transactionThirdService;
     private BtcApiProvider btcApiManager;
     private EthApiProvider ethApiManager;
     private BchApiProvider bchApiProvider;
+    private XrpApiProvider xrpApiProvider;
     private ExchangeRateApiProvider exchangeRateApiProvider;
     private ExchangeRateApiService exchangeRateApiService;
     private MfrDao mfrDao;
@@ -70,6 +73,7 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         btcApiManager = new BtcApiProvider(context, apiService, transactionThirdService);
         ethApiManager = new EthApiProvider(context, apiService, transactionThirdService);
         bchApiProvider = new BchApiProvider(context, transactionThirdService);
+        xrpApiProvider = new XrpApiProvider(context, transactionThirdService);
         exchangeRateApiProvider = new ExchangeRateApiProvider(context, exchangeRateApiService);
     }
 
@@ -106,14 +110,15 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         if (Constant.BlockChain.BITCOIN.equals(blockChain)) {
             LogUtils.i(TAG, "get BitCoin Balance");
             return btcApiManager.getBtcBalance(network, address);
-
         } else if (Constant.BlockChain.ETHEREUM.equals(blockChain)) {
             LogUtils.i(TAG, "get Eth Balance");
             return ethApiManager.getEthBalance(network, address);
         } else if (Constant.BlockChain.BITCOIN_CASH.equals(blockChain)) {
             LogUtils.i(TAG, "get BitCoin Cash Balance");
             return bchApiProvider.getBchBalance(network, address);
-
+        } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
+            LogUtils.i(TAG, "get Ripple Balance");
+            return xrpApiProvider.getXrpBalance(network, address);
         }
 
         return new MediatorLiveData<>();
@@ -132,7 +137,9 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         } else if (Constant.BlockChain.BITCOIN_CASH.equals(blockChain)) {
             LogUtils.i(TAG, "get BitCoin Cash Fees");
             return bchApiProvider.getBchFees(network);
-
+        } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
+            LogUtils.i(TAG, "get Ripple Fees");
+            return xrpApiProvider.getXrpFees(network);
         }
         return new MediatorLiveData<>();
     }
@@ -169,10 +176,12 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         } else if (Constant.BlockChain.ETHEREUM.equals(blockChain)) {
             LogUtils.i(TAG, "Eth Send Tx");
             return ethApiManager.sendEthTx(network, hexString);
-
         } else if (Constant.BlockChain.BITCOIN_CASH.equals(blockChain)) {
             LogUtils.i(TAG, "BitCoin Cash Send Tx");
             return bchApiProvider.sendBchTx(network, hexString);
+        } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
+            LogUtils.i(TAG, "Ripple Send Tx");
+            return xrpApiProvider.sendXrpTx(network, hexString);
         }
         return null;
     }
@@ -205,6 +214,9 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         } else if (Constant.BlockChain.BITCOIN_CASH.equals(blockChain)) {
             LogUtils.i(TAG, "BitCoin Cash confirmed Tx");
             return bchApiProvider.isConfirmedTxForBch(network, txId);
+        } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
+            LogUtils.i(TAG, "Ripple confirmed Tx");
+            return xrpApiProvider.isConfirmedTxForXrp(network, txId);
         }
         return mediatorLiveData;
     }
@@ -265,6 +277,10 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
             request.setBlockchain(C_BLOCKCHAIN_BITCOIN_CASH);
             request.setNetwork(BtcApiProvider.eNotesNetWork.get(network));
             request.setTxid(txId);
+        } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
+            request.setBlockchain(C_BLOCKCHAIN_RIPPLE);
+            request.setNetwork(BtcApiProvider.eNotesNetWork.get(network));
+            request.setTxid(txId);
         }
         return addSourceForEsList(apiService.subscribeNotificationByES(listRequests), blockChain);
     }
@@ -283,10 +299,12 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
     public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(@NonNull String blockChain, int network, @NonNull String address, String tokenAddress) {
         if (Constant.BlockChain.ETHEREUM.equals(blockChain)) {
             return ethApiManager.getTransactionList(network, address, tokenAddress);
-        } else if(Constant.BlockChain.BITCOIN.equals(blockChain)){
+        } else if (Constant.BlockChain.BITCOIN.equals(blockChain)) {
             return btcApiManager.getTransactionList(network, address);
-        } else if(Constant.BlockChain.BITCOIN_CASH.equals(blockChain)){
+        } else if (Constant.BlockChain.BITCOIN_CASH.equals(blockChain)) {
             return bchApiProvider.getTransactionList(network, address);
+        } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
+            return xrpApiProvider.getTransactionList(network, address);
         }
         return new MediatorLiveData<>();
     }

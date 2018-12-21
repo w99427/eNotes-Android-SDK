@@ -9,6 +9,7 @@ public class CryptoCompareEntity {
     private String JPY;
     private String USDT;
     private String BCH;
+    private String XRP;
 
     public String getBTC() {
         return BTC;
@@ -72,5 +73,13 @@ public class CryptoCompareEntity {
 
     public void setBCH(String BCH) {
         this.BCH = BCH;
+    }
+
+    public String getXRP() {
+        return XRP;
+    }
+
+    public void setXRP(String XRP) {
+        this.XRP = XRP;
     }
 }

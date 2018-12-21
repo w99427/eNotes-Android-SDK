@@ -541,7 +541,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             if (cert.getCertVersion() > Constant.APDU.CERT_VERSION && !ENotesSDK.config.debugCard) {
                 throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
-            if (!cert.getBlockChain().equals(Constant.BlockChain.BITCOIN) && !cert.getBlockChain().equals(Constant.BlockChain.ETHEREUM) && !cert.getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH)) {
+            if (!cert.getBlockChain().equals(Constant.BlockChain.BITCOIN) && !cert.getBlockChain().equals(Constant.BlockChain.ETHEREUM) && !cert.getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH)&& !cert.getBlockChain().equals(Constant.BlockChain.RIPPLE)) {
                 throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
             LogUtils.i(TAG, cert.toString());

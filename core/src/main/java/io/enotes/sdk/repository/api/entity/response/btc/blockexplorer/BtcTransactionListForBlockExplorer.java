@@ -138,7 +138,15 @@ public class BtcTransactionListForBlockExplorer {
 
     public static class Out {
         private String value;
-        private String[] addresses;
+        private ScriptPubKey scriptPubKey;
+
+        public ScriptPubKey getScriptPubKey() {
+            return scriptPubKey;
+        }
+
+        public void setScriptPubKey(ScriptPubKey scriptPubKey) {
+            this.scriptPubKey = scriptPubKey;
+        }
 
         public String getValue() {
             return value;
@@ -146,6 +154,20 @@ public class BtcTransactionListForBlockExplorer {
 
         public void setValue(String value) {
             this.value = value;
+        }
+
+    }
+
+    public static class ScriptPubKey {
+        private String hex;
+        private String[] addresses;
+
+        public String getHex() {
+            return hex;
+        }
+
+        public void setHex(String hex) {
+            this.hex = hex;
         }
 
         public String[] getAddresses() {

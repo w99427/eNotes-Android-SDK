@@ -34,6 +34,7 @@ public class EntExchangeRateEntity extends BaseENotesEntity {
         private String eth;
         private String usdt;
         private String bch;
+        private String xrp;
         private String usd;
         private String eur;
         private String cny;
@@ -102,10 +103,18 @@ public class EntExchangeRateEntity extends BaseENotesEntity {
         public void setJpy(String jpy) {
             this.jpy = jpy;
         }
+
+        public String getXrp() {
+            return xrp;
+        }
+
+        public void setXrp(String xrp) {
+            this.xrp = xrp;
+        }
     }
 
     @Override
     public String toString() {
-        return "exchange = " + exchange + "\ndigiccy = " + digiccy + "\nrate = "+ " # btc : " + data.btc+ " # eth : " + data.eth + " # bch : " + data.bch+ " # usdt : " + data.usdt   + " # usd : " + data.usd + " # eur : " + data.eur + " # cny : " + data.cny + " # jpy : " + data.jpy;
+        return "exchange = " + exchange + "\ndigiccy = " + digiccy + "\nrate = "+ " # btc : " + data.btc+ " # eth : " + data.eth + " # bch : " + data.bch+ " # usdt : " + data.usdt   +" # xrp : " + data.xrp   + " # usd : " + data.usd + " # eur : " + data.eur + " # cny : " + data.cny + " # jpy : " + data.jpy;
     }
 }

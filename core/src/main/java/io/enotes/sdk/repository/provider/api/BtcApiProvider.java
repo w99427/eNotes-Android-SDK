@@ -74,7 +74,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitBalance
-     *
      */
     public LiveData<Resource<EntBalanceEntity>> getBtcBalance(int network, String address) {
         List<EntBalanceListRequest> listRequests = new ArrayList<>();
@@ -83,24 +82,22 @@ public class BtcApiProvider extends BaseApiProvider {
         request.setBlockchain(C_BLOCKCHAIN_BITCOIN);
         request.setNetwork(eNotesNetWork.get(network));
         request.setAddress(address);
-        return addLiveDataSource( getBtcBalanceBy2nd(network, address), getBtcBalanceBy1st(network, address),getBtcBalanceBy3rd(network, address), addSourceForEsList(apiService.getBalanceListByES(listRequests), Constant.BlockChain.BITCOIN));
+        return addLiveDataSource(getBtcBalanceBy2nd(network, address), getBtcBalanceBy1st(network, address), getBtcBalanceBy3rd(network, address), addSourceForEsList(apiService.getBalanceListByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
     public LiveData<Resource<EntBalanceEntity>> getOmniBalance(int network, String address, String id) {
-        return getOmniBalanceBy1st(network,address,id);
+        return getOmniBalanceBy1st(network, address, id);
     }
 
     /**
      * get bitcoin unSpend list
-     *
      */
     public LiveData<Resource<List<EntUtxoEntity>>> getBtcUnSpend(int network, String address) {
-        return addLiveDataSource( getUtxoListBy2nd(network, address), getUtxoListBy1st(network, address),getUtxoListBy3rd(network, address), getUtxoListByES(network, address));
+        return addLiveDataSource(getUtxoListBy2nd(network, address), getUtxoListBy1st(network, address), getUtxoListBy3rd(network, address), getUtxoListByES(network, address));
     }
 
     /**
      * bitcoin transaction confirmed
-     *
      */
     public LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForBitCoin(int network, String txId) {
         List<EntConfirmedListRequest> listRequests = new ArrayList<>();
@@ -109,14 +106,13 @@ public class BtcApiProvider extends BaseApiProvider {
         request.setBlockchain(C_BLOCKCHAIN_BITCOIN);
         request.setNetwork(eNotesNetWork.get(network));
         request.setTxid(txId);
-        return addLiveDataSource( isConfirmedTxForBitCoinBy2nd(network, txId),isConfirmedTxForBitCoinBy1st(network, txId), addSourceForEsList(apiService.getConfirmedListByES(listRequests), Constant.BlockChain.BITCOIN));
+        return addLiveDataSource(isConfirmedTxForBitCoinBy2nd(network, txId), isConfirmedTxForBitCoinBy1st(network, txId), addSourceForEsList(apiService.getConfirmedListByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
 
     /**
      * getBitFees
      * because of enotes server result is not completion,so need to request third
-     *
      */
     public LiveData<Resource<EntFeesEntity>> getBtcFees(int network) {
         if (network == Constant.Network.BTC_TESTNET)
@@ -128,7 +124,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * sendBitTx
-     *
      */
     public LiveData<Resource<EntSendTxEntity>> sendBtcTx(int network, String hex) {
         List<EntSendTxListRequest> listRequests = new ArrayList<>();
@@ -137,7 +132,7 @@ public class BtcApiProvider extends BaseApiProvider {
         request.setRawtx(hex);
         request.setBlockchain(C_BLOCKCHAIN_BITCOIN);
         request.setNetwork(eNotesNetWork.get(network));
-        return addLiveDataSource(sendBtcTxBy2nd(network, hex),sendBtcTxBy1st(network, hex),  addSourceForEsList(apiService.sendRawTransactionByES(listRequests), Constant.BlockChain.BITCOIN));
+        return addLiveDataSource(sendBtcTxBy2nd(network, hex), sendBtcTxBy1st(network, hex), addSourceForEsList(apiService.sendRawTransactionByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
 
@@ -163,7 +158,19 @@ public class BtcApiProvider extends BaseApiProvider {
                                 break;
                             }
                         }
-                        entTransactionEntity.setAmount(!entTransactionEntity.isSent() ? tx.getValueOut() : tx.getValueIn());
+                        if (entTransactionEntity.isSent()) {
+                            entTransactionEntity.setAmount(tx.getValueOut());
+                        } else {
+                            entTransactionEntity.setAmount("0");
+                            for (BtcTransactionListForBlockExplorer.Out out : tx.getVout()) {
+                                if (out.getScriptPubKey().getAddresses() != null && out.getScriptPubKey().getAddresses().length > 0) {
+                                    if (out.getScriptPubKey().getAddresses()[0].equals(address)) {
+                                        entTransactionEntity.setAmount(new BigDecimal(entTransactionEntity.getAmount()).add(new BigDecimal(out.getValue())).toString());
+                                    }
+                                }
+                            }
+                        }
+
                         entTransactionEntity.setAmount(new BigDecimal(entTransactionEntity.getAmount()).multiply(new BigDecimal("100000000")).toBigInteger().toString());
                         list.add(entTransactionEntity);
                     }
@@ -212,7 +219,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitBalanceList By first network
-     *
      */
     private LiveData<Resource<List<EntBalanceEntity>>> getBtcBalanceListBy1st(int network, String[] addresses) {
         MediatorLiveData<Resource<List<EntBalanceEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -267,7 +273,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitBalance By first network
-     *
      */
     private LiveData<Resource<EntBalanceEntity>> getBtcBalanceBy1st(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -286,7 +291,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitBalance By second network
-     *
      */
     private LiveData<Resource<EntBalanceEntity>> getBtcBalanceBy2nd(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -305,7 +309,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitBalance By second network
-     *
      */
     private LiveData<Resource<EntBalanceEntity>> getBtcBalanceBy3rd(int network, String address) {
         MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -324,7 +327,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitFees by first X network
-     *
      */
     private LiveData<Resource<EntFeesEntity>> getBtcFeesBy1Xst(int network) {
         MediatorLiveData<Resource<EntFeesEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -340,7 +342,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitFees by first network
-     *
      */
     private LiveData<Resource<EntFeesEntity>> getBtcFeesBy1st() {
         MediatorLiveData<Resource<EntFeesEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -356,7 +357,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getBitFees by second network
-     *
      */
     private LiveData<Resource<EntFeesEntity>> getBtcFeesBy2nd(int network) {
         MediatorLiveData<Resource<EntFeesEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -386,7 +386,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * isConfirmedTxForBitCoin by first network
-     *
      */
     private LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForBitCoinBy1st(int network, String txId) {
         MediatorLiveData<Resource<EntConfirmedEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -402,7 +401,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * isConfirmedTxForBitCoin by second network
-     *
      */
     private LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForBitCoinBy2nd(int network, String txId) {
         MediatorLiveData<Resource<EntConfirmedEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -418,7 +416,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * sendBitTx by first network
-     *
      */
     private LiveData<Resource<EntSendTxEntity>> sendBtcTxBy1st(int network, String hex) {
         MediatorLiveData<Resource<EntSendTxEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -436,7 +433,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * sendBitTx by second network
-     *
      */
     private LiveData<Resource<EntSendTxEntity>> sendBtcTxBy2nd(int network, String hex) {
         MediatorLiveData<Resource<EntSendTxEntity>> mediatorLiveData = new MediatorLiveData<>();
@@ -452,7 +448,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getUtxoList by first network
-     *
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListBy1st(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -474,7 +469,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getUtxoList by second network
-     *
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListBy2nd(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -501,7 +495,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getUtxoList by third network
-     *
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListBy3rd(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -523,7 +516,6 @@ public class BtcApiProvider extends BaseApiProvider {
 
     /**
      * getUtxoList by eNotes network
-     *
      */
     private LiveData<Resource<List<EntUtxoEntity>>> getUtxoListByES(int network, String address) {
         MediatorLiveData<Resource<List<EntUtxoEntity>>> mediatorLiveData = new MediatorLiveData<>();

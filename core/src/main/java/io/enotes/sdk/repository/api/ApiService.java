@@ -23,6 +23,11 @@ import io.enotes.sdk.repository.api.entity.request.EntNotificationListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntSendTxListRequest;
 import io.enotes.sdk.repository.api.entity.request.btc.blockcypher.BtcRequestSendRawTransaction;
 import io.enotes.sdk.repository.api.entity.request.eth.infura.EthRequestForInfura;
+import io.enotes.sdk.repository.api.entity.request.xrp.XRPBalanceParams;
+import io.enotes.sdk.repository.api.entity.request.xrp.XRPRequest;
+import io.enotes.sdk.repository.api.entity.request.xrp.XRPSendRawTxParams;
+import io.enotes.sdk.repository.api.entity.request.xrp.XRPTransactionListParams;
+import io.enotes.sdk.repository.api.entity.request.xrp.XRPTxParams;
 import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchBalanceForBlockdozer;
 import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchConfirmedForBlockdozer;
 import io.enotes.sdk.repository.api.entity.response.bch.blockdozer.BchFeesForBlockdozer;
@@ -61,6 +66,11 @@ import io.enotes.sdk.repository.api.entity.response.eth.infura.EthEstimateGasFor
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthGasPriceForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthNonceForInfura;
 import io.enotes.sdk.repository.api.entity.response.eth.infura.EthSendRawTransactionForInfura;
+import io.enotes.sdk.repository.api.entity.response.xrp.XRPBalance;
+import io.enotes.sdk.repository.api.entity.response.xrp.XRPFee;
+import io.enotes.sdk.repository.api.entity.response.xrp.XRPIsConfirmed;
+import io.enotes.sdk.repository.api.entity.response.xrp.XRPSendRawTransaction;
+import io.enotes.sdk.repository.api.entity.response.xrp.XRPTransactionList;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
@@ -216,50 +226,86 @@ public interface ApiService {
     @GET("https://{network}." + URI_ETHERSCAN + "/api?module=account&action=txlist&page=1&offset=50&sort=desc")
     LiveData<ApiResponse<EthTransactionListForEtherScan>> getTransactionListByEtherScan(@Path("network") String network, @Query("address") String address, @Query("token") String apiKey);
 
-    @GET("https://{network}."+URI_ETHERSCAN+"/api?module=account&action=tokentx&page=1&offset=50&sort=desc")
+    @GET("https://{network}." + URI_ETHERSCAN + "/api?module=account&action=tokentx&page=1&offset=50&sort=desc")
     LiveData<ApiResponse<EthTransactionListForEtherScan>> getTokenTransactionListByEtherScan(@Path("network") String network, @Query("contractaddress") String contractAddress, @Query("address") String address, @Query("token") String apiKey);
 
     /**********************************Bitcoin Cash****************************************/
-     String URI_BLOCKDOZER="blockdozer.com/insight-api";
-     String URI_BITPAY="bch-insight.bitpay.com/api";
+    String URI_BLOCKDOZER = "blockdozer.com/insight-api";
+    String URI_BITPAY = "bch-insight.bitpay.com/api";
 
     /*****Balance Api***/
     @GET("https://{network}" + URI_BLOCKDOZER + "/addr/{address}")
     LiveData<ApiResponse<BchBalanceForBlockdozer>> getBalanceForBchByBlockZoder(@Path("network") String network, @Path("address") String address);
+
     @GET("https://{network}" + URI_BITPAY + "/addr/{address}")
     LiveData<ApiResponse<BchBalanceForBlockdozer>> getBalanceForBchByBitpay(@Path("network") String network, @Path("address") String address);
 
     /*****TransactionReceipt Api***/
     @GET("https://{network}" + URI_BLOCKDOZER + "/tx/{txid}")
     LiveData<ApiResponse<BchConfirmedForBlockdozer>> isConfirmedTxForBchByBlockdozer(@Path("network") String network, @Path("txid") String TxId);
+
     @GET("https://{network}" + URI_BITPAY + "/tx/{txid}")
     LiveData<ApiResponse<BchConfirmedForBlockdozer>> isConfirmedTxForBchByBitpay(@Path("network") String network, @Path("txid") String TxId);
 
     /*****Fee Api***/
     @GET("https://{network}" + URI_BLOCKDOZER + "/utils/estimatefee")
-    LiveData<ApiResponse<Map<String,String>>> getFeesForBchByBlockdozer(@Path("network") String network);
+    LiveData<ApiResponse<Map<String, String>>> getFeesForBchByBlockdozer(@Path("network") String network);
+
     @GET("https://{network}" + URI_BITPAY + "/utils/estimatefee")
-    LiveData<ApiResponse<Map<String,String>>> getFeesForBchByBitpay(@Path("network") String network);
+    LiveData<ApiResponse<Map<String, String>>> getFeesForBchByBitpay(@Path("network") String network);
 
     /*****SendRawTransaction Api***/
     @FormUrlEncoded
     @POST("https://{network}" + URI_BLOCKDOZER + "/tx/send")
-    LiveData<ApiResponse<BchSendRawTransactionForBlockdozer>> sendRawTransactionForBchByBlockdozer(@Path("network") String network,@Field("rawtx") String hex);
+    LiveData<ApiResponse<BchSendRawTransactionForBlockdozer>> sendRawTransactionForBchByBlockdozer(@Path("network") String network, @Field("rawtx") String hex);
+
     @FormUrlEncoded
     @POST("https://{network}" + URI_BITPAY + "/tx/send")
-    LiveData<ApiResponse<BchSendRawTransactionForBlockdozer>> sendRawTransactionForBchByBitpay(@Path("network") String network,@Field("rawtx") String hex);
+    LiveData<ApiResponse<BchSendRawTransactionForBlockdozer>> sendRawTransactionForBchByBitpay(@Path("network") String network, @Field("rawtx") String hex);
 
     /*****Transaction List Api***/
     @GET("https://{network}" + URI_BLOCKDOZER + "/txs")
     LiveData<ApiResponse<BchTransactionListForBlockdozer>> getTransactionListForBchByBlockdozer(@Path("network") String network, @Query("address") String address);
+
     @GET("https://{network}" + URI_BITPAY + "/txs")
     LiveData<ApiResponse<BchTransactionListForBlockdozer>> getTransactionListForBchByBitpay(@Path("network") String network, @Query("address") String address);
 
     /*****UnSpend Api***/
     @GET("https://{network}" + URI_BLOCKDOZER + "/addr/{addr}/utxo")
     LiveData<ApiResponse<List<BchUtxoForBlockdozer>>> getUTXOForBchByBlockdozer(@Path("network") String network, @Path("addr") String address);
+
     @GET("https://{network}" + URI_BITPAY + "/addr/{addr}/utxo")
     LiveData<ApiResponse<List<BchUtxoForBlockdozer>>> getUTXOForBchByBitpay(@Path("network") String network, @Path("addr") String address);
+
+    /**********************************Ripple****************************************/
+    String URI_RIPPLE = "s2.ripple.com";
+    String URI_RIPPLE_TEST = "s.altnet.rippletest.net";
+
+    /*****Balance Api***/
+    @Headers({"Content-Type: application/json", "Accept: application/json"})
+    @POST("https://{url}:51234")
+    LiveData<ApiResponse<XRPBalance>> getBalanceForRipple(@Path("url") String url, @Body XRPRequest<XRPBalanceParams> requests);
+
+    /*****TransactionReceipt Api***/
+    @Headers({"Content-Type: application/json", "Accept: application/json"})
+    @POST("https://{url}:51234")
+    LiveData<ApiResponse<XRPIsConfirmed>> isConfirmedForRipple(@Path("url") String url, @Body XRPRequest<XRPTxParams> requests);
+
+    /*****Fee Api***/
+    @Headers({"Content-Type: application/json", "Accept: application/json"})
+    @POST("https://{url}:51234")
+    LiveData<ApiResponse<XRPFee>> getFeesForRipple(@Path("url") String url, @Body XRPRequest<Object> requests);
+
+    /*****SendRawTransaction Api***/
+    @Headers({"Content-Type: application/json", "Accept: application/json"})
+    @POST("https://{url}:51234")
+    LiveData<ApiResponse<XRPSendRawTransaction>> sendRawTransactionForRipple(@Path("url") String url, @Body XRPRequest<XRPSendRawTxParams> requests);
+
+    /*****Transaction List Api***/
+    @Headers({"Content-Type: application/json", "Accept: application/json"})
+    @POST("https://{url}:51234")
+    LiveData<ApiResponse<XRPTransactionList>> getTransactionListForRipple(@Path("url") String url, @Body XRPRequest<XRPTransactionListParams> requests);
+
     /**********************************ENOTES****************************************/
 
     @Headers({"Content-Type: application/json", "Accept: application/json"})
