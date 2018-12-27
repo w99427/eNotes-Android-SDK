@@ -34,7 +34,7 @@ public class XrpRawTransaction {
     public byte[] previousSigningData;
     public String tx_blob;
 
-    public String createRawTransaction(Card card, CardProvider cardProvider, String toAddress, String amount, int sequence, String fee) throws CommandException {
+    public String createRawTransaction(Card card, CardProvider cardProvider, String toAddress, String amount, int sequence, String fee, long destinationTag) throws CommandException {
         Payment payment = new Payment();
         payment.as(AccountID.Account, card.getAddress());
         payment.as(AccountID.Destination, toAddress);
@@ -46,6 +46,8 @@ public class XrpRawTransaction {
 
         this.txn.signingPubKey(pubKey);
         this.txn.setCanonicalSignatureFlag();
+        if (destinationTag > 0)
+            this.txn.put(UInt32.DestinationTag, new UInt32(destinationTag));
         this.txn.checkFormat();
         this.signingData = this.txn.signingData();
 

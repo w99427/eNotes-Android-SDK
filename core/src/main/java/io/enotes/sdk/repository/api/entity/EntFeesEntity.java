@@ -11,8 +11,12 @@ public class EntFeesEntity extends BaseENotesEntity {
     private String low;
     private String price;
     private String feerate;
+    private String base;
+    private String median;
+    private String minimum;
 
     public String getFastest() {
+        if (!TextUtils.isEmpty(median)) return Utils.hexToBigIntString(median);
         return fastest;
     }
 
@@ -23,6 +27,7 @@ public class EntFeesEntity extends BaseENotesEntity {
     public String getFast() {
         if (!TextUtils.isEmpty(price)) return Utils.hexToBigIntString(price);
         if (!TextUtils.isEmpty(feerate)) return Utils.hexToBigIntString(feerate);
+        if (!TextUtils.isEmpty(base)) return Utils.hexToBigIntString(base);
         return fast;
     }
 
@@ -31,6 +36,7 @@ public class EntFeesEntity extends BaseENotesEntity {
     }
 
     public String getLow() {
+        if (!TextUtils.isEmpty(minimum)) return Utils.hexToBigIntString(minimum);
         return low;
     }
 

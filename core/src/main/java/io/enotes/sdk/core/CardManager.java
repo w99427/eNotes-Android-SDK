@@ -189,7 +189,7 @@ public class CardManager implements CardInterface {
     }
 
     @Override
-    public void getXrpRawTransaction(Card card, String toAddress, String amount, int sequence, String fee, Callback<String> callback) {
+    public void getXrpRawTransaction(Card card, String toAddress, String amount, int sequence, String fee, long destinationTag, Callback<String> callback) {
         new Thread(() -> {
             if (!cardProvider.isPresent() || cardProvider.getConnectedCard() == null || !cardProvider.getConnectedCard().getCurrencyPubKey().equals(card.getCurrencyPubKey())) {
                 if (!ENotesSDK.config.debugForEmulatorCard) {
@@ -213,7 +213,7 @@ public class CardManager implements CardInterface {
                 return;
             }
             try {
-                String rawTransaction = xrpRawTransaction.createRawTransaction(card, cardProvider, toAddress, toValue.toString(), sequence, fee);
+                String rawTransaction = xrpRawTransaction.createRawTransaction(card, cardProvider, toAddress, toValue.toString(), sequence, fee, destinationTag);
                 handler.post(() -> {
                     callback.onCallBack(Resource.success(rawTransaction));
                 });

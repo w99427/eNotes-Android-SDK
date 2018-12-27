@@ -12,6 +12,7 @@ import java.util.Map;
 
 import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.ErrorCode;
+import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.repository.api.ApiService;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
@@ -19,6 +20,9 @@ import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
+import io.enotes.sdk.repository.api.entity.request.EntBalanceListRequest;
+import io.enotes.sdk.repository.api.entity.request.EntConfirmedListRequest;
+import io.enotes.sdk.repository.api.entity.request.EntSendTxListRequest;
 import io.enotes.sdk.repository.api.entity.request.xrp.XRPBalanceParams;
 import io.enotes.sdk.repository.api.entity.request.xrp.XRPRequest;
 import io.enotes.sdk.repository.api.entity.request.xrp.XRPSendRawTxParams;
@@ -32,13 +36,19 @@ import io.enotes.sdk.repository.api.entity.response.xrp.XRPTransactionList;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.utils.Utils;
 
+import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_BITCOIN;
+import static io.enotes.sdk.repository.provider.ApiProvider.C_BLOCKCHAIN_RIPPLE;
+
 /**
  * BchApiProvider
  */
 public class XrpApiProvider extends BaseApiProvider {
     private ApiService transactionThirdService;
+    private ApiService apiService;
     private static Map<Integer, String> firstNetWork = new HashMap<>();
     private static Map<Integer, String> secondNetWork = new HashMap<>();
+    public static Map<Integer, String> eNotesNetWork = new HashMap<>();
+
 
     static {
         firstNetWork.put(Constant.Network.BTC_MAINNET, "s2.ripple.com");
@@ -47,11 +57,14 @@ public class XrpApiProvider extends BaseApiProvider {
         secondNetWork.put(Constant.Network.BTC_MAINNET, "");
         secondNetWork.put(Constant.Network.BTC_TESTNET, "test-");
 
+        eNotesNetWork.put(Constant.Network.BTC_MAINNET, "mainnet");
+        eNotesNetWork.put(Constant.Network.BTC_TESTNET, "testnet");
     }
 
-    public XrpApiProvider(Context context, ApiService transactionThirdService) {
+    public XrpApiProvider(Context context, ApiService apiService, ApiService transactionThirdService) {
         super(context);
         this.transactionThirdService = transactionThirdService;
+        this.apiService = apiService;
     }
 
 
@@ -59,7 +72,10 @@ public class XrpApiProvider extends BaseApiProvider {
      * getBitBalance
      */
     public LiveData<Resource<EntBalanceEntity>> getXrpBalance(int network, String address) {
-        return addLiveDataSourceNoENotes(getXrpBalanceBy1st(network, address));
+        if (!ENotesSDK.config.isRequestENotesServer || network == Constant.Network.BTC_TESTNET)
+            return addLiveDataSourceNoENotes(getXrpBalanceBy1st(network, address));
+        return addLiveDataSourceNoENotes(addSourceForES(apiService.getXrpBalanceByES(eNotesNetWork.get(network), address)), getXrpBalanceBy1st(network, address));
+
     }
 
 
@@ -67,7 +83,15 @@ public class XrpApiProvider extends BaseApiProvider {
      * bitcoin transaction confirmed
      */
     public LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForXrp(int network, String txId) {
-        return addLiveDataSourceNoENotes(isConfirmedTxForXrpBy1st(network, txId));
+        if (!ENotesSDK.config.isRequestENotesServer || network == Constant.Network.BTC_TESTNET)
+            return addLiveDataSourceNoENotes(isConfirmedTxForXrpBy1st(network, txId));
+        List<EntConfirmedListRequest> listRequests = new ArrayList<>();
+        EntConfirmedListRequest request = new EntConfirmedListRequest();
+        listRequests.add(request);
+        request.setBlockchain(C_BLOCKCHAIN_RIPPLE);
+        request.setNetwork(eNotesNetWork.get(network));
+        request.setTxid(txId);
+        return addLiveDataSourceNoENotes(addSourceForEsList(apiService.getConfirmedListByES(listRequests), Constant.BlockChain.RIPPLE), isConfirmedTxForXrpBy1st(network, txId));
     }
 
 
@@ -76,19 +100,30 @@ public class XrpApiProvider extends BaseApiProvider {
      * because of enotes server result is not completion,so need to request third
      */
     public LiveData<Resource<EntFeesEntity>> getXrpFees(int network) {
-        return addLiveDataSourceNoENotes(getXrpFeesBy1st(network));
+        if (!ENotesSDK.config.isRequestENotesServer || network == Constant.Network.BTC_TESTNET)
+            return addLiveDataSourceNoENotes(getXrpFeesBy1st(network));
+
+        return addLiveDataSourceNoENotes(addSourceForES(apiService.getXrpFeeByES(eNotesNetWork.get(network))), getXrpFeesBy1st(network));
     }
 
     /**
      * sendBitTx
      */
     public LiveData<Resource<EntSendTxEntity>> sendXrpTx(int network, String hex) {
-        return addLiveDataSourceNoENotes(sendXrpTxBy1st(network, hex), sendBtcTxBy2nd(network, hex));
+        if (!ENotesSDK.config.isRequestENotesServer || network == Constant.Network.BTC_TESTNET)
+            return addLiveDataSourceNoENotes(sendXrpTxBy1st(network, hex));
+        List<EntSendTxListRequest> listRequests = new ArrayList<>();
+        EntSendTxListRequest request = new EntSendTxListRequest();
+        listRequests.add(request);
+        request.setRawtx(hex);
+        request.setBlockchain(C_BLOCKCHAIN_RIPPLE);
+        request.setNetwork(eNotesNetWork.get(network));
+        return addLiveDataSourceNoENotes(addSourceForEsList(apiService.sendRawTransactionByES(listRequests), Constant.BlockChain.RIPPLE), sendXrpTxBy1st(network, hex));
     }
 
 
     public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(int network, String address) {
-        return addLiveDataSourceNoENotes(getTransactionList1st(network, address), getTransactionList2nd(network, address));
+        return addLiveDataSourceNoENotes(getTransactionList1st(network, address));
     }
 
     private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList1st(int network, String address) {
@@ -109,42 +144,11 @@ public class XrpApiProvider extends BaseApiProvider {
                 if (txs != null) {
                     for (XRPTransactionList.Transaction tx : txs) {
                         EntTransactionEntity entTransactionEntity = new EntTransactionEntity();
-                        entTransactionEntity.setConfirmations(tx.isValidated()?6:0);
+                        entTransactionEntity.setConfirmations(tx.isValidated() ? 6 : 0);
                         entTransactionEntity.setTime(tx.getTx().getDate() + "");
                         entTransactionEntity.setTxId(tx.getTx().getHash());
                         entTransactionEntity.setSent(tx.getTx().getAccount().equals(address));
                         entTransactionEntity.setAmount(tx.getTx().getAmount());
-                        list.add(entTransactionEntity);
-                    }
-                }
-                mediatorLiveData.postValue(Resource.success(list));
-            } else {
-                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
-            }
-        }));
-        return mediatorLiveData;
-    }
-
-    private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList2nd(int network, String address) {
-        MediatorLiveData<Resource<List<EntTransactionEntity>>> mediatorLiveData = new MediatorLiveData<>();
-        mediatorLiveData.addSource(transactionThirdService.getTransactionListForBchByBitpay(secondNetWork.get(network), address), (resource -> {
-            if (resource.isSuccessful()) {
-                List<EntTransactionEntity> list = new ArrayList<>();
-                List<BchTransactionListForBlockdozer.Tx> txs = resource.body.getTxs();
-                if (txs != null) {
-                    for (BchTransactionListForBlockdozer.Tx tx : txs) {
-                        EntTransactionEntity entTransactionEntity = new EntTransactionEntity();
-                        entTransactionEntity.setConfirmations(tx.getConfirmations());
-                        entTransactionEntity.setTime(tx.getTime() + "");
-                        entTransactionEntity.setTxId(tx.getTxid());
-                        for (BchTransactionListForBlockdozer.Input input : tx.getVin()) {
-                            if (input.getAddr().equals(address)) {
-                                entTransactionEntity.setSent(true);
-                                break;
-                            }
-                        }
-                        entTransactionEntity.setAmount(!entTransactionEntity.isSent() ? tx.getValueOut() : tx.getValueIn());
-                        entTransactionEntity.setAmount(new BigDecimal(entTransactionEntity.getAmount()).multiply(new BigDecimal("100000000")).toBigInteger().toString());
                         list.add(entTransactionEntity);
                     }
                 }
@@ -174,12 +178,12 @@ public class XrpApiProvider extends BaseApiProvider {
                 XRPBalance balance = api.body;
                 entBalanceEntity.setAddress(address);
                 entBalanceEntity.setCoinType(Constant.BlockChain.RIPPLE);
-                if(balance.getResult().getAccount_data() == null){
+                if (balance.getResult().getAccount_data() == null) {
                     entBalanceEntity.setBalance(Utils.intToHexString("0"));
-                    entBalanceEntity.setSequence(1);
-                }else{
+                    entBalanceEntity.setSequence("1");
+                } else {
                     entBalanceEntity.setBalance(Utils.intToHexString(balance.getResult().getAccount_data().getBalance()));
-                    entBalanceEntity.setSequence(balance.getResult().getAccount_data().getSequence());
+                    entBalanceEntity.setSequence(Utils.intToHexString(balance.getResult().getAccount_data().getSequence() + ""));
                 }
                 mediatorLiveData.postValue(Resource.success(entBalanceEntity));
             } else {
@@ -189,23 +193,6 @@ public class XrpApiProvider extends BaseApiProvider {
         return mediatorLiveData;
     }
 
-    /**
-     * getBitBalance By second network
-     */
-    private LiveData<Resource<EntBalanceEntity>> getBtcBalanceBy2nd(int network, String address) {
-        MediatorLiveData<Resource<EntBalanceEntity>> mediatorLiveData = new MediatorLiveData<>();
-        mediatorLiveData.addSource(transactionThirdService.getBalanceForBchByBitpay(secondNetWork.get(network), address), (api -> {
-            if (api.isSuccessful()) {
-                EntBalanceEntity entBalanceEntity = api.body.parseToENotesEntity();
-                entBalanceEntity.setAddress(address);
-                entBalanceEntity.setCoinType(Constant.BlockChain.BITCOIN_CASH);
-                mediatorLiveData.postValue(Resource.success(entBalanceEntity));
-            } else {
-                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
-            }
-        }));
-        return mediatorLiveData;
-    }
 
     /**
      * getBitFees by first network
@@ -221,30 +208,6 @@ public class XrpApiProvider extends BaseApiProvider {
                 feesEntity.setFast(drops.getBase_fee());
                 feesEntity.setFastest(drops.getMedian_fee());
                 mediatorLiveData.postValue(Resource.success(feesEntity));
-            } else {
-                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
-            }
-        }));
-        return mediatorLiveData;
-    }
-
-
-    /**
-     * getBitFees by second network
-     */
-    private LiveData<Resource<EntFeesEntity>> getBtcFeesBy2nd(int network) {
-        MediatorLiveData<Resource<EntFeesEntity>> mediatorLiveData = new MediatorLiveData<>();
-        mediatorLiveData.addSource(transactionThirdService.getFeesForBchByBitpay(secondNetWork.get(network)), (api -> {
-            if (api.isSuccessful()) {
-                if (api.body.size() > 0) {
-                    Map.Entry<String, String> next = api.body.entrySet().iterator().next();
-                    String fee = api.body.get(next.getKey());
-                    EntFeesEntity entFeeEntity = new EntFeesEntity();
-                    entFeeEntity.setFast(new BigDecimal(fee).multiply(new BigDecimal("100000000")).intValue() + "");
-                    mediatorLiveData.postValue(Resource.success(entFeeEntity));
-                } else {
-                    mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
-                }
             } else {
                 mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
             }
@@ -272,20 +235,6 @@ public class XrpApiProvider extends BaseApiProvider {
         return mediatorLiveData;
     }
 
-    /**
-     * isConfirmedTxForBitCoin by second network
-     */
-    private LiveData<Resource<EntConfirmedEntity>> isConfirmedTxForBitCoinBy2nd(int network, String txId) {
-        MediatorLiveData<Resource<EntConfirmedEntity>> mediatorLiveData = new MediatorLiveData<>();
-        mediatorLiveData.addSource(transactionThirdService.isConfirmedTxForBchByBitpay(secondNetWork.get(network), txId), (api -> {
-            if (api.isSuccessful()) {
-                mediatorLiveData.postValue(Resource.success(api.body.parseToENotesEntity()));
-            } else {
-                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
-            }
-        }));
-        return mediatorLiveData;
-    }
 
     /**
      * sendBitTx by first network
@@ -305,19 +254,5 @@ public class XrpApiProvider extends BaseApiProvider {
         return mediatorLiveData;
     }
 
-    /**
-     * sendBitTx by second network
-     */
-    private LiveData<Resource<EntSendTxEntity>> sendBtcTxBy2nd(int network, String hex) {
-        MediatorLiveData<Resource<EntSendTxEntity>> mediatorLiveData = new MediatorLiveData<>();
-        mediatorLiveData.addSource(transactionThirdService.sendRawTransactionForBchByBitpay(secondNetWork.get(network), hex), (api -> {
-            if (api.isSuccessful()) {
-                mediatorLiveData.postValue(Resource.success(api.body.parseToENotesEntity()));
-            } else {
-                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, api.errorMessage));
-            }
-        }));
-        return mediatorLiveData;
-    }
 
 }

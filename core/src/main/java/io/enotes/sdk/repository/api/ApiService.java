@@ -345,4 +345,8 @@ public interface ApiService {
     @GET("v1/version/check/")
     LiveData<ApiResponse<EntVersionEntity>> updateVersion();
 
+    @GET("v1/get_fee/ripple/{network}")
+    LiveData<ApiResponse<ResponseEntity<EntFeesEntity>>> getXrpFeeByES(@Path("network") String network);
+    @GET("v1/get_address_info/ripple/{network}/")
+    LiveData<ApiResponse<ResponseEntity<EntBalanceEntity>>> getXrpBalanceByES(@Path("network") String network,  @Query("address") String address);
 }

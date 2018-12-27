@@ -38,7 +38,7 @@ public class RPCApiTest {
     private static final String TAG = "RPCApiTest";
     private static final String BTC_ADDRESS = "2N5rJVCfwz2X8iiYmPqKsuczohSwptrVxLk";
     private static final String ETH_ADDRESS = "0xC954D9BC070Ba97Bb80E0095ad2CC3A037906540";
-    private static final String XRP_ADDRESS = "r3p1aJuVtxUDBzn3YSrzirWTW9DgHztE6k";
+    private static final String XRP_ADDRESS = "rBT5h55iftNBwnFA1CsvtHuo7LgXfZYabE";
     private static final String BTC_TXID = "7f827d4a3ae3b6e408fa1737f12f9dbfa2bb8fd79e0e3e63256a6e78310790a4";
     private static final String ETH_TXID = "0xa4bcfc7d1dd2db21df8d74da00fb865775033b4b94821a45a3dd94aacf3cda4f";
     private static final String XRP_TXID = "535B7E155FF7023A61886FC5D7C4FF62753FC710DCD2CA5BDB5755CC17DF165D";
@@ -51,6 +51,7 @@ public class RPCApiTest {
 
     public RPCApiTest() {
         ENotesSDK.config.debugCard=true;
+        ENotesSDK.config.isRequestENotesServer=true;
         apiProvider = ProviderFactory.getInstance(null).getApiProvider();
     }
 
@@ -76,11 +77,11 @@ public class RPCApiTest {
 
     @Test
     public void testBalanceOfXrp() {
-        Resource<EntBalanceEntity> balance = getValue(apiProvider.getBalance(Constant.BlockChain.RIPPLE, Constant.Network.BTC_TESTNET, XRP_ADDRESS));
+        Resource<EntBalanceEntity> balance = getValue(apiProvider.getBalance(Constant.BlockChain.RIPPLE, Constant.Network.BTC_MAINNET, XRP_ADDRESS));
         assertTrue(balance != null);
         assertTrue(balance.status == Status.SUCCESS);
         assertNotNull(balance.data);
-        Log.i(TAG, "xrp balance = " + balance.data.getBalance());
+        Log.i(TAG, "xrp balance = " + balance.data.getBalance() + " sequence = " + balance.data.getSequence());
     }
 
     @Test

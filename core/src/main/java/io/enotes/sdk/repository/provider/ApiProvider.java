@@ -73,7 +73,7 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
         btcApiManager = new BtcApiProvider(context, apiService, transactionThirdService);
         ethApiManager = new EthApiProvider(context, apiService, transactionThirdService);
         bchApiProvider = new BchApiProvider(context, transactionThirdService);
-        xrpApiProvider = new XrpApiProvider(context, transactionThirdService);
+        xrpApiProvider = new XrpApiProvider(context, apiService, transactionThirdService);
         exchangeRateApiProvider = new ExchangeRateApiProvider(context, exchangeRateApiService);
     }
 

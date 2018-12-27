@@ -98,7 +98,7 @@ public class NfcTest extends BaseTest {
                 assertTrue(resource.data instanceof Card);
                 resource.data.getCert().setBlockChain(Constant.BlockChain.RIPPLE);
                 Log.i(TAG, "card cert = " + resource.data.getCert().toString());
-                cardManager.getXrpRawTransaction(resource.data,"rLeQtpFZC4PizpR8y1gEhGEPp4MAz1gzk9","100000",1,"100",(resource1 -> {
+                cardManager.getXrpRawTransaction(resource.data,"rLeQtpFZC4PizpR8y1gEhGEPp4MAz1gzk9","100000",1,"100", 0,(resource1 -> {
                     String hex = resource1.data;
                     Log.i(TAG,"xrp raw transaction hex = "+hex);
                     threadLock.notifyLock();

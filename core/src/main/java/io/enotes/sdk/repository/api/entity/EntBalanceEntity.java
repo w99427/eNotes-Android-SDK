@@ -7,7 +7,7 @@ public class EntBalanceEntity extends BaseENotesEntity {
     private String address;
     private String balance;
     private String unit;
-    private int Sequence;
+    private String sequence;
 
     public String getAddress() {
         return address;
@@ -37,12 +37,12 @@ public class EntBalanceEntity extends BaseENotesEntity {
         return Utils.hexToBigIntString(balance);
     }
 
-    public int getSequence() {
-        return Sequence;
+    public String getSequence() {
+        return Utils.hexToBigIntString(sequence);
     }
 
-    public void setSequence(int sequence) {
-        Sequence = sequence;
+    public void setSequence(String sequence) {
+        sequence = sequence;
     }
 }
 
