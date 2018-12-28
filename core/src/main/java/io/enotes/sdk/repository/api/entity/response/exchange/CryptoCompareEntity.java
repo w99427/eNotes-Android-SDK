@@ -10,6 +10,7 @@ public class CryptoCompareEntity {
     private String USDT;
     private String BCH;
     private String XRP;
+    private String GUSD;
 
     public String getBTC() {
         return BTC;
@@ -81,5 +82,13 @@ public class CryptoCompareEntity {
 
     public void setXRP(String XRP) {
         this.XRP = XRP;
+    }
+
+    public String getGUSD() {
+        return GUSD;
+    }
+
+    public void setGUSD(String GUSD) {
+        this.GUSD = GUSD;
     }
 }

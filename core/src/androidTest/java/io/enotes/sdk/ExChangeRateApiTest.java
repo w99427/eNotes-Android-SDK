@@ -68,6 +68,15 @@ public class ExChangeRateApiTest {
         Log.i(TAG, "exchangeRate = \n" + entity.data.toString());
     }
 
+    @Test
+    public void testBCHExchangeRate() {
+        Resource<EntExchangeRateEntity> entity = getValue(apiProvider.getExchangeRate(Constant.CardType.BCH));
+        assertTrue(entity != null);
+        assertTrue(entity.status == Status.SUCCESS);
+        assertNotNull(entity.data);
+        Log.i(TAG, "exchangeRate = \n" + entity.data.toString());
+    }
+
     private static <T> T getValue(LiveData<T> liveData) {
         try {
             final Object[] objects = new Object[1];

@@ -17,6 +17,7 @@ import io.enotes.sdk.repository.api.ExchangeRateApiService;
 import io.enotes.sdk.repository.api.RetrofitFactory;
 import io.enotes.sdk.repository.api.entity.EntExchangeRateEntity;
 import io.enotes.sdk.repository.api.entity.EntExchangeRateUSDEntity;
+import io.enotes.sdk.repository.api.entity.response.exchange.CoinMarketEntity;
 import io.enotes.sdk.repository.api.entity.response.exchange.CryptoCompareEntity;
 import io.enotes.sdk.repository.api.entity.response.exchange.OkexGUSDBTCEntity;
 import io.enotes.sdk.repository.base.Resource;
@@ -40,13 +41,13 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
 
     public LiveData<Resource<EntExchangeRateEntity>> getExchangeRate(@RateMode String digiccy) {
         if (digiccy.contains(Constant.CardType.BCH) || digiccy.contains(Constant.CardType.XRP)) {
-            return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy));
+            return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy), getExchangeRate5ve(digiccy));
         } else if (digiccy.contains(Constant.CardType.GUSD) || digiccy.contains(Constant.CardType.OTHER_ERC20)) {
-            return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy), getExchangeRateGUSD1st(digiccy));
+            return addLiveDataSourceNoENotes(getExchangeRate4ur(digiccy), getExchangeRate5ve(digiccy), getExchangeRateGUSD1st(digiccy));
         } else if (digiccy.contains(Constant.CardType.USDT)) {
-            return addLiveDataSourceNoENotes(getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
+            return addLiveDataSourceNoENotes(getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate5ve(digiccy), getExchangeRate2nd(digiccy));
         } else {
-            return addLiveDataSourceNoENotes(getExchangeRate1st(digiccy), getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate2nd(digiccy));
+            return addLiveDataSourceNoENotes(getExchangeRate1st(digiccy), getExchangeRate3rd(digiccy), getExchangeRate4ur(digiccy), getExchangeRate5ve(digiccy), getExchangeRate2nd(digiccy));
         }
     }
 
@@ -152,6 +153,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                 data.setUsdt(entity.getUSDT());
                 data.setBch(entity.getBCH());
                 data.setXrp(entity.getXRP());
+                data.setGusd(entity.getGUSD());
                 rateEntity.setData(data);
                 mediatorLiveData.postValue(Resource.success(rateEntity));
             } else {
@@ -200,6 +202,7 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                                 exData.setBtc(gusd2btc);
                                 exData.setEth(gusd2eth);
                                 exData.setUsdt(gusd2usdt);
+                                exData.setGusd("1");
                                 exData.setEur(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getEur())).toString());
                                 exData.setCny(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getCny())).toString());
                                 exData.setJpy(new BigDecimal(gusd2usd).multiply(new BigDecimal(resource1.data.getJpy())).toString());
@@ -218,6 +221,98 @@ public class ExchangeRateApiProvider extends BaseApiProvider {
                 mediatorLiveData.postValue(Resource.error(NET_ERROR, resource0.errorMessage));
             }
         }));
+        return mediatorLiveData;
+    }
+
+    private LiveData<Resource<EntExchangeRateEntity>> getExchangeRate5ve(String digiccy) {
+        MediatorLiveData<Resource<EntExchangeRateEntity>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(exchangeRateApiService.getExchangeRateCoinMarket(), (resource) -> {
+            if (resource.isSuccessful()) {
+                mediatorLiveData.addSource(getExchangeRateUSD(), (usdResource) -> {
+                    if (usdResource.status == Status.SUCCESS) {
+                        EntExchangeRateEntity entExchangeRateEntity = new EntExchangeRateEntity();
+                        entExchangeRateEntity.setExchange("coinmarketcap");
+                        entExchangeRateEntity.setDigiccy(digiccy);
+                        EntExchangeRateEntity.Data eData = new EntExchangeRateEntity.Data();
+                        CoinMarketEntity.Data data = resource.body.getData();
+                        entExchangeRateEntity.setData(eData);
+                        if (digiccy.equals(Constant.CardType.XRP)) {
+                            eData.setXrp("1");
+                            eData.setBch(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsdt(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setEth(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBtc(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setGusd(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsd(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).toString());
+                            eData.setEur(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getEur())).toString());
+                            eData.setJpy(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getJpy())).toString());
+                            eData.setCny(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getCny())).toString());
+                        } else if (digiccy.equals(Constant.CardType.BCH)) {
+                            eData.setBch("1");
+                            eData.setXrp(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsdt(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setEth(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBtc(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setGusd(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsd(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).toString());
+                            eData.setEur(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getEur())).toString());
+                            eData.setJpy(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getJpy())).toString());
+                            eData.setCny(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getCny())).toString());
+                        } else if (digiccy.equals(Constant.CardType.USDT)) {
+                            eData.setUsdt("1");
+                            eData.setXrp(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBch(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setEth(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBtc(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setGusd(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsd(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).toString());
+                            eData.setEur(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getEur())).toString());
+                            eData.setJpy(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getJpy())).toString());
+                            eData.setCny(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getCny())).toString());
+                        } else if (digiccy.equals(Constant.CardType.GUSD)) {
+                            eData.setGusd("1");
+                            eData.setXrp(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsdt(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setEth(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBtc(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBch(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsd(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).toString());
+                            eData.setEur(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getEur())).toString());
+                            eData.setJpy(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getJpy())).toString());
+                            eData.setCny(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getCny())).toString());
+                        } else if (digiccy.equals(Constant.CardType.ETH)) {
+                            eData.setEth("1");
+                            eData.setXrp(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsdt(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setGusd(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBtc(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBch(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsd(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).toString());
+                            eData.setEur(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getEur())).toString());
+                            eData.setJpy(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getJpy())).toString());
+                            eData.setCny(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getCny())).toString());
+                        } else if (digiccy.equals(Constant.CardType.BTC)) {
+                            eData.setBtc("1");
+                            eData.setXrp(new BigDecimal(data.getXRP().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsdt(new BigDecimal(data.getUSDT().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setGusd(new BigDecimal(data.getGUSD().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setEth(new BigDecimal(data.getETH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setBch(new BigDecimal(data.getBCH().getQuote().getUSD().getPrice()).divide(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()), 10, BigDecimal.ROUND_HALF_UP).toString());
+                            eData.setUsd(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).toString());
+                            eData.setEur(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getEur())).toString());
+                            eData.setJpy(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getJpy())).toString());
+                            eData.setCny(new BigDecimal(data.getBTC().getQuote().getUSD().getPrice()).multiply(new BigDecimal(usdResource.data.getCny())).toString());
+                        }
+                        mediatorLiveData.postValue(Resource.success(entExchangeRateEntity));
+                    } else if (usdResource.status == Status.ERROR) {
+                        mediatorLiveData.postValue(Resource.error(NET_ERROR, usdResource.message));
+                    }
+                });
+
+            } else {
+                mediatorLiveData.postValue(Resource.error(NET_ERROR, resource.errorMessage));
+            }
+        });
         return mediatorLiveData;
     }
 
