@@ -42,7 +42,7 @@ public class EntBalanceEntity extends BaseENotesEntity {
     }
 
     public void setSequence(String sequence) {
-        sequence = sequence;
+        this.sequence = sequence;
     }
 }
 

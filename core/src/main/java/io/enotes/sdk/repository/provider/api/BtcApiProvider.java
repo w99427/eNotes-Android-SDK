@@ -137,7 +137,7 @@ public class BtcApiProvider extends BaseApiProvider {
 
 
     public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(int network, String address) {
-        return addLiveDataSourceNoENotes(getTransactionList1st(network, address), getTransactionList2nd(network, address));
+        return addLiveDataSourceNoENotes(getTransactionList2nd(network, address), getTransactionList1st(network, address));
     }
 
     private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList1st(int network, String address) {
@@ -201,7 +201,7 @@ public class BtcApiProvider extends BaseApiProvider {
                         SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         try {
                             Date date = utcFormat.parse(UTCString);
-                            entTransactionEntity.setTime(date.getTime() + "");
+                            entTransactionEntity.setTime(date.getTime()/1000l + "");
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }

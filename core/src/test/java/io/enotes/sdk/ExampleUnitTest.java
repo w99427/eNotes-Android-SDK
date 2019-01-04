@@ -70,8 +70,8 @@ public class ExampleUnitTest {
         // Put `as` AccountID field Account, `Object` o
         payment.as(AccountID.Account,     "rP7JNBVPS31t1vroS3u9pPpywi5MYjyvkr");
         payment.as(AccountID.Destination, "r3fVM5zkC4TVmLnD5PeSYSNZQkDLT6bTeQ");
-        payment.as(Amount.Amount,         "20000000");
-        payment.as(UInt32.Sequence,       4);
+        payment.as(Amount.Amount,         "30000000");
+        payment.as(UInt32.Sequence,       5);
         payment.as(Amount.Fee,            "10");
 
         // Try commenting out the Fee, you'll get STObject.FormatException

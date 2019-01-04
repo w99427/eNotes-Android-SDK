@@ -44,6 +44,8 @@ import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.card.CommandException;
 import io.enotes.sdk.repository.db.entity.Card;
 import io.enotes.sdk.repository.provider.CardProvider;
+import io.enotes.sdk.utils.bch.MoneyNetwork;
+import io.enotes.sdk.utils.bch.bitcoincash.BitcoinCashAddressFormatter;
 
 import static io.enotes.sdk.utils.SignatureUtils.str2BtcSignature;
 import static org.bitcoinj.core.Utils.int64ToByteStreamLE;
@@ -117,10 +119,30 @@ public class BtcRawTransaction {
         }
         toCount = amount - fees - changeCount;
         LogUtils.i(TAG, "\namount=" + amount + "\nfees=" + fees + "\ntoCount=" + toCount + "\nchangeCount=" + changeCount);
-        TransactionOutput to = new TransactionOutput(currentBtcNetWork, transaction, Coin.valueOf(toCount), Address.fromBase58(currentBtcNetWork, toAddress));
+        Address toAddr = null;
+        if (card.getCert().getBlockChain().equals(Constant.BlockChain.BITCOIN)) {
+            toAddr = Address.fromBase58(currentBtcNetWork, toAddress);
+        } else if (card.getCert().getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH)) {
+            byte[] hash = BitcoinCashAddressFormatter.decodeCashAddress(toAddress, card.getCert().getNetWork() == 0 ? MoneyNetwork.MAIN : MoneyNetwork.TEST).getHash();
+            toAddr = Address.fromP2SHHash(currentBtcNetWork, hash);
+        }
+        if (toAddr == null) {
+            throw new CommandException(ErrorCode.SDK_ERROR, "toAddress decode is null");
+        }
+        TransactionOutput to = new TransactionOutput(currentBtcNetWork, transaction, Coin.valueOf(toCount), toAddr);
         transaction.addOutput(to);
         if (changeCount > 0) {
-            TransactionOutput change = new TransactionOutput(currentBtcNetWork, transaction, Coin.valueOf(changeCount), Address.fromBase58(currentBtcNetWork, changeAddress));
+            Address toChange = null;
+            if (card.getCert().getBlockChain().equals(Constant.BlockChain.BITCOIN)) {
+                toChange = Address.fromBase58(currentBtcNetWork, changeAddress);
+            } else if (card.getCert().getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH)) {
+                byte[] hash = BitcoinCashAddressFormatter.decodeCashAddress(changeAddress, card.getCert().getNetWork() == 0 ? MoneyNetwork.MAIN : MoneyNetwork.TEST).getHash();
+                toChange = Address.fromP2SHHash(currentBtcNetWork, hash);
+            }
+            if (toChange == null) {
+                throw new CommandException(ErrorCode.SDK_ERROR, "toChange decode is null");
+            }
+            TransactionOutput change = new TransactionOutput(currentBtcNetWork, transaction, Coin.valueOf(changeCount), toChange);
             transaction.addOutput(change);
         }
         Log.i(TAG, "get no sign tx");
