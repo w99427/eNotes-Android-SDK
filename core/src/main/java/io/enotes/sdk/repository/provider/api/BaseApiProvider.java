@@ -34,7 +34,6 @@ public abstract class BaseApiProvider {
 
     /**
      * add source in order
-     *
      */
     public <T> MediatorLiveData<Resource<T>> addLiveDataSource(LiveData<Resource<T>>... source) {
         MediatorLiveData<Resource<T>> mutableLiveData = new MediatorLiveData<>();
@@ -51,7 +50,6 @@ public abstract class BaseApiProvider {
 
     /**
      * add source in order
-     *
      */
     public <T> MediatorLiveData<Resource<T>> addLiveDataSourceNoENotes(LiveData<Resource<T>>... source) {
         MediatorLiveData<Resource<T>> mutableLiveData = new MediatorLiveData<>();
@@ -65,7 +63,6 @@ public abstract class BaseApiProvider {
 
     /**
      * recur source
-     *
      */
     private <T> void recurLiveDataSource(MediatorLiveData<Resource<T>> mutableLiveData, List<LiveData<Resource<T>>> sourceList) {
         if (context != null && !Utils.isNetworkConnected(context)) {
@@ -92,7 +89,6 @@ public abstract class BaseApiProvider {
 
     /**
      * add source in random
-     *
      */
     public <T> MediatorLiveData<Resource<T>> addLiveDataSourceRandom(LiveData<Resource<T>>... source) {
         MediatorLiveData<Resource<T>> mutableLiveData = new MediatorLiveData<>();
@@ -109,7 +105,6 @@ public abstract class BaseApiProvider {
 
     /**
      * recur source
-     *
      */
     private <T> void recurLiveDataSourceRandom(MediatorLiveData<Resource<T>> mutableLiveData, List<LiveData<Resource<T>>> sourceList) {
         if (sourceList != null && sourceList.size() > 0) {
@@ -143,7 +138,6 @@ public abstract class BaseApiProvider {
 
     /**
      * addSourceForES
-     *
      */
     protected <T> LiveData<Resource<T>> addSourceForES(LiveData<ApiResponse<ResponseEntity<T>>> es) {
         MediatorLiveData<Resource<T>> mediatorLiveData = new MediatorLiveData<>();
@@ -162,13 +156,12 @@ public abstract class BaseApiProvider {
 
     /**
      * addSourceForEsList
-     *
      */
     protected <T extends BaseENotesEntity> LiveData<Resource<T>> addSourceForEsList(LiveData<ApiResponse<List<ResponseEntity<T>>>> es, String blockChain) {
         MediatorLiveData<Resource<T>> mediatorLiveData = new MediatorLiveData<>();
         mediatorLiveData.addSource(es, (api -> {
             if (api.isSuccessful()) {
-                if (api.body != null && api.body.size() > 0 && api.body.get(0).getCode() == 0) {
+                if (api.body != null && api.body.size() > 0 && api.body.get(0).getCode() == 0 && api.body.get(0).getData() != null) {
                     api.body.get(0).getData().setCoinType(blockChain);
                     mediatorLiveData.postValue(Resource.success(api.body.get(0).getData()));
                 } else {
@@ -183,7 +176,6 @@ public abstract class BaseApiProvider {
 
     /**
      * addSourceForEsListAll
-     *
      */
     protected <T> LiveData<Resource<List<ResponseEntity<T>>>> addSourceForEsListAll(LiveData<ApiResponse<List<ResponseEntity<T>>>> es) {
         MediatorLiveData<Resource<List<ResponseEntity<T>>>> mediatorLiveData = new MediatorLiveData<>();
@@ -204,7 +196,6 @@ public abstract class BaseApiProvider {
 
     /**
      * checkEthError
-     *
      */
     protected <T> boolean checkEthError(MediatorLiveData<Resource<T>> mediatorLiveData, Object obj, boolean showError) {
         if (obj != null && obj instanceof BaseEthEntity) {

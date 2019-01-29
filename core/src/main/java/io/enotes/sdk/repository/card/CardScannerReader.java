@@ -646,7 +646,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             if (result.length() == 4) {
                 int txSignTimes = ByteUtil.byteArrayToInt(ByteUtil.hexStringToBytes(result.substring(0, 4)));
                 LogUtils.d(TAG, "    txSignTimes: " + txSignTimes);
-                return txSignTimes == 0 ? STATUS_SAFE : STATUS_UNSAFE;
+                return txSignTimes;
             }
         }
         throw new CommandException(ErrorCode.INVALID_CARD, "Fail to read status");

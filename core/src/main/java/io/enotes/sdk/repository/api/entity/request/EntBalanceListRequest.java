@@ -7,6 +7,7 @@ public class EntBalanceListRequest extends BaseENotesEntity {
     private String height;
     private String address;
     private String contract;
+    private String omniproperty;
 
     public String getHeight() {
         return height;
@@ -30,5 +31,13 @@ public class EntBalanceListRequest extends BaseENotesEntity {
 
     public void setContract(String contract) {
         this.contract = contract;
+    }
+
+    public String getOmniproperty() {
+        return omniproperty;
+    }
+
+    public void setOmniproperty(String omniproperty) {
+        this.omniproperty = omniproperty;
     }
 }

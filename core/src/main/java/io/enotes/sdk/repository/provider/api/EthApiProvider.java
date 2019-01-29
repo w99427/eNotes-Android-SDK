@@ -18,6 +18,7 @@ import java.util.Random;
 
 import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.ErrorCode;
+import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.core.RPCApiManager;
 import io.enotes.sdk.repository.api.ApiService;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
@@ -27,6 +28,7 @@ import io.enotes.sdk.repository.api.entity.EntGasEntity;
 import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntSpendTxCountEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.request.EntBalanceListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntConfirmedListRequest;
@@ -170,6 +172,21 @@ public class EthApiProvider extends BaseApiProvider {
             return addLiveDataSourceNoENotes(getTransactionList1st(network, address));
         } else
             return addLiveDataSourceNoENotes(getTokenTransactionList1st(network, tokenAddress, address));
+    }
+
+    public LiveData<Resource<EntSpendTxCountEntity>> getSpendTransactionCount(int network, String address) {
+        MediatorLiveData<Resource<EntSpendTxCountEntity>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(getEthNonce(network, address),(resource)->{
+            if(resource.status == Status.SUCCESS){
+                EntSpendTxCountEntity entity = new EntSpendTxCountEntity();
+                entity.setCount(Integer.valueOf(resource.data.getNonce()));
+                mediatorLiveData.postValue(Resource.success(entity));
+            }else{
+                mediatorLiveData.postValue(Resource.error(resource.errorCode,resource.message));
+            }
+
+        });
+        return mediatorLiveData;
     }
 
     private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList1st(int network, String address) {

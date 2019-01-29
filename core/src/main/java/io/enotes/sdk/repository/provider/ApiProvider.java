@@ -30,6 +30,7 @@ import io.enotes.sdk.repository.api.entity.EntGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.EntNonceEntity;
 import io.enotes.sdk.repository.api.entity.EntNotificationEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntSpendTxCountEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.api.entity.EntVersionEntity;
@@ -305,6 +306,19 @@ public class ApiProvider extends BaseApiProvider implements BaseManager {
             return bchApiProvider.getTransactionList(network, address);
         } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
             return xrpApiProvider.getTransactionList(network, address);
+        }
+        return new MediatorLiveData<>();
+    }
+
+    public LiveData<Resource<EntSpendTxCountEntity>> getSpendTransactionCount(@NonNull String blockChain, int network, String address) {
+        if (Constant.BlockChain.ETHEREUM.equals(blockChain)) {
+            return ethApiManager.getSpendTransactionCount(network, address);
+        } else if (Constant.BlockChain.BITCOIN.equals(blockChain)) {
+            return btcApiManager.getSpendTransactionCount(network, address);
+        } else if (Constant.BlockChain.BITCOIN_CASH.equals(blockChain)) {
+            return new MediatorLiveData<>();
+        } else if (Constant.BlockChain.RIPPLE.equals(blockChain)) {
+            return xrpApiProvider.getSpendTransactionCount(network, address);
         }
         return new MediatorLiveData<>();
     }

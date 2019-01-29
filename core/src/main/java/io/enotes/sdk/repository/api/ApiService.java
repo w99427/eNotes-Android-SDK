@@ -50,6 +50,7 @@ import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcConfirm
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcSendRawTransactionForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcUtxoForBlockExplorer;
+import io.enotes.sdk.repository.api.entity.response.btc.chainso.SpendTxForChainSo;
 import io.enotes.sdk.repository.api.entity.response.btc.omniexplorer.OmniBalance;
 import io.enotes.sdk.repository.api.entity.response.eth.etherchain.EthGasPriceEntity;
 import io.enotes.sdk.repository.api.entity.response.eth.etherscan.EthBalanceForEtherScan;
@@ -152,6 +153,14 @@ public interface ApiService {
 
     @GET("https://" + URI_BLOCKCYPHER + "/v1/btc/{network}/addrs/{address}")
     LiveData<ApiResponse<BtcTransactionListForBlockCypher>> getTransactionListByBlockCypher(@Path("network") String network, @Path("address") String address);
+
+    /*****spend Transaction count Api***/
+    @GET("https://{network}" + URI_BLOCKCHAIN + "/rawaddr/{address}?filter=1")
+    LiveData<ApiResponse<BtcTransactionListForBlockChain>> getSpendTransactionCountByBlockChain(@Path("network") String network, @Path("address") String address);
+
+    @GET("https://chain.so/api/v2/get_tx_spent/{network}/{address}")
+    LiveData<ApiResponse<SpendTxForChainSo>> getSpendTransactionCountByChainSo(@Path("network") String network, @Path("address") String address);
+
 
     /**********************************ETH****************************************/
     String URI_INFURA = "infura.io";
@@ -347,6 +356,7 @@ public interface ApiService {
 
     @GET("v1/get_fee/ripple/{network}")
     LiveData<ApiResponse<ResponseEntity<EntFeesEntity>>> getXrpFeeByES(@Path("network") String network);
+
     @GET("v1/get_address_info/ripple/{network}/")
-    LiveData<ApiResponse<ResponseEntity<EntBalanceEntity>>> getXrpBalanceByES(@Path("network") String network,  @Query("address") String address);
+    LiveData<ApiResponse<ResponseEntity<EntBalanceEntity>>> getXrpBalanceByES(@Path("network") String network, @Query("address") String address);
 }

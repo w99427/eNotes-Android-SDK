@@ -12,12 +12,14 @@ import java.util.Map;
 
 import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.ErrorCode;
+import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.core.ENotesSDK;
 import io.enotes.sdk.repository.api.ApiService;
 import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
 import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntSpendTxCountEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.api.entity.request.EntBalanceListRequest;
@@ -124,6 +126,21 @@ public class XrpApiProvider extends BaseApiProvider {
 
     public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(int network, String address) {
         return addLiveDataSourceNoENotes(getTransactionList1st(network, address));
+    }
+
+    public LiveData<Resource<EntSpendTxCountEntity>> getSpendTransactionCount(int network, String address) {
+        MediatorLiveData<Resource<EntSpendTxCountEntity>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(getXrpBalance(network, address),(resource)->{
+            if(resource.status == Status.SUCCESS){
+                EntSpendTxCountEntity entity = new EntSpendTxCountEntity();
+                entity.setCount(Integer.valueOf(resource.data.getSequence()));
+                mediatorLiveData.postValue(Resource.success(entity));
+            }else{
+                mediatorLiveData.postValue(Resource.error(resource.errorCode,resource.message));
+            }
+
+        });
+        return mediatorLiveData;
     }
 
     private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList1st(int network, String address) {

@@ -23,6 +23,7 @@ import io.enotes.sdk.repository.api.entity.EntBalanceEntity;
 import io.enotes.sdk.repository.api.entity.EntConfirmedEntity;
 import io.enotes.sdk.repository.api.entity.EntFeesEntity;
 import io.enotes.sdk.repository.api.entity.EntSendTxEntity;
+import io.enotes.sdk.repository.api.entity.EntSpendTxCountEntity;
 import io.enotes.sdk.repository.api.entity.EntTransactionEntity;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.api.entity.request.EntBalanceListRequest;
@@ -30,11 +31,13 @@ import io.enotes.sdk.repository.api.entity.request.EntConfirmedListRequest;
 import io.enotes.sdk.repository.api.entity.request.EntSendTxListRequest;
 import io.enotes.sdk.repository.api.entity.request.btc.blockcypher.BtcRequestSendRawTransaction;
 import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcBalanceListForBlockChain;
+import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcTransactionListForBlockChain;
 import io.enotes.sdk.repository.api.entity.response.btc.blockchain.BtcUtxoForBlockChain;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcTransactionListForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockcypher.BtcUtxoForBlockCypher;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcTransactionListForBlockExplorer;
 import io.enotes.sdk.repository.api.entity.response.btc.blockexplorer.BtcUtxoForBlockExplorer;
+import io.enotes.sdk.repository.api.entity.response.btc.chainso.SpendTxForChainSo;
 import io.enotes.sdk.repository.api.entity.response.btc.omniexplorer.OmniBalance;
 import io.enotes.sdk.repository.base.Resource;
 import io.enotes.sdk.utils.Utils;
@@ -49,6 +52,7 @@ public class BtcApiProvider extends BaseApiProvider {
     private ApiService transactionThirdService;
     private static Map<Integer, String> firstNetWork = new HashMap<>();
     private static Map<Integer, String> secondNetWork = new HashMap<>();
+    private static Map<Integer, String> chainSoNetWork = new HashMap<>();
     public static Map<Integer, String> eNotesNetWork = new HashMap<>();
 
     static {
@@ -57,6 +61,9 @@ public class BtcApiProvider extends BaseApiProvider {
 
         secondNetWork.put(Constant.Network.BTC_MAINNET, "");
         secondNetWork.put(Constant.Network.BTC_TESTNET, "testnet.");
+
+        chainSoNetWork.put(Constant.Network.BTC_MAINNET, "BTC");
+        chainSoNetWork.put(Constant.Network.BTC_TESTNET, "BTCTEST");
 
         eNotesNetWork.put(Constant.Network.BTC_MAINNET, "mainnet");
         eNotesNetWork.put(Constant.Network.BTC_TESTNET, "testnet");
@@ -86,7 +93,14 @@ public class BtcApiProvider extends BaseApiProvider {
     }
 
     public LiveData<Resource<EntBalanceEntity>> getOmniBalance(int network, String address, String id) {
-        return getOmniBalanceBy1st(network, address, id);
+        List<EntBalanceListRequest> listRequests = new ArrayList<>();
+        EntBalanceListRequest request = new EntBalanceListRequest();
+        listRequests.add(request);
+        request.setBlockchain(C_BLOCKCHAIN_BITCOIN);
+        request.setNetwork(eNotesNetWork.get(network));
+        request.setAddress(address);
+        request.setOmniproperty(id);
+        return addLiveDataSource(getOmniBalanceBy1st(network, address, id), addSourceForEsList(apiService.getBalanceListByES(listRequests), Constant.BlockChain.BITCOIN));
     }
 
     /**
@@ -139,6 +153,41 @@ public class BtcApiProvider extends BaseApiProvider {
     public LiveData<Resource<List<EntTransactionEntity>>> getTransactionList(int network, String address) {
         return addLiveDataSourceNoENotes(getTransactionList2nd(network, address), getTransactionList1st(network, address));
     }
+
+    public LiveData<Resource<EntSpendTxCountEntity>> getSpendTransactionCount(int network, String address) {
+        return addLiveDataSourceNoENotes(getSpendTransactionCount1st(network, address), getSpendTransactionCount2nd(network, address));
+    }
+
+    private LiveData<Resource<EntSpendTxCountEntity>> getSpendTransactionCount1st(int network, String address) {
+        MediatorLiveData<Resource<EntSpendTxCountEntity>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(transactionThirdService.getSpendTransactionCountByBlockChain(secondNetWork.get(network), address), (resource) -> {
+            if (resource.isSuccessful()) {
+                BtcTransactionListForBlockChain body = resource.body;
+                EntSpendTxCountEntity spendTxCountEntity = new EntSpendTxCountEntity();
+                spendTxCountEntity.setCount(body.getTxs().size());
+                mediatorLiveData.postValue(Resource.success(spendTxCountEntity));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        });
+        return mediatorLiveData;
+    }
+
+    private LiveData<Resource<EntSpendTxCountEntity>> getSpendTransactionCount2nd(int network, String address) {
+        MediatorLiveData<Resource<EntSpendTxCountEntity>> mediatorLiveData = new MediatorLiveData<>();
+        mediatorLiveData.addSource(transactionThirdService.getSpendTransactionCountByChainSo(chainSoNetWork.get(network), address), (resource) -> {
+            if (resource.isSuccessful() && resource.body.getStatus().equals("success")) {
+                SpendTxForChainSo body = resource.body;
+                EntSpendTxCountEntity spendTxCountEntity = new EntSpendTxCountEntity();
+                spendTxCountEntity.setCount(body.getData().getTxs().size());
+                mediatorLiveData.postValue(Resource.success(spendTxCountEntity));
+            } else {
+                mediatorLiveData.postValue(Resource.error(ErrorCode.NET_ERROR, resource.errorMessage));
+            }
+        });
+        return mediatorLiveData;
+    }
+
 
     private LiveData<Resource<List<EntTransactionEntity>>> getTransactionList1st(int network, String address) {
         MediatorLiveData<Resource<List<EntTransactionEntity>>> mediatorLiveData = new MediatorLiveData<>();
@@ -201,7 +250,7 @@ public class BtcApiProvider extends BaseApiProvider {
                         SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         try {
                             Date date = utcFormat.parse(UTCString);
-                            entTransactionEntity.setTime(date.getTime()/1000l + "");
+                            entTransactionEntity.setTime(date.getTime() / 1000l + "");
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }

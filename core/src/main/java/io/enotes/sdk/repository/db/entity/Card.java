@@ -115,12 +115,11 @@ public class Card {
         this.balance = balance;
     }
 
-    @Status
     public int getStatus() {
         return status;
     }
 
-    public void setStatus(@Status int status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
