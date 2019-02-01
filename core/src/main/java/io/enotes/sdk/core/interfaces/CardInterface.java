@@ -107,5 +107,5 @@ public interface CardInterface {
     int getUnFreezeTries() throws CommandException;
     boolean freezeTransaction(String pin) throws CommandException;
     boolean unFreezeTransaction(String pin) throws CommandException;
-    EntSignature doSign(String hash)throws CommandException ;
+    EntSignature doSign(byte[] hash)throws CommandException ;
 }

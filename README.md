@@ -38,7 +38,7 @@ repositories {
 ```
 
 ```
-implementation 'io.enotes.sdk:library:1.0.0'
+implementation 'io.enotes.sdk:library:1.0.1'
 ```
 
 #### Building from source code

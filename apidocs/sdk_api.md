@@ -304,7 +304,7 @@ public int getUnFresszeTries()
 - signs the given hash and returns the R and S.
 - interface definition：
 ```
-public EntSignature doSign(String hash)
+public EntSignature doSign(byte[] hash)
 ```
 
 

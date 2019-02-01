@@ -267,9 +267,9 @@ public class CardManager implements CardInterface {
     }
 
     @Override
-    public EntSignature doSign(String hash) throws CommandException {
+    public EntSignature doSign(byte[] hash) throws CommandException {
         TLVBox tlvBox = new TLVBox();
-        tlvBox.putBytesValue(Commands.TLVTag.Transaction_Hash, ByteUtil.hexStringToBytes(hash));
+        tlvBox.putBytesValue(Commands.TLVTag.Transaction_Hash, hash);
         try {
             byte[] bytes = ByteUtil.hexStringToBytes(transmitApdu(Commands.signTX(tlvBox.serialize())));
             TLVBox signatureTLV = TLVBox.parse(bytes, 0, bytes.length);
