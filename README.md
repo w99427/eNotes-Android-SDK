@@ -103,6 +103,9 @@ If you don't have eNotes around, you can use a service to simulate eNotes for yo
         Log.i("tag", resource.status + "");
         if (resource.status == Status.SUCCESS) {
             Card card = resource.data;
+            Cert cert = card.getCert();
+            String publicKey = card.getCurrencyPubKey();
+            String address = card.getAddress();
         }
     });
     ```
