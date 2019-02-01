@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import java.util.List;
 
 import io.enotes.sdk.core.Callback;
+import io.enotes.sdk.core.EntSignature;
 import io.enotes.sdk.repository.api.entity.EntUtxoEntity;
 import io.enotes.sdk.repository.api.entity.response.simulate.BluetoothEntity;
 import io.enotes.sdk.repository.card.Command;
@@ -106,4 +107,5 @@ public interface CardInterface {
     int getUnFreezeTries() throws CommandException;
     boolean freezeTransaction(String pin) throws CommandException;
     boolean unFreezeTransaction(String pin) throws CommandException;
+    EntSignature doSign(String hash)throws CommandException ;
 }

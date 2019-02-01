@@ -1,6 +1,6 @@
 # eNotes Android SDK
 
-[ ![Download](https://api.bintray.com/packages/enoteschain/sdk/core/images/download.svg) ](https://bintray.com/enoteschain/sdk/core/_latestVersion)[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[ ![Download](https://api.bintray.com/packages/cryptoenotes/eNotes/library/images/download.svg) ](https://bintray.com/enoteschain/sdk/core/_latestVersion)[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## Description
 
@@ -32,13 +32,13 @@ repositories {
     google()
     jcenter()
     maven {
-        url 'https://dl.bintray.com/enoteschain/sdk'
+        url 'https://dl.bintray.com/cryptoenotes/eNotes'
     }
 }
 ```
 
 ```
-implementation 'io.enotes.sdk:sdk:0.1.2'
+implementation 'io.enotes.sdk:library:1.0.0'
 ```
 
 #### Building from source code
@@ -106,6 +106,12 @@ If you don't have eNotes around, you can use a service to simulate eNotes for yo
         }
     });
     ```
+4. signs the given hash and returns the R and S
+	```
+	Entsignature sign = cardManager.doSign(hash);
+	String r = sign.getR();
+	String s = sign.getS();
+	```
 
 ### Use Bluetooth NFC Reader
 

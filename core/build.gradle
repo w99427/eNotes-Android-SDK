@@ -3,10 +3,10 @@ apply plugin: 'com.novoda.bintray-release'
 
 publish {
     def groupProjectID = 'io.enotes.sdk'
-    def artifactProjectID = 'eNotes'
-    def publishVersionID = '1.0.6'
+    def artifactProjectID = 'library'
+    def publishVersionID = '1.0.0'
 
-    userOrg = 'victorxry'
+    userOrg = 'cryptoenotes'
     repoName = 'eNotes'
     groupId = groupProjectID
     artifactId = artifactProjectID
@@ -20,7 +20,7 @@ android {
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 27
-        versionCode 6
+        versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 

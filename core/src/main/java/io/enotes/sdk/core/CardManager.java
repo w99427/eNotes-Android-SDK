@@ -265,4 +265,23 @@ public class CardManager implements CardInterface {
         transmitApdu(Commands.unFreezeTx(tlvBox.serialize()));
         return true;
     }
+
+    @Override
+    public EntSignature doSign(String hash) throws CommandException {
+        TLVBox tlvBox = new TLVBox();
+        tlvBox.putBytesValue(Commands.TLVTag.Transaction_Hash, ByteUtil.hexStringToBytes(hash));
+        try {
+            byte[] bytes = ByteUtil.hexStringToBytes(transmitApdu(Commands.signTX(tlvBox.serialize())));
+            TLVBox signatureTLV = TLVBox.parse(bytes, 0, bytes.length);
+            String signature = signatureTLV.getStringValue(Commands.TLVTag.Transaction_signature);
+            if (signature.length() != 128) {
+                throw new CommandException(ErrorCode.INVALID_CARD, "please_right_card");
+            }
+            String r = signature.substring(0, 64);
+            String s = signature.substring(64);
+            return new EntSignature(r, s);
+        } catch (CommandException e) {
+            throw e;
+        }
+    }
 }

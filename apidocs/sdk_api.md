@@ -18,6 +18,7 @@
 - [unFreezeTransaction](#unFreezeTransaction)
 - [getFreezeStatus](#getFreezeStatus)
 - [getUnFresszeTries](#getUnFresszeTries)
+- [doSign](#doSign)
 
 ## RPCApiManager
 
@@ -297,6 +298,13 @@ public int getFreezeStatus()
 - interface definition：
 ```
 public int getUnFresszeTries()
+```
+
+### doSign
+- signs the given hash and returns the R and S.
+- interface definition：
+```
+public EntSignature doSign(String hash)
 ```
 
 
