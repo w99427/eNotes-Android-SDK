@@ -185,6 +185,8 @@ public class Commands {
         public static final int Apdu_Protocol_Version = 0x12;
         public static final int Secure_Channel_Protocol = 0x13;
         public static final int Device_Certificate = 0x30;
+        public static final int Account = 0x32;
+        public static final int Master_PublicKey = 0x57;
         public static final int BlockChain_PublicKey = 0x55;
         public static final int Challenge = 0x70;
         public static final int Salt = 0x71;

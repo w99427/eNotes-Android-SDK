@@ -54,6 +54,11 @@ public class Card {
     private int status;
     private String txId;
 
+    //1.2.0
+    private String account;
+    private String masterPublicKey;
+
+
     @Ignore
     private org.bitcoinj.core.ECKey bitCoinECKey;
     @Ignore
@@ -129,6 +134,22 @@ public class Card {
 
     public void setTxId(String txId) {
         this.txId = txId;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public String getMasterPublicKey() {
+        return masterPublicKey;
+    }
+
+    public void setMasterPublicKey(String masterPublicKey) {
+        this.masterPublicKey = masterPublicKey;
     }
 
     public org.bitcoinj.core.ECKey getBitCoinECKey() {

@@ -488,6 +488,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             card.setCurrencyPubKey(readCurrencyPubKey());
             setCurrencyAddress(card);
             card.setStatus(readStatus());
+            read1_2_0VersionData(card);
             checkBlockChainPrv(CardUtils.isBTC(card.getCert().getBlockChain()) ? card.getBitCoinECKey().getPubKey() : card.getEthECKey().getPubKey());
             connectedCard = card;
             //differentiate success type
@@ -541,7 +542,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             if (cert.getCertVersion() > Constant.APDU.CERT_VERSION && !ENotesSDK.config.debugCard) {
                 throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
-            if (!cert.getBlockChain().equals(Constant.BlockChain.BITCOIN) && !cert.getBlockChain().equals(Constant.BlockChain.ETHEREUM) && !cert.getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH)&& !cert.getBlockChain().equals(Constant.BlockChain.RIPPLE)) {
+            if (!cert.getBlockChain().equals(Constant.BlockChain.BITCOIN) && !cert.getBlockChain().equals(Constant.BlockChain.ETHEREUM) && !cert.getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH) && !cert.getBlockChain().equals(Constant.BlockChain.RIPPLE)) {
                 throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
             LogUtils.i(TAG, cert.toString());
@@ -616,6 +617,24 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         else if (pubKey.length() == 66 && (pubKey.startsWith("02") || pubKey.startsWith("03")))
             return pubKey;
         throw new CommandException(ErrorCode.INVALID_CARD, "wrong public key format");
+
+    }
+
+    private void read1_2_0VersionData(Card card) {
+        LogUtils.d(TAG, "read1_2_0VersionData");
+        try {
+            String account = transceive2TLV(Command.newCmd().setDesc("READ_ACCOUNT").setCmdStr("00CA0032")).getStringValue(Commands.TLVTag.Account);
+            card.setAccount(account);
+        } catch (CommandException e) {
+
+        }
+
+        try {
+            String masterPublicKey = transceive2TLV(Command.newCmd().setDesc("READ_MASTER_PUBLIC_KEY").setCmdStr("00CA0057")).getStringValue(Commands.TLVTag.Master_PublicKey);
+            card.setMasterPublicKey(masterPublicKey);
+        } catch (CommandException e) {
+
+        }
 
     }
 

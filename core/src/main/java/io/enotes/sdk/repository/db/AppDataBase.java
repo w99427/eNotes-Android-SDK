@@ -15,7 +15,7 @@ import io.enotes.sdk.repository.db.dao.MfrDao;
 import io.enotes.sdk.repository.db.entity.Card;
 import io.enotes.sdk.repository.db.entity.Mfr;
 
-@Database(entities = {Card.class, Mfr.class}, version = 3, exportSchema = false)
+@Database(entities = {Card.class, Mfr.class}, version = 4, exportSchema = false)
 @TypeConverters({ValueConverter.class})
 public abstract class AppDataBase extends RoomDatabase {
     abstract public CardDao getCardDao();
@@ -24,7 +24,7 @@ public abstract class AppDataBase extends RoomDatabase {
 
     public static AppDataBase init(Context application) {
         return Room.databaseBuilder(application, AppDataBase.class, "eNotes.db")
-                .addMigrations(MIGRATION_1_2).build();
+                .addMigrations(MIGRATION_1_2).addMigrations(MIGRATION_3_4).build();
     }
 
     static final Migration MIGRATION_1_2 = new Migration(2, 3) {
@@ -32,6 +32,16 @@ public abstract class AppDataBase extends RoomDatabase {
         public void migrate(SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE Card "
                     + " ADD COLUMN tokenProtocol TEXT");
+        }
+    };
+
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE Card "
+                    + " ADD COLUMN account TEXT");
+            database.execSQL("ALTER TABLE Card "
+                    + " ADD COLUMN masterPublicKey TEXT");
         }
     };
 }

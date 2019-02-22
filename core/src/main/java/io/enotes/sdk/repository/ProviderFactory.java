@@ -15,7 +15,7 @@ public class ProviderFactory {
     private Context context;
 
     private ProviderFactory(Context context) {
-        this.context = context;
+        this.context = context.getApplicationContext();
     }
 
     public static ProviderFactory getInstance(Context context) {
