@@ -103,9 +103,11 @@ public interface CardInterface {
      */
     void parseNfcTag(Tag tag);
 
-    int getFreezeStatus() throws CommandException;
-    int getUnFreezeTries() throws CommandException;
-    boolean freezeTransaction(String pin) throws CommandException;
-    boolean unFreezeTransaction(String pin) throws CommandException;
+    int getTransactionPinStatus() throws CommandException;
+    int getDisableTransactionPinTries() throws CommandException;
+    boolean enableTransactionPin(String pin) throws CommandException;
+    boolean disableTransactionPin(String pin) throws CommandException;
+    boolean verifyTransactionPin(String pin) throws CommandException;
+    boolean updateTransactionPin(String oldPin, String newPin) throws CommandException;
     EntSignature doSign(byte[] hash)throws CommandException ;
 }

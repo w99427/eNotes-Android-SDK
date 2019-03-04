@@ -237,21 +237,21 @@ public class CardManager implements CardInterface {
     }
 
     @Override
-    public int getFreezeStatus() throws CommandException {
+    public int getTransactionPinStatus() throws CommandException {
         byte[] bytes = ByteUtil.hexStringToBytes(transmitApdu(Commands.getFreezeStatus()));
         TLVBox tlvBox = TLVBox.parse(bytes, 0, bytes.length);
         return new BigInteger(tlvBox.getStringValue(Commands.TLVTag.Transaction_Freeze_Status), 16).intValue();
     }
 
     @Override
-    public int getUnFreezeTries() throws CommandException {
+    public int getDisableTransactionPinTries() throws CommandException {
         byte[] bytes = ByteUtil.hexStringToBytes(transmitApdu(Commands.getReadUnfreezeTries()));
         TLVBox tlvBox = TLVBox.parse(bytes, 0, bytes.length);
         return new BigInteger(tlvBox.getStringValue(Commands.TLVTag.Transaction_Freeze_Tries), 16).intValue();
     }
 
     @Override
-    public boolean freezeTransaction(String pin) throws CommandException {
+    public boolean enableTransactionPin(String pin) throws CommandException {
         TLVBox tlvBox = new TLVBox();
         tlvBox.putBytesValue(Commands.TLVTag.Transaction_Freeze_Pin, pin.getBytes());
         transmitApdu(Commands.freezeTx(tlvBox.serialize()));
@@ -259,10 +259,30 @@ public class CardManager implements CardInterface {
     }
 
     @Override
-    public boolean unFreezeTransaction(String pin) throws CommandException {
+    public boolean disableTransactionPin(String pin) throws CommandException {
         TLVBox tlvBox = new TLVBox();
         tlvBox.putBytesValue(Commands.TLVTag.Transaction_Freeze_Pin, pin.getBytes());
         transmitApdu(Commands.unFreezeTx(tlvBox.serialize()));
+        return true;
+    }
+
+    @Override
+    public boolean verifyTransactionPin(String pin) throws CommandException {
+        TLVBox tlvBox = new TLVBox();
+        tlvBox.putBytesValue(Commands.TLVTag.Transaction_Freeze_Pin, pin.getBytes());
+        transmitApdu(Commands.verifyTxPin(tlvBox.serialize()));
+        return true;
+    }
+
+    @Override
+    public boolean updateTransactionPin(String oldPin, String newPin) throws CommandException {
+        TLVBox tlvBox = new TLVBox();
+        tlvBox.putBytesValue(Commands.TLVTag.Transaction_Freeze_Pin, oldPin.getBytes());
+        transmitApdu(Commands.verifyTxPin(tlvBox.serialize()));
+
+        TLVBox tlvBox1 = new TLVBox();
+        tlvBox1.putBytesValue(Commands.TLVTag.Transaction_Freeze_Pin, newPin.getBytes());
+        transmitApdu(Commands.updateTxPin(tlvBox1.serialize()));
         return true;
     }
 

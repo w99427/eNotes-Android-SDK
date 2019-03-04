@@ -100,6 +100,14 @@ public class TLVBox {
         return ByteUtil.toHexString(bytes);
     }
 
+    public String getUtf8StringValue(int type) {
+        byte[] bytes = mObjects.get(type);
+        if (bytes == null) {
+            return null;
+        }
+        return new String(bytes);
+    }
+
     public byte[] getBytesValue(int type) {
         byte[] bytes = mObjects.get(type);
         return bytes;

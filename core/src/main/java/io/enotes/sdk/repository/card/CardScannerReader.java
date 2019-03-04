@@ -14,6 +14,7 @@ import android.text.TextUtils;
 
 import org.ethereum.util.ByteUtil;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -542,9 +543,9 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             if (cert.getCertVersion() > Constant.APDU.CERT_VERSION && !ENotesSDK.config.debugCard) {
                 throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
             }
-            if (!cert.getBlockChain().equals(Constant.BlockChain.BITCOIN) && !cert.getBlockChain().equals(Constant.BlockChain.ETHEREUM) && !cert.getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH) && !cert.getBlockChain().equals(Constant.BlockChain.RIPPLE)) {
-                throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
-            }
+//            if (!cert.getBlockChain().equals(Constant.BlockChain.BITCOIN) && !cert.getBlockChain().equals(Constant.BlockChain.ETHEREUM) && !cert.getBlockChain().equals(Constant.BlockChain.BITCOIN_CASH) && !cert.getBlockChain().equals(Constant.BlockChain.RIPPLE)) {
+//                throw new CommandException(ErrorCode.NOT_SUPPORT_CARD, "Not Support");
+//            }
             LogUtils.i(TAG, cert.toString());
             //verify manufacture cert
             verifyCert(cert);
@@ -623,18 +624,12 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
     private void read1_2_0VersionData(Card card) {
         LogUtils.d(TAG, "read1_2_0VersionData");
         try {
-            String account = transceive2TLV(Command.newCmd().setDesc("READ_ACCOUNT").setCmdStr("00CA0032")).getStringValue(Commands.TLVTag.Account);
+            String account = transceive2TLV(Command.newCmd().setDesc("READ_ACCOUNT").setCmdStr("00CA0032")).getUtf8StringValue(Commands.TLVTag.Account);
             card.setAccount(account);
         } catch (CommandException e) {
 
         }
 
-        try {
-            String masterPublicKey = transceive2TLV(Command.newCmd().setDesc("READ_MASTER_PUBLIC_KEY").setCmdStr("00CA0057")).getStringValue(Commands.TLVTag.Master_PublicKey);
-            card.setMasterPublicKey(masterPublicKey);
-        } catch (CommandException e) {
-
-        }
 
     }
 
@@ -662,11 +657,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
         LogUtils.d(TAG, "read status");
         String result = transceive2TLV(Commands.getTxSignCounter()).getStringValue(Commands.TLVTag.Transaction_Signature_Counter);
         if (result != null) {
-            if (result.length() == 4) {
-                int txSignTimes = ByteUtil.byteArrayToInt(ByteUtil.hexStringToBytes(result.substring(0, 4)));
-                LogUtils.d(TAG, "    txSignTimes: " + txSignTimes);
-                return txSignTimes;
-            }
+            return new BigInteger(result,16).intValue();
         }
         throw new CommandException(ErrorCode.INVALID_CARD, "Fail to read status");
     }

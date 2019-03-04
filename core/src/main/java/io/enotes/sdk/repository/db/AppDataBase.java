@@ -40,8 +40,6 @@ public abstract class AppDataBase extends RoomDatabase {
         public void migrate(SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE Card "
                     + " ADD COLUMN account TEXT");
-            database.execSQL("ALTER TABLE Card "
-                    + " ADD COLUMN masterPublicKey TEXT");
         }
     };
 }

@@ -124,8 +124,8 @@ public class ExampleUnitTest {
 
     @Test
     public void testHash() {
-        String data = "e53dfd50df574820e99c3f9bc7d6583017a9d68452d9071b86e4ce473cc64c2f0d5881587d07a6cc325b16843c86fb570ef5e52fea5cc81f507260ae57f85b33";
-        String hash = Sha256Hash.of(ByteUtil.hexStringToBytes(data)).toString();
+        String data = "123456";
+        String hash = Sha256Hash.of(data.getBytes()).toString();
         String hash1 = Sha256Hash.of(ByteUtil.hexStringToBytes(hash)).toString();
         String a = "a";
     }

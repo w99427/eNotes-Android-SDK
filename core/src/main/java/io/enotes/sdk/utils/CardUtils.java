@@ -22,6 +22,7 @@ import io.enotes.sdk.repository.db.entity.Card;
 
 import static io.enotes.sdk.constant.Constant.BlockChain.BITCOIN;
 import static io.enotes.sdk.constant.Constant.BlockChain.BITCOIN_CASH;
+import static io.enotes.sdk.constant.Constant.BlockChain.CYBEX;
 import static io.enotes.sdk.constant.Constant.BlockChain.ETHEREUM;
 import static io.enotes.sdk.constant.Constant.BlockChain.RIPPLE;
 import static java.lang.Integer.parseInt;
@@ -91,6 +92,8 @@ public class CardUtils {
             return card.getEthTxAddress();
         else if (blockChain.equals(RIPPLE))
             return card.getRippleAddress();
+        else if (blockChain.equals(CYBEX))
+            return card.getEthTxAddress();
         return null;
     }
 

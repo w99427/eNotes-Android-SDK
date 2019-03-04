@@ -6,6 +6,7 @@ public class Constant {
         public static final String ETHEREUM = "8000003c";
         public static final String BITCOIN_CASH = "80000091";
         public static final String RIPPLE = "80000090";
+        public static final String CYBEX = "00000001";
     }
 
     public static class Network {

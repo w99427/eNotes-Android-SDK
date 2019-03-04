@@ -45,6 +45,9 @@ public class Commands {
 
     private static final String unFreezeTx = "0026940008";
 
+    private static final String verifyTransactionPin = "0020930008";
+    private static final String updateTransactionPin = "0024930008";
+
     private static final Command READ_FREEZE_STATUS = Command.newCmd().setDesc("READ_FREEZE_STATUS").setCmdStr("00CA0094");
     private static final Command READ_UNFREEZE_TRIES = Command.newCmd().setDesc("READ_FREEZE_STATUS").setCmdStr("00CA0095");
 
@@ -130,6 +133,14 @@ public class Commands {
 
     public static Command unFreezeTx(byte[] pin) {
         return Command.newCmd().setDesc("UNFREEZE_TX").setCmdByte(concat(ByteUtil.hexStringToBytes(unFreezeTx), pin));
+    }
+
+    public static Command verifyTxPin(byte[] pin) {
+        return Command.newCmd().setDesc("verifyTxPin").setCmdByte(concat(ByteUtil.hexStringToBytes(verifyTransactionPin), pin));
+    }
+
+    public static Command updateTxPin(byte[] pin) {
+        return Command.newCmd().setDesc("updateTxPin").setCmdByte(concat(ByteUtil.hexStringToBytes(updateTransactionPin), pin));
     }
 
     /**

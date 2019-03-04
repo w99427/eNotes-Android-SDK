@@ -9,6 +9,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.math.BigInteger;
+
 import io.enotes.examples.test.TestNfcActivity;
 import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.Status;
@@ -31,7 +33,7 @@ public class NfcTest extends BaseTest {
     @Before
     public void setup() {
         activity = activityTestRule.getActivity();
-        ENotesSDK.config.debugCard=true;
+        ENotesSDK.config.debugCard = true;
     }
 
     @Test
@@ -98,9 +100,9 @@ public class NfcTest extends BaseTest {
                 assertTrue(resource.data instanceof Card);
                 resource.data.getCert().setBlockChain(Constant.BlockChain.RIPPLE);
                 Log.i(TAG, "card cert = " + resource.data.getCert().toString());
-                cardManager.getXrpRawTransaction(resource.data,"rLeQtpFZC4PizpR8y1gEhGEPp4MAz1gzk9","100000",1,"100", 0,(resource1 -> {
+                cardManager.getXrpRawTransaction(resource.data, "rLeQtpFZC4PizpR8y1gEhGEPp4MAz1gzk9", "100000", 1, "100", 0, (resource1 -> {
                     String hex = resource1.data;
-                    Log.i(TAG,"xrp raw transaction hex = "+hex);
+                    Log.i(TAG, "xrp raw transaction hex = " + hex);
                     threadLock.notifyLock();
                 }));
             }
@@ -120,7 +122,7 @@ public class NfcTest extends BaseTest {
                 Log.i(TAG, "card cert = " + resource.data.getCert().toString());
                 try {
 
-                    int freezeStatus = cardManager.getFreezeStatus();
+                    int freezeStatus = cardManager.getTransactionPinStatus();
                     Log.i(TAG, "freezeStatus = " + freezeStatus);
                     threadLock.notifyLock();
                 } catch (CommandException e) {
@@ -145,7 +147,7 @@ public class NfcTest extends BaseTest {
                 Log.i(TAG, "card cert = " + resource.data.getCert().toString());
                 try {
 
-                    int getUnFreezeTries = cardManager.getUnFreezeTries();
+                    int getUnFreezeTries = cardManager.getDisableTransactionPinTries();
                     Log.i(TAG, "getUnFreezeTries = " + getUnFreezeTries);
                     threadLock.notifyLock();
                 } catch (CommandException e) {
@@ -170,7 +172,7 @@ public class NfcTest extends BaseTest {
                 Log.i(TAG, "card cert = " + resource.data.getCert().toString());
                 try {
 
-                    boolean flag = cardManager.freezeTransaction("123456");
+                    boolean flag = cardManager.enableTransactionPin("123456");
                     assert flag;
                     Log.i(TAG, "freezeTransaction = " + flag);
                     threadLock.notifyLock();
@@ -196,9 +198,84 @@ public class NfcTest extends BaseTest {
                 Log.i(TAG, "card cert = " + resource.data.getCert().toString());
                 try {
 
-                    boolean flag = cardManager.unFreezeTransaction("123456");
+                    boolean flag = cardManager.disableTransactionPin("123456");
                     assert flag;
                     Log.i(TAG, "unFreezeTransaction = " + flag);
+                    threadLock.notifyLock();
+                } catch (CommandException e) {
+                    e.printStackTrace();
+                    assert false;
+                }
+            }
+        }));
+
+        threadLock.waitAndRelease(15);
+    }
+
+    @Test
+    public void testVerifyTXPin() {
+        Object lock = new Object();
+        ThreadLock threadLock = new ThreadLock(lock);
+        CardManager cardManager = activity.getCardManager();
+        assertNotNull(cardManager);
+        cardManager.setReadCardCallback((resource -> {
+            if (resource.status == Status.SUCCESS) {
+                assertTrue(resource.data instanceof Card);
+                Log.i(TAG, "card cert = " + resource.data.getCert().toString());
+                try {
+
+                    boolean flag = cardManager.verifyTransactionPin("123456");
+                    assert flag;
+                    Log.i(TAG, "verifyTransactionPin = " + flag);
+                    threadLock.notifyLock();
+                } catch (CommandException e) {
+                    e.printStackTrace();
+                    assert false;
+                }
+            }
+        }));
+
+        threadLock.waitAndRelease(15);
+    }
+
+    @Test
+    public void testUpdateTXPin() {
+        Object lock = new Object();
+        ThreadLock threadLock = new ThreadLock(lock);
+        CardManager cardManager = activity.getCardManager();
+        assertNotNull(cardManager);
+        cardManager.setReadCardCallback((resource -> {
+            if (resource.status == Status.SUCCESS) {
+                assertTrue(resource.data instanceof Card);
+                Log.i(TAG, "card cert = " + resource.data.getCert().toString());
+                try {
+
+                    boolean flag = cardManager.updateTransactionPin("123456", "234567");
+                    assert flag;
+                    Log.i(TAG, "updateTransactionPin = " + flag);
+                    threadLock.notifyLock();
+                } catch (CommandException e) {
+                    e.printStackTrace();
+                    assert false;
+                }
+            }
+        }));
+
+        threadLock.waitAndRelease(15);
+    }
+
+    @Test
+    public void testSign() {
+        Object lock = new Object();
+        ThreadLock threadLock = new ThreadLock(lock);
+        CardManager cardManager = activity.getCardManager();
+        assertNotNull(cardManager);
+        cardManager.setReadCardCallback((resource -> {
+            if (resource.status == Status.SUCCESS) {
+                assertTrue(resource.data instanceof Card);
+                Log.i(TAG, "card cert = " + resource.data.getCert().toString());
+                try {
+                    cardManager.doSign(new BigInteger("8D969EEF6ECAD3C29A3A629280E686CF0C3F5D5A86AFF3CA12020C923ADC6C", 16).toByteArray());
                     threadLock.notifyLock();
                 } catch (CommandException e) {
                     e.printStackTrace();

@@ -56,8 +56,6 @@ public class Card {
 
     //1.2.0
     private String account;
-    private String masterPublicKey;
-
 
     @Ignore
     private org.bitcoinj.core.ECKey bitCoinECKey;
@@ -144,13 +142,6 @@ public class Card {
         this.account = account;
     }
 
-    public String getMasterPublicKey() {
-        return masterPublicKey;
-    }
-
-    public void setMasterPublicKey(String masterPublicKey) {
-        this.masterPublicKey = masterPublicKey;
-    }
 
     public org.bitcoinj.core.ECKey getBitCoinECKey() {
         if (bitCoinECKey == null && currencyPubKey != null) {
