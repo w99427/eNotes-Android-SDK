@@ -109,5 +109,5 @@ public interface CardInterface {
     boolean disableTransactionPin(String pin) throws CommandException;
     boolean verifyTransactionPin(String pin) throws CommandException;
     boolean updateTransactionPin(String oldPin, String newPin) throws CommandException;
-    EntSignature doSign(byte[] hash)throws CommandException ;
+    EntSignature doSign(byte[] hash, Card card)throws CommandException ;
 }

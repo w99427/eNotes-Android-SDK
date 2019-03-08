@@ -11,9 +11,11 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 
 import org.bitcoinj.core.Transaction;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 import io.enotes.sdk.constant.Constant;
@@ -287,7 +289,7 @@ public class CardManager implements CardInterface {
     }
 
     @Override
-    public EntSignature doSign(byte[] hash) throws CommandException {
+    public EntSignature doSign(byte[] hash, Card card) throws CommandException {
         TLVBox tlvBox = new TLVBox();
         tlvBox.putBytesValue(Commands.TLVTag.Transaction_Hash, hash);
         try {
@@ -299,7 +301,18 @@ public class CardManager implements CardInterface {
             }
             String r = signature.substring(0, 64);
             String s = signature.substring(64);
-            return new EntSignature(r, s);
+            ECKey.ECDSASignature sig = new ECKey.ECDSASignature(new BigInteger(r, 16), new BigInteger(s, 16)).toCanonicalised();
+            int recId = -1;
+            byte[] thisKey = card.getEthECKey().getPubKey();
+
+            for (int i = 0; i < 4; ++i) {
+                byte[] k = ECKey.recoverPubBytesFromSignature(i, sig, hash);
+                if (k != null && Arrays.equals(k, thisKey)) {
+                    recId = i;
+                    break;
+                }
+            }
+            return new EntSignature(sig.r.toString(16), sig.s.toString(16), recId);
         } catch (CommandException e) {
             throw e;
         }

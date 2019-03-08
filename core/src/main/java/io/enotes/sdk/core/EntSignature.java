@@ -3,10 +3,12 @@ package io.enotes.sdk.core;
 public class EntSignature {
     private String r;
     private String s;
+    private int recId;
 
-    public EntSignature(String r, String s) {
+    public EntSignature(String r, String s, int recId) {
         this.r = r;
         this.s = s;
+        this.recId = recId;
     }
 
     public String getR() {
@@ -23,5 +25,13 @@ public class EntSignature {
 
     public void setS(String s) {
         this.s = s;
+    }
+
+    public int getRecId() {
+        return recId;
+    }
+
+    public void setRecId(int recId) {
+        this.recId = recId;
     }
 }

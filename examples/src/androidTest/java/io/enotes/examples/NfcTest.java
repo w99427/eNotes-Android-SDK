@@ -16,6 +16,7 @@ import io.enotes.sdk.constant.Constant;
 import io.enotes.sdk.constant.Status;
 import io.enotes.sdk.core.CardManager;
 import io.enotes.sdk.core.ENotesSDK;
+import io.enotes.sdk.core.EntSignature;
 import io.enotes.sdk.core.RPCApiManager;
 import io.enotes.sdk.repository.card.CommandException;
 import io.enotes.sdk.repository.db.entity.Card;
@@ -275,7 +276,7 @@ public class NfcTest extends BaseTest {
                 assertTrue(resource.data instanceof Card);
                 Log.i(TAG, "card cert = " + resource.data.getCert().toString());
                 try {
-                    cardManager.doSign(new BigInteger("8D969EEF6ECAD3C29A3A629280E686CF0C3F5D5A86AFF3CA12020C923ADC6C", 16).toByteArray());
+                    EntSignature entSignature = cardManager.doSign(new BigInteger("8D969EEF6ECAD3C29A344A629280E686CF0C3F5D5A86AFF3CA12020C923ADC", 16).toByteArray(), resource.data);
                     threadLock.notifyLock();
                 } catch (CommandException e) {
                     e.printStackTrace();

@@ -14,9 +14,9 @@ import com.ripple.encodings.base58.B58;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Base58;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.params.MainNetParams;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
 import org.spongycastle.asn1.sec.SECNamedCurves;
@@ -99,13 +99,13 @@ public class ExampleUnitTest {
         String s2 = org.ethereum.crypto.ECKey.CURVE.getN().toString(16);
 
 
-        byte[] publicKey = ByteUtil.hexStringToBytes("0444ae7f5391d52515b746191d114e2bf612408bd2abd9ee95bbd2b4f9a67566707193c394d07511bd110c21c640053ca8ca1ad948cdac9281c62e87444fbb85e6");
-        byte[] data = ByteUtil.hexStringToBytes("30818d0201021309654e6f7465732e696f180f32303138313130313038353930305a302302080de0b6b3a7640000040480000000020100300e0404000000028106313233343536042103966b952d0c1e874e02769d619a8e20dfafd457c4ba433b6afd53973d0ba651183024161041414130303030393030303030313236161041414130303030303030303030303030");
+        byte[] publicKey = ByteUtil.hexStringToBytes("04F1C073C702077AE7E6C4983B0EE8C5001AEF1E2D3D47451E96BA6A5C99338F4FBC95CF9988B9EFF8EDBC7B56798FAF61F8856B10BA3609AFF8532AE116A946DD");
+        byte[] data = ByteUtil.hexStringToBytes("D9C9EB62FF5697B8D1937241037F219259D104DFDA6320A36925C7EAF10D1C3E");
         if (publicKey == null || publicKey.length == 0 || data == null || data.length == 0) {
             throw new CommandException(ErrorCode.INVALID_CARD, "Invalid cert _ verify manufacture cert fail");
         }
-        BigInteger r = new BigInteger("79504e0c8abb36b49ea8ecdf55bfb1ffe4341435f59170243a64a3b509d7cc3e", 16);
-        BigInteger s = new BigInteger("35ad80aab2e2ef2260af20fae370d02c4bc84a09e020b56d008fb9c09278db31", 16);
+        BigInteger r = new BigInteger("E537207EF9D98C54D189F8968779BE78F8E224EEF441B8C59EA9E58E737C49DD", 16);
+        BigInteger s = new BigInteger("E0E120715D01AAA73C352D25BD6CF6DD146EDE2C7040CA3ED1E75035DE564126", 16);
         SHA256Digest s_SHA256Digest = new SHA256Digest();
         s_SHA256Digest.update(data, 0, data.length);
         byte hash[] = new byte[32];
@@ -124,9 +124,16 @@ public class ExampleUnitTest {
 
     @Test
     public void testHash() {
-        String data = "123456";
-        String hash = Sha256Hash.of(data.getBytes()).toString();
-        String hash1 = Sha256Hash.of(ByteUtil.hexStringToBytes(hash)).toString();
+        String data = "0000001D043139246EF5EA05CC2159C580413A19F23ACD5EBE5591D2A524962D9E1A8CB5E0C840580440DF61286738994D197C780DFA00FDE6AF7DDCAF277663A7D7E6CF7E";
+        String r="F900EB4FC75C672842572E1B18FD3FB1415A515E4458B9E115736F6D2A9B63B1";
+        String s="81CE4ACD2385CAE437EE4ECCDD8D029119DCD51755953526ED1D2E0B4F4F16BD";
+        byte[] hash = Sha256Hash.of(ByteUtil.hexStringToBytes(data)).getBytes();
+        String hash1 = ByteUtil.toHexString(Sha256Hash.of(hash).getBytes());
+
+
+        org.ethereum.crypto.ECKey.ECDSASignature sig = new ECKey.ECDSASignature(new BigInteger(r, 16), new BigInteger(s, 16)).toCanonicalised();
+        String s1 = sig.s.toString(16);
+
         String a = "a";
     }
 

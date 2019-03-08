@@ -14,10 +14,13 @@
 - [isPresent](#isPresent)
 - [getBtcRawTransaction](#getBtcRawTransaction)
 - [getEthRawTransaction](#getEthRawTransaction)
-- [freezeTransaction](#freezeTransaction)
-- [unFreezeTransaction](#unFreezeTransaction)
-- [getFreezeStatus](#getFreezeStatus)
-- [getUnFresszeTries](#getUnFresszeTries)
+- [getXrpRawTransaction](#getXrpRawTransaction)
+- [transmitApdu](#transmitApdu)
+- [enableTransactionPin](#enableTransactionPin)
+- [disableTransactionPin](#disableTransactionPin)
+- [getTransactionPinStatus](#getTransactionPinStatus)
+- [verifyTransactionPin](#verifyTransactionPin)
+- [updateTransactionPin](#updateTransactionPin)
 - [doSign](#doSign)
 
 ## RPCApiManager
@@ -74,9 +77,11 @@ public class NetworkConfig{
 | :-            | :-                                    |
 | bitcoin       | 80000000     |
 | ethereum      | 8000003c     |
+| bitcoin_cash      | 80000091     |
+| ripple      | 80000090     |
 
 ### network
-#### Bitcoin
+#### Bitcoin, Bitcoin_Cash, Ripple
 | network    | value                               |
 | :-            | :-                                    |
 | mainnet      | 0    |
@@ -272,39 +277,80 @@ cardManager.getEthRawTransaction(Card card, string nonce, String estimateGas, St
 })
 ```
 
-### freezeTransaction
-- freezeTransaction.
+### getXrpRawTransaction
+- get eth Ripple transaction.
 - interface definition：
 ```
-public boolean freezeTransaction(String pin)
+public void getXrpRawTransaction(Card card, string toAddress, String amount, int sequence, String fee, long destinationTag, Callback callback)
+```
+- code exapmle:
+```
+CardManager cardManager = new CardManager(activity);
+cardManager.getXrpRawTransaction(Card card, string toAddress, String amount, int sequence, String fee, long destinationTag, (resource)-> {
+	if(resource.status == Status.SUCCESS) {
+		String hex = resource.data;
+		//TODO
+	} else if(resource.status == Status.ERROR) {
+		String errorMsg = resource.msg;
+		int errorCode = resource.code;
+		//TODO
+	}
+})
+```
+### transmitApdu
+- send Command with raw ISO-DEP data to the card and receive the response..
+- interface definition：
+```
+public boolean transmitApdu(Command command)
 ```
 
-### unFreezeTransaction
-- unFreezeTransaction.
+### enableTransactionPin
+- enableTransactionPin.
 - interface definition：
 ```
-public boolean unFreezeTransaction(String pin)
+public boolean enableTransactionPin(String pin)
 ```
 
-### getFreezeStatus
-- getFreezeStatus.
+### disableTransactionPin
+- disableTransactionPin.
 - interface definition：
 ```
-public int getFreezeStatus()
+public boolean disableTransactionPin(String pin)
 ```
 
-### getUnFresszeTries
-- getUnFresszeTries.
+### verifyTransactionPin
+- verifyTransactionPin.
 - interface definition：
 ```
-public int getUnFresszeTries()
+public boolean verifyTransactionPin(String pin)
+```
+
+### updateTransactionPin
+- updateTransactionPin.
+- interface definition：
+```
+public boolean updateTransactionPin(String oldPin, String newPin)
+```
+
+### getTransactionPinStatus
+- getTransactionPinStatus.
+- interface definition：
+```
+public int getTransactionPinStatus()
+```
+
+### getDisableTransactionPinTries
+- getDisableTransactionPinTries.
+- interface definition：
+```
+public int getDisableTransactionPinTries()
 ```
 
 ### doSign
-- signs the given hash and returns the R and S.
+- signs the given hash and returns the R , S and RecId.
 - interface definition：
 ```
-public EntSignature doSign(byte[] hash)
+public EntSignature doSign(byte[] hash, Card card)
 ```
 
 
