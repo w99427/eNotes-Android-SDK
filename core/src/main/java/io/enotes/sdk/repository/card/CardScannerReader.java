@@ -490,6 +490,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             setCurrencyAddress(card);
             card.setStatus(readStatus());
             read1_2_0VersionData(card);
+            checkDevicePrv(ByteUtil.hexStringToBytes(card.getCert().getPublicKey()));
             checkBlockChainPrv(CardUtils.isBTC(card.getCert().getBlockChain()) ? card.getBitCoinECKey().getPubKey() : card.getEthECKey().getPubKey());
             connectedCard = card;
             //differentiate success type
@@ -549,8 +550,7 @@ public class CardScannerReader implements ICardScanner, ICardReader, ICardScanne
             LogUtils.i(TAG, cert.toString());
             //verify manufacture cert
             verifyCert(cert);
-            //verify device priKey
-            checkDevicePrv(ByteUtil.hexStringToBytes(cert.getPublicKey()));
+
         } catch (IllegalArgumentException ex) {
             throw new CommandException("Invalid cert", ex);
         }
