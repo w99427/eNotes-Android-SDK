@@ -4,7 +4,7 @@ apply plugin: 'com.novoda.bintray-release'
 publish {
     def groupProjectID = 'io.enotes.sdk'
     def artifactProjectID = 'library'
-    def publishVersionID = '1.0.8'
+    def publishVersionID = '1.2.0'
 
     userOrg = 'cryptoenotes'
     repoName = 'eNotes'

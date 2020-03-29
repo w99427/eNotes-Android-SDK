@@ -163,7 +163,7 @@ public interface ApiService {
 
 
     /**********************************ETH****************************************/
-    String URI_INFURA = "infura.io";
+    String URI_INFURA = "infura.io/v3/11bf57adbfc943228151de57fc441b8b";
     String URI_ETHERSCAN = "etherscan.io";
 
     /*****Balance List Api***/
